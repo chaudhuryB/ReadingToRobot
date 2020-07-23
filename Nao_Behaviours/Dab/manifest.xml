@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<package uuid="dab-fbe703" version="0.0.0">
+ <names>
+  <name lang="en_US">Dab</name>
+ </names>
+ <descriptions>
+  <description lang="en_US">Nao does a dab</description>
+ </descriptions>
+ <supportedLanguages>
+  <language>en_US</language>
+ </supportedLanguages>
+ <descriptionLanguages>
+  <language>en_US</language>
+ </descriptionLanguages>
+ <contents>
+  <behaviorContent path="behavior_1">
+   <nature>solitary</nature>
+   <names>
+    <name lang="en_US">dab</name>
+   </names>
+   <triggerSentences/>
+   <loadingResponses/>
+   <autonomous/>
+   <permissions/>
+  </behaviorContent>
+ </contents>
+</package>
