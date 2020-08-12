@@ -28,8 +28,8 @@ class SpeechReco(threading.Thread):
                 audio = r.listen(source, phrase_time_limit=5)
                 # recognize speech using Sphinx
                 try:
-                    toText = r.recognize_google(audio)
-                    #toText = r.recognize_sphinx(audio)
+                    #toText = r.recognize_google(audio)  # google to do it online. It ismore accurate
+                    toText = r.recognize_sphinx(audio)  # Spinx to do it offline
                     print(toText)
                     if "happy" in toText or "funny" in toText:
                         self.game.feel=HAPPY
