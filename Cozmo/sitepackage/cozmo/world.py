@@ -50,7 +50,7 @@ showing where faces, pets and objects have been observed.
 '''
 
 # __all__ should order by constants, event classes, other classes, functions.
-__all__ = ['EvtNewCameraImage',
+__all__ = ['EvtNewCameraImage', 'EvtRobotMovedBish',
            'CameraImage', 'World']
 
 import asyncio
@@ -73,7 +73,10 @@ from ._clad import _clad_to_engine_iface, _clad_to_game_cozmo
 class EvtNewCameraImage(event.Event):
     '''Dispatched when a new camera image is received and processed from the robot's camera.'''
     image = 'A CameraImage object'
-
+    
+class EvtRobotMovedBish(event.Event):
+    '''Dispatched when a new camera image is received and processed from the robot delocalised.'''
+    pass
 
 class World(event.Dispatcher):
     '''Represents the state of the world, as known to a Cozmo robot.'''
@@ -428,6 +431,7 @@ class World(event.Dispatcher):
         logger.info("Robot delocalized - invalidating poses for all objects")
         for obj in self._objects.values():
             obj.pose.invalidate()
+        self.dispatch_event(EvtRobotMovedBish)
 
     #### Public Event Handlers ####
 
