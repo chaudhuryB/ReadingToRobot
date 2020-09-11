@@ -121,6 +121,9 @@ class CozmoPlayerActions(object):
         wait_time = 10.0
         self.fist_bump_success = False
 
+        # This event EvtRobotMovedBish was added to the cozmo.world.py in site-packages specifically for this
+        # It is dispatched when the world receives the robot delocalized message because that is what "fist bumping"
+        # tiny Cozmo does.
         self.robot.add_event_handler(cozmo.world.EvtRobotMovedBish, self.handle_fist_bump)
         self.robot.move_lift(5)
         time.sleep(.2)
@@ -150,4 +153,3 @@ class CozmoPlayerActions(object):
             self.robot.move_lift(-3)
             time.sleep(2)
             self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpLeftHanging).wait_for_completed()
-
