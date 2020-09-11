@@ -9,9 +9,15 @@ from constants import (NEUTRAL,
                         EXCITED)
 
 wordlist = {
-    'happy': 'pip saw teeny green stem peeping out of the pot'.split(' '),
+    'happy': 'teeny green stem peeping out pot'.split(' '),
+    'happy': 'happy day second week'.split(' '),
+    'happy': 'keep them wet and wait'.split(' '),
+    'groan': 'very long week sat there'.split(' '),
+    'groan': 'there was no tree seen'.split(' '),
     'groan': 'this is silly'.split(' '),
-    'excited': 'yippe you have a tree'.split(' '),
+    'excited': 'Molly saw leaf'.split(' '),
+    'excited': 'peeping out pot'.split(' '),
+    'excited': 'yippee have tree'.split(' '),
     'sad': 'Molly was very sad'.split(' '),
     'scared': 'Molly was scared'.split(' ')}
 
@@ -56,23 +62,23 @@ class SpeechReco(threading.Thread):
                     #toText = r.recognize_sphinx(audio)  # Spinx to do it offline
                     print(toText)
                     expression = evaluate_text(toText)
-                    if expression is "happy":
+                    if expression == "happy":
                         self.game.feel=HAPPY
                         print("HAPPY")
                         time.sleep(self.reaction_delay)
-                    elif expression is "sad":
+                    elif expression == "sad":
                         self.game.feel=SAD
                         print("SAD")
                         time.sleep(self.reaction_delay)
-                    elif expression is "groan":
+                    elif expression == "groan":
                         self.game.feel=ANNOYED
                         print("ANNOYED")
                         time.sleep(self.reaction_delay)
-                    elif expression is "excited":
+                    elif expression == "excited":
                         self.game.feel=EXCITED
                         print("EXCITED")
                         time.sleep(self.reaction_delay)
-                    elif expression is "scared":
+                    elif expression == "scared":
                         self.game.feel=SCARED
                         print("SCARED")
                         time.sleep(self.reaction_delay)

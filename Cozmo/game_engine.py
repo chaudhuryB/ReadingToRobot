@@ -5,6 +5,7 @@ import time
 import threading
 from cozmo.util import degrees, distance_mm
 from random import randint
+from keyboard_control import EmotionController
 
 
 from constants import (
@@ -70,7 +71,7 @@ class ReadEngine:
         """
         self.robot_proxy = CozmoPlayerActions()
 
-        self.read_listener = SpeechReco(self.robot_proxy,
+        self.read_listener = EmotionController(self.robot_proxy,
                                         self)
         if self.robot.is_on_charger:
             self.robot.DriveOffChargerContacts().wait_for_completed()
@@ -149,7 +150,7 @@ class ReadEngine:
 
         except KeyboardInterrupt:
             print("\nInterrupted by user, shutting down")
-            raise
+            raise KeyboardInterrupt
 
         finally:
             if self.read_listener.game_on:
