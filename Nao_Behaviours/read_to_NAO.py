@@ -83,11 +83,11 @@ class HumanListener:
         Executes a robot movement given a set of joint names, angles and times
 
         Args:
-            names (list):   Names of joints to move
-            keys (list):    Each entry contains a list object containing the target positions of
-                            each joint
-            times ([type]): Each entry contains a list object containing the target times for each
-                            joint position
+            names ([string]):   Names of joints to move
+            keys ([[float]]):   Each entry contains a list object containing the target positions of
+                                each joint
+            times ([[float]]):  Each entry contains a list object containing the target times for each
+                                joint position
         """
         try:
             self.movement.angleInterpolation(names, keys, times, abs)
