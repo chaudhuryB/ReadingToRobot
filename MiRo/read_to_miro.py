@@ -1,36 +1,8 @@
 #!/usr/bin/python
 #
-#	@section COPYRIGHT
-#	Copyright (C) 2020 Consequential Robotics Ltd
+# Main script for Reading With Robots and MiRo
 #
-#	@section AUTHOR
-#	Consequential Robotics http://consequentialrobotics.com
-#
-#	@section LICENSE
-#	For a full copy of the license agreement, and a complete
-#	definition of "The Software", see LICENSE in the MDK root
-#	directory.
-#
-#	Subject to the terms of this Agreement, Consequential
-#	Robotics grants to you a limited, non-exclusive, non-
-#	transferable license, without right to sub-license, to use
-#	"The Software" in accordance with this Agreement and any
-#	other written agreement with Consequential Robotics.
-#	Consequential Robotics does not transfer the title of "The
-#	Software" to you; the license granted to you is not a sale.
-#	This agreement is a binding legal agreement between
-#	Consequential Robotics and the purchasers or users of "The
-#	Software".
-#
-#	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
-#	KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-#	WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-#	PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
-#	OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-#	OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-#	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-#	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
+
 
 import os
 import sys
@@ -44,6 +16,8 @@ import geometry_msgs
 import miro2.core.pars as pars
 import miro2 as miro
 from cv_bridge import CvBridge
+
+from keyboard_control import EmotionController
 
 # nodes
 from miro2.core.node_lower import *
@@ -61,7 +35,7 @@ from miro2.core.node_spatial import *
 
 
 
-class DemoPub:
+class Pub:
 
 	def __init__(self, pub, data_type):
 
@@ -86,7 +60,7 @@ class DemoPub:
 
 
 
-class DemoInput:
+class Input:
 
 	def __init__(self):
 
@@ -99,7 +73,7 @@ class DemoInput:
 
 
 
-class DemoState:
+class State:
 
 	def __init__(self, pars):
 
@@ -162,7 +136,7 @@ class DemoState:
 
 
 
-class DemoOutput:
+class Output:
 
 	def __init__(self):
 
@@ -176,7 +150,7 @@ class DemoOutput:
 
 
 
-class DemoNodes:
+class Nodes:
 
 	def __init__(self, client_type):
 
@@ -217,7 +191,7 @@ class DemoNodes:
 
 
 
-class DemoSystem(object):
+class ReadSystem(object):
 
 	def __init__(self, client_type):
 
@@ -235,21 +209,26 @@ class DemoSystem(object):
 
 		# pars
 		self.pars = pars.CorePars()
+		self.pars.express.eyelids_droop_on_touch = 0
 
 		# resources
 		self.bridge = CvBridge()
 
+		# emotion expression management
+		self.emotion = EmotionController(self)
+		self.emotion.start()
+
 		# init ROS
-		rospy.init_node(self.pars.ros.robot_name + "_client_demo_" + client_type, log_level=self.pars.ros.log_level)
+		rospy.init_node(self.pars.ros.robot_name + "_client__" + client_type, log_level=self.pars.ros.log_level)
 		self.topic_base_name = "/" + self.pars.ros.robot_name + "/"
 
 		# subs
 		self.kc_m = miro.utils.kc_interf.kc_miro()
 		self.kc_s = miro.utils.kc_interf.kc_miro()
-		self.input = DemoInput()
-		self.state = DemoState(self.pars)
-		self.output = DemoOutput()
-		self.nodes = DemoNodes(self.client_type)
+		self.input = Input()
+		self.state = State(self.pars)
+		self.output = Output()
+		self.nodes = Nodes(self.client_type)
 
 		# debug
 		if self.pars.dev.START_CAMS_HORIZ:
@@ -414,7 +393,20 @@ class DemoSystem(object):
 
 	def publish(self, topic_name, data_type):
 
-		return DemoPub(rospy.Publisher(self.topic_base_name + topic_name, data_type, queue_size=0, tcp_nodelay=True), data_type)
+		return Pub(rospy.Publisher(self.topic_base_name + topic_name, data_type, queue_size=0, tcp_nodelay=True), data_type)
+
+	def do_feel(self, feeling):
+		if feeling == 1:
+			#TODO move tail
+			self.state.user_touch = 2.0
+			self.state.emotion.valence = 1.0
+			self.state.emotion.arousal = 1.0
+			print "feeling happy"
+		elif feeling == 2:
+			#TODO move head and tail down
+			self.state.emotion.valence = -1.0
+			self.state.emotion.arousal = -1.0
+			print "feeling sad"
 
 	def callback_config_command(self, msg):
 
@@ -497,14 +489,16 @@ class DemoSystem(object):
 
 		# publish flags only if they have changed
 		platform_flags = 0
+		# default flags inlcude disabled cliff reflex, disable wheels and always-enabled emotion
+		platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_CLIFF_REFLEX
+		platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_WHEELS
+		platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_TRANSLATION
+
 		if self.state.user_touch == 0:
 			platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_KIN_IDLE
-		if self.pars.flags.BODY_ENABLE_CLIFF_REFLEX == 0:
-			platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_CLIFF_REFLEX
+
 		if self.pars.flags.BODY_ENABLE_TRANSLATION == 0:
 			platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_TRANSLATION
-		if self.pars.flags.BODY_ENABLE_ROTATION == 0:
-			platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_WHEELS
 		if self.platform_flags != platform_flags:
 			print "publishing flags", "{0:08x}".format(platform_flags)
 			self.platform_flags = platform_flags
@@ -530,12 +524,14 @@ class DemoSystem(object):
 		# to use the same configuration as the main node (even if it changes
 		# at runtime).
 		self.output.animal_state.flags = 0
-		if self.pars.flags.EXPRESS_THROUGH_VOICE != 0:
-			self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
+
+		# Uncomment this to allow vocalization
+		# if self.pars.flags.EXPRESS_THROUGH_VOICE != 0:
+		# 	 self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
 		if self.pars.flags.EXPRESS_THROUGH_NECK != 0:
 			self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_NECK
-		if self.pars.flags.EXPRESS_THROUGH_WHEELS != 0:
-			self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
+		#if self.pars.flags.EXPRESS_THROUGH_WHEELS != 0:
+		#	self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
 		if self.pars.flags.SALIENCE_FROM_MOTION != 0:
 			self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_MOTION
 		if self.pars.flags.SALIENCE_FROM_BALL != 0:
@@ -546,6 +542,7 @@ class DemoSystem(object):
 			self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_SOUND
 		if self.pars.flags.SALIENCE_FROM_APRIL != 0:
 			self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_APRIL
+
 
 		# publish core states
 		self.pub_animal_state.publish()
@@ -892,7 +889,7 @@ class DemoSystem(object):
 				print np.array(tt)
 
 	def term(self):
-
+		self.emotion.stop()
 		# remove state file
 		os.remove(self.demo_state_filename)
 
@@ -923,7 +920,7 @@ if len(sys.argv) > 2:
 ################ MAIN ################
 
 # instantiate
-demo = DemoSystem(client_type)
+demo = ReadSystem(client_type)
 
 # execute
 demo.loop()
