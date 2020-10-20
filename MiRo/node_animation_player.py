@@ -26,11 +26,20 @@ class Trajectory:
         self.process_anim_cmds()
 
     def get_cmd_vel(self, t):
-        # For now, the trajectory will keep a constant speed between positions.
-        for i, cmd in enumerate(self.anim_cmds):
+        """
+            Target angle generation.
+            For now, the trajectory will keep a constant speed between positions.
+            We can also assume that there won't be simultaneous animations
+        Args:
+            t (float): current time relative to animation start
+
+        Returns:
+            Tuple[float, bool]: Returns the target position, plus a bool indicating if the animation has ended.
+        """
+        for i, speed in enumerate(self.anim_cmds):
             if self.times[i+1] > t:
-                return cmd
-        return None
+                return t * speed, False
+        return t * speed, True
 
     def process_anim_cmds(self):
         cmds = []
@@ -60,10 +69,11 @@ class EmptyTrajectory(Trajectory):
         super(EmptyTrajectory, self).__init__([0.0], [0.0])
 
     def initialize(self, current_pose):
+        self.run_angles = current_pose
         pass
 
     def get_cmd_vel(self):
-        return None
+        return self.run_angles, True
 
 
 class Animation:
@@ -94,20 +104,20 @@ class Animation:
             self.trajectories[name].initialize(cosmetic[self.kinematic_name_idx[name]])
 
     def get_commands(self):
-        jnts = []
+        kin_j, cos_j = [0.0]*4, [0.0]*6
         dt = (datetime.datetime.now() - self.ref_time).total_seconds()
         finished = True
         for traj in self.trajectories:
-            cmd = traj.get_cmd_vel(dt)
-            if cmd is None:
-                jnts.append(0.0)
-            else:
-                jnts.append(cmd)
-                finished = False
+            cmd, t_ended = self.trajectories[traj].get_cmd_vel(dt)
+            finished &= t_ended
+            if traj in self.cosmetic_name_idx:
+                cos_j[self.cosmetic_name_idx[traj]] = cmd
+            elif traj in self.kinematic_name_idx:
+                kin_j[self.kinematic_name_idx[traj]] = cmd
         if finished:
             return None
         else:
-            return jnts
+            return kin_j, cos_j
 
     @classmethod
     def from_dict(cls, data):
@@ -143,7 +153,11 @@ class NodeAnimationPlayer(node.Node):
             if self.playing_animations:
                 self.current_animation = self.playing_animations.pop(0)
                 self.current_animation.initialize(self.sys.input.sensors_package.kinematic_joints.position)
-            else:
-                return
+
         else:
-            kin_jnt, cos_jnt = self.current_animation.get_commands()
+            cmds = self.current_animation.get_commands()
+            if cmds:
+                # TODO: add logic to push comands into kinematic and cosmetic joints.
+                pass
+            else:
+                self.current_animation = None
