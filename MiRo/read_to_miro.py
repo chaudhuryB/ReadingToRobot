@@ -6,7 +6,6 @@
 
 import copy
 import os
-import sys
 import time
 
 import numpy as np
@@ -25,18 +24,12 @@ from keyboard_control import EmotionController
 
 # nodes
 from miro2.core.node_lower import NodeLower
-from miro2.core.node_decode import NodeDecode
 from miro2.core.node_affect import NodeAffect
 from miro2.core.node_express import NodeExpress
 from miro2.core.node_action import NodeAction
 from miro2.core.node_loop import NodeLoop
 
 # Perception nodes
-from miro2.core.node_detect_april import NodeDetectApril
-from miro2.core.node_detect_motion import NodeDetectMotion
-from miro2.core.node_detect_ball import NodeDetectBall
-from miro2.core.node_detect_face import NodeDetectFace
-from miro2.core.node_detect_audio import NodeDetectAudio
 from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from miro2.core.node_spatial import NodeSpatial
 
@@ -153,58 +146,25 @@ class Output:
 
 
 class Nodes:
-
-    def __init__(self, client_type):
-
-        self.client_type = client_type
-
-    def instantiate(self, sys):
-
-        # instantiate
-        if self.client_type == "main":
-            self.lower = NodeLower(sys)
-            self.affect = NodeAffect(sys)
-            self.express = NodeExpress(sys)
-            self.action = NodeAction(sys)
-            self.loop = NodeLoop(sys)
-            self.spatial = NodeSpatial(sys)
-
-        # instantiate
-        if self.client_type == "camera":
-            self.decode = NodeDecode(sys)
-            self.detect_april = NodeDetectApril(sys)
-            self.detect_motion = NodeDetectMotion(sys)
-            self.detect_face = NodeDetectFace(sys)
-            self.detect_ball = NodeDetectBall(sys)
-
-        # instantiate
-        if self.client_type == "mics":
-            self.detect_audio = NodeDetectAudio(sys)
+    def instantiate(self, app):
+        self.lower = NodeLower(app)
+        self.affect = NodeAffect(app)
+        self.express = NodeExpress(app)
+        self.action = NodeAction(app)
+        self.loop = NodeLoop(app)
+        self.spatial = NodeSpatial(app)
 
     def tick(self):
-
-        # tick
-        if self.client_type == "main":
-            self.lower.tick()
-            self.affect.tick()
-            self.express.tick()
-            self.action.tick()
-            self.loop.tick()
+        self.lower.tick()
+        self.affect.tick()
+        self.express.tick()
+        self.action.tick()
+        self.loop.tick()
 
 
 class ReadSystem(object):
 
-    def __init__(self, client_type):
-
-        # client type
-        self.client_type = client_type
-        if client_type == "caml" or client_type == "camr":
-            self.client_type = "camera"
-            self.camera_sub = client_type[-1:]
-            self.stream_index = 0
-            if client_type == "camr":
-                self.stream_index = 1
-
+    def __init__(self):
         # config
         self.use_external_kc = False
 
@@ -220,7 +180,7 @@ class ReadSystem(object):
         self.emotion.start()
 
         # init ROS
-        rospy.init_node(self.pars.ros.robot_name + "_client__" + client_type, log_level=self.pars.ros.log_level)
+        rospy.init_node(self.pars.ros.robot_name + "_client_main", log_level=self.pars.ros.log_level)
         self.topic_base_name = "/" + self.pars.ros.robot_name + "/"
 
         # subs
@@ -229,7 +189,7 @@ class ReadSystem(object):
         self.input = Input()
         self.state = State(self.pars)
         self.output = Output()
-        self.nodes = Nodes(self.client_type)
+        self.nodes = Nodes()
 
         # debug
         if self.pars.dev.START_CAMS_HORIZ:
@@ -255,73 +215,48 @@ class ReadSystem(object):
         # ROS interfaces
         self.sub = []
 
-        # select client type
-        if self.client_type == "main":
+        # publish priority
+        self.pub_pri = [
+            self.publish('core/pril', sensor_msgs.msg.Image),
+            self.publish('core/prir', sensor_msgs.msg.Image),
+            self.publish('core/priw', sensor_msgs.msg.Image)
+            ]
 
-            # publish priority
-            self.pub_pri = [
-                self.publish('core/pril', sensor_msgs.msg.Image),
-                self.publish('core/prir', sensor_msgs.msg.Image),
-                self.publish('core/priw', sensor_msgs.msg.Image)
-                ]
+        # publish control outputs
+        self.pub_cos = self.publish('control/cosmetic_joints', std_msgs.msg.Float32MultiArray)
+        self.pub_illum = self.publish('control/illum', std_msgs.msg.UInt32MultiArray)
 
-            # publish control outputs
-            self.pub_cos = self.publish('control/cosmetic_joints', std_msgs.msg.Float32MultiArray)
-            self.pub_illum = self.publish('control/illum', std_msgs.msg.UInt32MultiArray)
+        # publish core states
+        self.pub_animal_state = self.publish('core/animal/state', miro.msg.animal_state)
+        self.pub_sel_prio = self.publish('core/selection/priority', std_msgs.msg.Float32MultiArray)
+        self.pub_sel_inhib = self.publish('core/selection/inhibition', std_msgs.msg.Float32MultiArray)
 
-            # publish core states
-            self.pub_animal_state = self.publish('core/animal/state', miro.msg.animal_state)
-            self.pub_sel_prio = self.publish('core/selection/priority', std_msgs.msg.Float32MultiArray)
-            self.pub_sel_inhib = self.publish('core/selection/inhibition', std_msgs.msg.Float32MultiArray)
+        # reference core states output messages in output array
+        self.output.animal_state = self.pub_animal_state.msg
+        self.output.sel_prio = self.pub_sel_prio.msg
+        self.output.sel_inhib = self.pub_sel_inhib.msg
 
-            # reference core states output messages in output array
-            self.output.animal_state = self.pub_animal_state.msg
-            self.output.sel_prio = self.pub_sel_prio.msg
-            self.output.sel_inhib = self.pub_sel_inhib.msg
+        # publish
+        self.pub_flags = self.publish('control/flags', std_msgs.msg.UInt32)
+        self.pub_tone = self.publish('control/tone', std_msgs.msg.UInt16MultiArray)
 
-            # publish
-            self.pub_flags = self.publish('control/flags', std_msgs.msg.UInt32)
-            self.pub_tone = self.publish('control/tone', std_msgs.msg.UInt16MultiArray)
+        # publish motor output
+        if self.use_external_kc:
+            self.pub_push = self.publish('core/mpg/push', miro.msg.push)
+            self.pub_reset = self.publish('core/mpg/reset', std_msgs.msg.UInt32)
+        else:
+            self.pub_kin = self.publish('control/kinematic_joints', sensor_msgs.msg.JointState)
+            self.pub_kin.msg.name = ['tilt', 'lift', 'yaw', 'pitch']
+            self.pub_cmd_vel = self.publish('control/cmd_vel', geometry_msgs.msg.TwistStamped)
 
-            # publish motor output
-            if self.use_external_kc:
-                self.pub_push = self.publish('core/mpg/push', miro.msg.push)
-                self.pub_reset = self.publish('core/mpg/reset', std_msgs.msg.UInt32)
-            else:
-                self.pub_kin = self.publish('control/kinematic_joints', sensor_msgs.msg.JointState)
-                self.pub_kin.msg.name = ['tilt', 'lift', 'yaw', 'pitch']
-                self.pub_cmd_vel = self.publish('control/cmd_vel', geometry_msgs.msg.TwistStamped)
+        # publish config
+        self.pub_config = self.publish('core/config/state', std_msgs.msg.String)
 
-            # publish config
-            self.pub_config = self.publish('core/config/state', std_msgs.msg.String)
+        # publish audio
+        self.pub_stream = self.publish('control/stream', std_msgs.msg.Int16MultiArray)
 
-            # publish audio
-            self.pub_stream = self.publish('control/stream', std_msgs.msg.Int16MultiArray)
-
-            # publish debug states JIT
-            self.pub_pri_peak = None
-
-        # select client type
-        if self.client_type == "camera":
-
-            # publish object detector output
-            self.pub_obj = self.publish('core/detect_objects_' + self.camera_sub, miro.msg.objects)
-
-            # publish motion detector output
-            self.pub_mov = self.publish('core/detect_motion_' + self.camera_sub, sensor_msgs.msg.Image)
-
-            # publish command so we can reconfigure cameras
-            self.pub_command = self.publish('control/command', std_msgs.msg.String)
-
-            # publish debug states JIT
-            self.pub_bal = None
-
-        # select client type
-        if self.client_type == "mics":
-
-            # publish
-            self.pub_mics = self.publish('core/detect_audio_event', std_msgs.msg.Float32MultiArray)
-            self.pub_level = self.publish('core/audio_level', std_msgs.msg.Float32MultiArray)
+        # publish debug states JIT
+        self.pub_pri_peak = None
 
         # instantiate nodes
         self.nodes.instantiate(self)
@@ -340,48 +275,28 @@ class ReadSystem(object):
         self.demo_state_filename = os.getenv("MIRO_DIR_STATE") + "/client_demo.state"
         self.state_file_contents = ""
 
-        # select client type
-        if self.client_type == "main":
-
-            # subscribe
-            self.subscribe('sensors/package', miro.msg.sensors_package, self.callback_sensors_package)
-            self.subscribe('core/voice_state', miro.msg.voice_state, self.callback_voice_state)
-            self.subscribe('core/detect_motion_l', sensor_msgs.msg.Image, self.callback_movl)
-            self.subscribe('core/detect_motion_r', sensor_msgs.msg.Image, self.callback_movr)
-            self.subscribe('core/detect_objects_l', miro.msg.objects, self.callback_detect_objects)
-            self.subscribe('core/detect_objects_r', miro.msg.objects, self.callback_detect_objects)
-            self.subscribe('core/detect_audio_event', std_msgs.msg.Float32MultiArray, self.callback_audio_event)
-            self.subscribe('core/config/command', std_msgs.msg.String, self.callback_config_command)
-            self.subscribe('core/animal/adjust', miro.msg.animal_adjust, self.callback_animal_adjust)
-            self.subscribe('core/audio_level', std_msgs.msg.Float32MultiArray, self.callback_audio_level)
-            self.subscribe('sensors/stream', std_msgs.msg.UInt16MultiArray, self.callback_stream)
-
-        # select client type
-        if self.client_type == "camera":
-
-            # subscribe
-            self.subscribe('sensors/cam' + self.camera_sub, sensor_msgs.msg.Image, self.callback_cam)
-            self.subscribe('core/animal/state', miro.msg.animal_state, self.callback_animal_state)
-
-        # select client type
-        if self.client_type == "mics":
-
-            # subscribe
-            self.subscribe('sensors/mics', std_msgs.msg.Int16MultiArray, self.callback_mics)
-            self.subscribe('core/animal/state', miro.msg.animal_state, self.callback_animal_state)
+        # subscribe
+        self.subscribe('sensors/package', miro.msg.sensors_package, self.callback_sensors_package)
+        self.subscribe('core/voice_state', miro.msg.voice_state, self.callback_voice_state)
+        self.subscribe('core/detect_motion_l', sensor_msgs.msg.Image, self.callback_movl)
+        self.subscribe('core/detect_motion_r', sensor_msgs.msg.Image, self.callback_movr)
+        self.subscribe('core/detect_objects_l', miro.msg.objects, self.callback_detect_objects)
+        self.subscribe('core/detect_objects_r', miro.msg.objects, self.callback_detect_objects)
+        self.subscribe('core/detect_audio_event', std_msgs.msg.Float32MultiArray, self.callback_audio_event)
+        self.subscribe('core/config/command', std_msgs.msg.String, self.callback_config_command)
+        self.subscribe('core/animal/adjust', miro.msg.animal_adjust, self.callback_animal_adjust)
+        self.subscribe('core/audio_level', std_msgs.msg.Float32MultiArray, self.callback_audio_level)
+        self.subscribe('sensors/stream', std_msgs.msg.UInt16MultiArray, self.callback_stream)
 
         # wait for connection before moving off
         print "waiting for connection..."
         time.sleep(1)
 
-        # select client type
-        if self.client_type == "main":
-
-            # reset body (dev only)
-            if self.use_external_kc:
-                print "**** RESET BODY DEV ONLY ****"
-                # self.pub_reset.msg.data = 1;
-                self.pub_reset.publish()
+        # reset body (dev only)
+        if self.use_external_kc:
+            print "**** RESET BODY DEV ONLY ****"
+            # self.pub_reset.msg.data = 1;
+            self.pub_reset.publish()
 
         # set active
         self.active = True
@@ -692,95 +607,6 @@ class ReadSystem(object):
 
         self.callback_mov(1, msg)
 
-    def callback_cam(self, msg):
-
-        stream_index = self.stream_index
-
-        if not self.active:
-            return
-
-        if self.active_counter == 0:
-            return
-
-        self.active_counter -= 1
-        if self.active_counter == 0:
-            print "going inactive..."
-            return
-
-        if self.timing0 is not None:
-            self.timing[1].append(time.time() - self.timing0)
-
-        # tick decode
-        result = self.nodes.decode.tick_camera(stream_index, msg)
-
-        # if resize required
-        if result == -1:
-
-            # tick_camera returns true to indicate the frame
-            # was the wrong size and we need to reconfigure
-            if self.stream_index == 0:
-
-                # only caml sends the command to reconfigure
-                print "reconfiguring cameras..."
-                self.pub_command.msg.data = "frame=360w@10;jpeg=75"
-                self.pub_command.publish()
-
-            # either camera ends processing there
-            return
-
-        # if otherwise failed
-        if result == 0:
-
-            # fail silently
-            return
-
-        # detect objects output message
-        msg_obj = miro.msg.objects()
-        msg_obj.stream_index = stream_index
-
-        # tick april
-        if self.animal_flags & miro.constants.ANIMAL_DETECT_APRIL:
-            self.nodes.detect_april.tick_camera(stream_index, msg_obj)
-
-        # tick face
-        if self.animal_flags & miro.constants.ANIMAL_DETECT_FACE:
-            self.nodes.detect_face.tick_camera(stream_index, msg_obj)
-
-        # tick ball
-        if self.animal_flags & miro.constants.ANIMAL_DETECT_BALL:
-            self.nodes.detect_ball.tick_camera(stream_index, msg_obj)
-
-        # publish detected objects
-        self.pub_obj.publish_this(msg_obj)
-
-        # tick motion
-        #
-        # NB: we have to /publish/ a frame whether we compute motion or
-        # not because it is arrival of this frame that triggers the
-        # spatial pipeline in the main node
-        detect_motion = self.animal_flags & miro.constants.ANIMAL_DETECT_MOTION
-        self.nodes.detect_motion.tick_camera(stream_index, detect_motion)
-        frame_mov = self.state.frame_mov[stream_index]
-        if frame_mov is not None:
-            msg = self.bridge.cv2_to_imgmsg(frame_mov, encoding='mono8')
-            self.pub_mov.pub.publish(msg)
-
-        # dev
-        if self.pars.dev.SEND_DEBUG_TOPICS:
-
-            # publish ball detector state (debug)
-            if self.pub_bal is None:
-                self.pub_bal = self.publish('core/debug_ball_' + self.camera_sub, sensor_msgs.msg.Image)
-
-            # publish
-            frame_bal = self.state.frame_bal[stream_index]
-            if frame_bal is not None:
-                msg = self.bridge.cv2_to_imgmsg(frame_bal, encoding='mono8')
-                self.pub_bal.pub.publish(msg)
-
-        if self.timing0 is not None:
-            self.timing[1].append(time.time() - self.timing0)
-
     def callback_voice_state(self, msg):
 
         if not self.active:
@@ -796,58 +622,11 @@ class ReadSystem(object):
             file.write(x)
         """
 
-    def callback_mics(self, msg):
-
-        if not self.active:
-            return
-
-        if self.active_counter == 0:
-            return
-
-        self.active_counter -= 1
-        if self.active_counter == 0:
-            print "going inactive..."
-            return
-
-        if self.timing0 is not None:
-            self.timing[2].append(time.time() - self.timing0)
-
-        if len(msg.data) != 2000:
-            print "bad data size in mics message"
-            return
-
-        self.input.mics = msg
-
-        (event, level) = self.nodes.detect_audio.tick_mics()
-
-        if event is not None:
-            self.pub_mics.msg.data = [event.azim, event.elev, event.level]
-            self.pub_mics.publish()
-
-        self.pub_level.msg.data = level
-        self.pub_level.publish()
-
-        if self.timing0 is not None:
-            self.timing[2].append(time.time() - self.timing0)
-
     def callback_audio_event(self, msg):
 
         q = DetectAudioEvent(msg.data)
         self.state.audio_events_for_spatial.append(q)
         self.state.audio_events_for_50Hz.append(q)
-
-    def callback_animal_state(self, msg):
-
-        if self.active_counter == 0:
-            print "going active..."
-
-        # this is used only to cause the background nodes to go active
-        # when the foreground node "main" starts running, and vice versa
-        self.active_counter = 50
-
-        # and also to synchronize our processing configuration with the
-        # main node by copying their animal flags
-        self.animal_flags = msg.flags
 
     def loop(self):
 
@@ -856,12 +635,6 @@ class ReadSystem(object):
 
             # sleepy time
             time.sleep(0.1)
-
-            # check run file
-            if run_file is not None:
-                if not os.path.isfile(run_file):
-                    print "run file disappeared, exiting..."
-                    break
 
             # check dev stop
             if self.pars.dev.DEBUG_AUTO_STOP:
@@ -894,34 +667,12 @@ class ReadSystem(object):
         os.remove(self.demo_state_filename)
 
 
-# ############### ARGS ################
+if __name__ == "__main__":
+    # instantiate
+    app = ReadSystem()
 
-# when running on board, the single argument may indicate the
-# run file; if so, we should exit if this file disappears
-run_file = None
-if len(sys.argv) > 1:
-    run_file = sys.argv[1]
+    # execute
+    app.loop()
 
-    # special run_file "-" means do not use
-    if run_file == "-":
-        run_file = None
-
-# a second argument determines which client to run
-client_type = "main"
-if len(sys.argv) > 2:
-    client_type = sys.argv[2]
-    if not (client_type == "caml" or client_type == "camr" or client_type == "mics"):
-        print "unrecognised client type"
-        exit()
-
-
-# ############### MAIN ################
-
-# instantiate
-demo = ReadSystem(client_type)
-
-# execute
-demo.loop()
-
-# terminate
-demo.term()
+    # terminate
+    app.term()
