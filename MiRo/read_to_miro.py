@@ -5,6 +5,7 @@
 
 
 import copy
+import json
 import os
 import time
 
@@ -32,6 +33,9 @@ from miro2.core.node_loop import NodeLoop
 # Perception nodes
 from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from miro2.core.node_spatial import NodeSpatial
+
+# Local nodes
+from node_animation_player import NodeAnimationPlayer, Animation
 
 
 class Pub:
@@ -153,6 +157,7 @@ class Nodes:
         self.action = NodeAction(app)
         self.loop = NodeLoop(app)
         self.spatial = NodeSpatial(app)
+        self.animation = NodeAnimationPlayer(app)
 
     def tick(self):
         self.lower.tick()
@@ -160,13 +165,36 @@ class Nodes:
         self.express.tick()
         self.action.tick()
         self.loop.tick()
+        self.animation.tick()
+
+
+def load_animations(animation_address=None):
+    if not animation_address:
+        animation_address = os.path.join(os.getcwd(), "animations")
+
+    file_addr = []
+    if os.path.isdir(animation_address):
+        for root, _, files in os.walk(animation_address):
+            for name in files:
+                if name.endswith('.json'):
+                    file_addr.append(os.path.join(root, name))
+
+    animations = {}
+
+    for addr in file_addr:
+        with open(addr, 'r') as f:
+            data = json.load(f)
+            animations[os.path.basename(addr)[:-4]] = Animation.from_dict(data)
+
+    return animations
 
 
 class ReadSystem(object):
 
     def __init__(self):
-        # config
-        self.use_external_kc = False
+        # config animations
+        self.animation_running = False
+        self.animations = load_animations()
 
         # pars
         self.pars = pars.CorePars()
@@ -241,13 +269,9 @@ class ReadSystem(object):
         self.pub_tone = self.publish('control/tone', std_msgs.msg.UInt16MultiArray)
 
         # publish motor output
-        if self.use_external_kc:
-            self.pub_push = self.publish('core/mpg/push', miro.msg.push)
-            self.pub_reset = self.publish('core/mpg/reset', std_msgs.msg.UInt32)
-        else:
-            self.pub_kin = self.publish('control/kinematic_joints', sensor_msgs.msg.JointState)
-            self.pub_kin.msg.name = ['tilt', 'lift', 'yaw', 'pitch']
-            self.pub_cmd_vel = self.publish('control/cmd_vel', geometry_msgs.msg.TwistStamped)
+        self.pub_kin = self.publish('control/kinematic_joints', sensor_msgs.msg.JointState)
+        self.pub_kin.msg.name = ['tilt', 'lift', 'yaw', 'pitch']
+        self.pub_cmd_vel = self.publish('control/cmd_vel', geometry_msgs.msg.TwistStamped)
 
         # publish config
         self.pub_config = self.publish('core/config/state', std_msgs.msg.String)
@@ -292,12 +316,6 @@ class ReadSystem(object):
         print "waiting for connection..."
         time.sleep(1)
 
-        # reset body (dev only)
-        if self.use_external_kc:
-            print "**** RESET BODY DEV ONLY ****"
-            # self.pub_reset.msg.data = 1;
-            self.pub_reset.publish()
-
         # set active
         self.active = True
 
@@ -321,9 +339,7 @@ class ReadSystem(object):
             print "feeling happy"
         elif feeling == 2:
             # TODO move head and tail down
-            self.state.emotion.valence = -1.0
-            self.state.emotion.arousal = -1.0
-            print "feeling sad"
+            self.nodes.animation.play_animation(self.animations['sad'])
 
     def callback_config_command(self, msg):
 
@@ -467,14 +483,11 @@ class ReadSystem(object):
         self.pub_sel_inhib.publish()
 
         # publish motor output
-        if self.use_external_kc:
-            for push in self.output.pushes:
-                msg = self.pub_push.msg
-                msg.pushpos = geometry_msgs.msg.Vector3(push.pos[0], push.pos[1], push.pos[2])
-                msg.pushvec = geometry_msgs.msg.Vector3(push.vec[0], push.vec[1], push.vec[2])
-                msg.flags = push.flags
-                msg.link = push.link
-                self.pub_push.publish()
+        if self.animation_running:
+            config = self.nodes.animation.get_config()
+            self.pub_kin.msg.position = config
+            self.pub_kin.publish()
+
         else:
             # get config & dpose from kc
             config = self.kc_m.getConfig()

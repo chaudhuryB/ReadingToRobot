@@ -1,0 +1,18 @@
+{
+    "tail_droop": {
+        "time": [1, 2, 3],
+        "position": [0.5, -0.5, 0.0]
+    },
+    "eyel": {
+        "time": [1, 2, 3],
+        "position": [-1, -2, -3]
+    },
+    "eyer": {
+        "time": [1, 2, 3],
+        "position": [-1, -2, -3]
+    },
+    "lift": {
+        "time": [1, 2, 3],
+        "position": [-1, -2, -3]
+    }
+}

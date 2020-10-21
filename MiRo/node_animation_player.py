@@ -1,6 +1,7 @@
 
 import datetime
 from miro2.core import node
+from miro2.utils import kc
 
 
 class Trajectory:
@@ -136,14 +137,20 @@ class Animation:
 
 
 class NodeAnimationPlayer(node.Node):
-    def __init__(self, sys):
-        super(NodeAnimationPlayer, self).__init__(sys, 'AnimationPlayer')
+    def __init__(self, app):
+        super(NodeAnimationPlayer, self).__init__(app, 'AnimationPlayer')
         self.playing_animations = []
         self.current_animation = None
+        self.animation_running = app.animation_running
+        # Kinematics target joint positions (config in the MDK)
+        self.config = [0.0] * 4
 
     def play_animation(self, anim):
         if self.playing_animations:
             self.playing_animations.append(anim)
+
+    def get_config(self):
+        return self.config
 
     def tick(self):
 
@@ -157,7 +164,9 @@ class NodeAnimationPlayer(node.Node):
         else:
             cmds = self.current_animation.get_commands()
             if cmds:
-                # TODO: add logic to push comands into kinematic and cosmetic joints.
-                pass
+                self.animation_running = True
+                self.config = cmds[0]
+                self.output.cosmetic_joints = cmds[1]
             else:
+                self.animation_running = False
                 self.current_animation = None
