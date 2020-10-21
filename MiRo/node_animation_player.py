@@ -1,7 +1,8 @@
 
 import datetime
+import numpy as np
+
 from miro2.core import node
-from miro2.utils import kc
 
 
 class Trajectory:
@@ -37,17 +38,17 @@ class Trajectory:
         Returns:
             Tuple[float, bool]: Returns the target position, plus a bool indicating if the animation has ended.
         """
-        for i, speed in enumerate(self.anim_cmds):
-            if self.times[i+1] > t:
-                return t * speed, False
-        return t * speed, True
+        for i in xrange(len(self.anim_vels)):
+            if self.run_times[i+1] > t:
+                return self.anim_vels[i] * (t - self.run_times[i]) + self.run_angles[i], False
+        return self.run_angles[i+1], True
 
     def process_anim_cmds(self):
-        cmds = []
+        self.anim_vels = []
         for i in xrange(1, len(self.run_angles)):
             dx = self.run_angles[i] - self.run_angles[i-1]
             dt = self.run_times[i] - self.run_times[i-1]
-            target_speed = (dx) / ()
+            target_speed = dx / dt
 
             if self.min_speed and target_speed < self.min_speed:
                 target_speed = self.min_speed
@@ -56,8 +57,7 @@ class Trajectory:
                 target_speed = self.max_speed
                 self._update_times(dx, dt, self.max_speed, i)
 
-            cmds.append(target_speed)
-        return cmds
+            self.anim_vels.append(target_speed)
 
     def _update_times(self, dx, dt, target, idx):
         time_diff = (dx) / target + dt
@@ -67,13 +67,13 @@ class Trajectory:
 
 class EmptyTrajectory(Trajectory):
     def __init__(self):
-        super(EmptyTrajectory, self).__init__([0.0], [0.0])
+        Trajectory.__init__(self, [0.0], [0.0])
 
     def initialize(self, current_pose):
         self.run_angles = current_pose
         pass
 
-    def get_cmd_vel(self):
+    def get_cmd_vel(self, t):
         return self.run_angles, True
 
 
@@ -130,7 +130,7 @@ class Animation:
             t_, p_ = [], []
             for t, p in zip(data[j]['times'], data[j]['positions']):
                 t_.append(t)
-                p_.append(t)
+                p_.append(p)
             trajectories[j] = Trajectory(angles=p_, times=t_)
 
         return cls(trajectories=trajectories)
@@ -146,8 +146,7 @@ class NodeAnimationPlayer(node.Node):
         self.config = [0.0] * 4
 
     def play_animation(self, anim):
-        if self.playing_animations:
-            self.playing_animations.append(anim)
+        self.playing_animations.append(anim)
 
     def get_config(self):
         return self.config
@@ -159,14 +158,16 @@ class NodeAnimationPlayer(node.Node):
         if not self.current_animation:
             if self.playing_animations:
                 self.current_animation = self.playing_animations.pop(0)
-                self.current_animation.initialize(self.sys.input.sensors_package.kinematic_joints.position)
+                config = self.kc_m.getConfig()
+                self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(), kinematic=config)
 
         else:
             cmds = self.current_animation.get_commands()
             if cmds:
                 self.animation_running = True
                 self.config = cmds[0]
-                self.output.cosmetic_joints = cmds[1]
+                self.output.cosmetic_joints = np.array(cmds[1])
+                print self.output.cosmetic_joints
             else:
                 self.animation_running = False
                 self.current_animation = None

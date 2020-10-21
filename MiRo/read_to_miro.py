@@ -184,7 +184,7 @@ def load_animations(animation_address=None):
     for addr in file_addr:
         with open(addr, 'r') as f:
             data = json.load(f)
-            animations[os.path.basename(addr)[:-4]] = Animation.from_dict(data)
+            animations[os.path.basename(addr)[:-5]] = Animation.from_dict(data)
 
     return animations
 
