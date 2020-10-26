@@ -27,7 +27,7 @@ class Trajectory:
         self.run_times = [0.0] + self.times
         self.process_anim_cmds()
 
-    def get_cmd_vel(self, t):
+    def get_target_pose(self, t):
         """
             Target angle generation.
             For now, the trajectory will keep a constant speed between positions.
@@ -73,11 +73,15 @@ class EmptyTrajectory(Trajectory):
         self.run_angles = current_pose
         pass
 
-    def get_cmd_vel(self, t):
+    def get_target_pose(self, t):
         return self.run_angles, True
 
 
 class Animation:
+
+    cosmetic_name_idx = {'tail_droop': 0, 'tail_wag': 1, 'eyel': 2, 'eyer': 3, 'earl': 4, 'earr': 5}
+    kinematic_name_idx = {'tilt': 0, 'lift': 1, 'yaw': 2, 'pitch': 3}
+
     def __init__(self, trajectories):
         """Robot animation class, containing trajectories for the joints that will be active.
 
@@ -87,34 +91,25 @@ class Animation:
         self.trajectories = trajectories
         self.ref_time = 0.0
 
-        self.cosmetic_name_idx = {'tail_droop': 0, 'tail_wag': 1, 'eyel': 2, 'eyer': 3, 'earl': 4, 'earr': 5}
-        self.kinematic_name_idx = {'tilt': 0, 'lift': 1, 'yaw': 2, 'pitch': 3}
-
-        for name in self.cosmetic_name_idx:
-            if name not in self.trajectories:
-                self.trajectories[name] = EmptyTrajectory()
-        for name in self.kinematic_name_idx:
-            if name not in self.trajectories:
-                self.trajectories[name] = EmptyTrajectory()
-
     def initialize(self, cosmetic, kinematic):
         self.ref_time = datetime.datetime.now()
-        for name in self.cosmetic_name_idx:
-            self.trajectories[name].initialize(cosmetic[self.cosmetic_name_idx[name]])
-        for name in self.kinematic_name_idx:
-            self.trajectories[name].initialize(cosmetic[self.kinematic_name_idx[name]])
+        for j in self.trajectories:
+            if self.trajectories[j]['group'] == 'cosmetic':
+                self.trajectories[j]['traj'].initialize(cosmetic[self.trajectories[j]['idx']])
+            else:
+                self.trajectories[j]['traj'].initialize(kinematic[self.trajectories[j]['idx']])
 
     def get_commands(self):
         kin_j, cos_j = [0.0]*4, [0.0]*6
         dt = (datetime.datetime.now() - self.ref_time).total_seconds()
         finished = True
         for traj in self.trajectories:
-            cmd, t_ended = self.trajectories[traj].get_cmd_vel(dt)
+            cmd, t_ended = self.trajectories[traj]['traj'].get_target_pose(dt)
             finished &= t_ended
-            if traj in self.cosmetic_name_idx:
-                cos_j[self.cosmetic_name_idx[traj]] = cmd
-            elif traj in self.kinematic_name_idx:
-                kin_j[self.kinematic_name_idx[traj]] = cmd
+            if self.trajectories[traj]['group'] == 'cosmetic':
+                cos_j[self.trajectories[traj]['idx']] = cmd
+            else:
+                kin_j[self.trajectories[traj]['idx']] = cmd
         if finished:
             return None
         else:
@@ -126,12 +121,26 @@ class Animation:
         {'joint_a': {'time': [t1, t2, t3], 'position': [p1, p2, p3]}}
         """
         trajectories = {}
-        for j in data:
-            t_, p_ = [], []
-            for t, p in zip(data[j]['times'], data[j]['positions']):
-                t_.append(t)
-                p_.append(p)
-            trajectories[j] = Trajectory(angles=p_, times=t_)
+
+        def gen_traj(index_dict, group):
+            for j in index_dict:
+                t_, p_ = [], []
+                if j in data:
+                    for t, p in zip(data[j]['times'], data[j]['positions']):
+                        t_.append(t)
+                        p_.append(p)
+                    tr = Trajectory(angles=p_, times=t_)
+                else:
+                    tr = EmptyTrajectory()
+
+                trajectories[j] = {
+                    'traj': tr,
+                    'group': group,
+                    'idx': index_dict[j]
+                }
+
+        gen_traj(cls.cosmetic_name_idx, 'cosmetic')
+        gen_traj(cls.kinematic_name_idx, 'kinematic')
 
         return cls(trajectories=trajectories)
 
