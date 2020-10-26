@@ -82,6 +82,8 @@ class State:
         self.camera_model_full = None
         self.camera_model_mini = None
 
+        self.animation_running = False
+
         # system
         self.tick = 0
         self.keep_running = True
@@ -193,7 +195,6 @@ class ReadSystem(object):
 
     def __init__(self):
         # config animations
-        self.animation_running = False
         self.animations = load_animations()
 
         # pars
@@ -332,14 +333,13 @@ class ReadSystem(object):
 
     def do_feel(self, feeling):
         if feeling == 1:
-            # TODO move tail
             self.state.user_touch = 2.0
             self.state.emotion.valence = 1.0
             self.state.emotion.arousal = 1.0
             print "feeling happy"
         elif feeling == 2:
-            # TODO move head and tail down
             self.nodes.animation.play_animation(self.animations['sad'])
+            print "feeling sad"
 
     def callback_config_command(self, msg):
 
@@ -483,7 +483,7 @@ class ReadSystem(object):
         self.pub_sel_inhib.publish()
 
         # publish motor output
-        if self.animation_running:
+        if self.state.animation_running:
             config = self.nodes.animation.get_config()
             self.pub_kin.msg.position = config
             self.pub_kin.publish()

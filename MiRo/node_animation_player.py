@@ -150,7 +150,6 @@ class NodeAnimationPlayer(node.Node):
         super(NodeAnimationPlayer, self).__init__(app, 'AnimationPlayer')
         self.playing_animations = []
         self.current_animation = None
-        self.animation_running = app.animation_running
         # Kinematics target joint positions (config in the MDK)
         self.config = [0.0] * 4
 
@@ -161,22 +160,18 @@ class NodeAnimationPlayer(node.Node):
         return self.config
 
     def tick(self):
-
         """ Calculate next step in the animation."""
-
         if not self.current_animation:
             if self.playing_animations:
                 self.current_animation = self.playing_animations.pop(0)
                 config = self.kc_m.getConfig()
                 self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(), kinematic=config)
-
         else:
             cmds = self.current_animation.get_commands()
             if cmds:
-                self.animation_running = True
+                self.state.animation_running = True
                 self.config = cmds[0]
                 self.output.cosmetic_joints = np.array(cmds[1])
-                print self.output.cosmetic_joints
             else:
-                self.animation_running = False
+                self.state.animation_running = False
                 self.current_animation = None
