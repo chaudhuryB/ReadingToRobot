@@ -1,6 +1,9 @@
 
 import datetime
+import json
 import numpy as np
+import os
+from threading import Lock
 
 from miro2.core import node
 
@@ -23,8 +26,23 @@ class Trajectory:
         self.max_speed = max_speed
 
     def initialize(self, current_pose):
+        """
+        Initialization of the animation, processing the movement from and to the current position into the animation.
+
+        Args:
+            current_pose (float): Current position of the joint, in the relevant units for the joint (degrees, radians,
+                                  meters..)
+        """
         self.run_angles = [current_pose] + self.angles
         self.run_times = [0.0] + self.times
+
+        # If a max limit speed is given, the current position is set as initial and final position, to avoid drastic
+        # movements on the robot.
+        if self.max_speed:
+            self.run_angles += [current_pose]
+            self.run_times += [
+                self._get_time_update(self.run_angles[-1]-self.run_angles[-2], self.max_speed, self.run_times[-1])]
+
         self.process_anim_cmds()
 
     def get_target_pose(self, t):
@@ -53,16 +71,20 @@ class Trajectory:
             if self.min_speed and target_speed < self.min_speed:
                 target_speed = self.min_speed
                 self._update_times(dx, dt, self.min_speed, i)
-            elif self.max_speed and self.target_speed > self.max_speed:
+            elif self.max_speed and target_speed > self.max_speed:
                 target_speed = self.max_speed
                 self._update_times(dx, dt, self.max_speed, i)
 
             self.anim_vels.append(target_speed)
 
     def _update_times(self, dx, dt, target, idx):
-        time_diff = (dx) / target + dt
-        for t in xrange(idx, len(self.run_angles)):
-            self.run_times[idx] += time_diff
+        time_diff = self._get_time_update(dx, target, dt)
+        for t in xrange(idx, len(self.run_times)):
+            self.run_times[t] += time_diff
+
+    @staticmethod
+    def _get_time_update(dx, tgt, dt):
+        return abs(dx / tgt) + dt
 
 
 class EmptyTrajectory(Trajectory):
@@ -116,9 +138,26 @@ class Animation:
             return kin_j, cos_j
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, min_speed=None, max_speed=None):
         """
-        {'joint_a': {'time': [t1, t2, t3], 'position': [p1, p2, p3]}}
+        Loads trajectories defined in json file with the format:
+            {'joint_a': {
+                'min_speed': 0.1,
+                'max_speed': 5.0,
+                'time': [t1, t2, t3,...],
+                'position': [p1, p2, p3,...]},
+             'joint_b': {...},
+             ...
+            }
+        The min_speed and max_speed values are optional, and overriten by the ones specified on this call
+
+        Args:
+            data (Dict): Dict containing json data formatted as indicated.
+            min_speed (float, optional): If specified, the min_speed for all joints will be set to this value.
+            max_speed (float, optional): If specified, the max_speed for all joints will be set to this value.
+
+        Returns:
+            Animation: Animation object containing the target trajectories for all joints.
         """
         trajectories = {}
 
@@ -126,10 +165,12 @@ class Animation:
             for j in index_dict:
                 t_, p_ = [], []
                 if j in data:
+                    mn = min_speed or data[j].get('min_speed')
+                    mx = max_speed or data[j].get('min_speed')
                     for t, p in zip(data[j]['times'], data[j]['positions']):
                         t_.append(t)
                         p_.append(p)
-                    tr = Trajectory(angles=p_, times=t_)
+                    tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx)
                 else:
                     tr = EmptyTrajectory()
 
@@ -152,6 +193,7 @@ class NodeAnimationPlayer(node.Node):
         self.current_animation = None
         # Kinematics target joint positions (config in the MDK)
         self.config = [0.0] * 4
+        self.lock = Lock()
 
     def play_animation(self, anim):
         self.playing_animations.append(anim)
@@ -161,17 +203,52 @@ class NodeAnimationPlayer(node.Node):
 
     def tick(self):
         """ Calculate next step in the animation."""
-        if not self.current_animation:
-            if self.playing_animations:
-                self.current_animation = self.playing_animations.pop(0)
-                config = self.kc_m.getConfig()
-                self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(), kinematic=config)
-        else:
-            cmds = self.current_animation.get_commands()
-            if cmds:
-                self.state.animation_running = True
-                self.config = cmds[0]
-                self.output.cosmetic_joints = np.array(cmds[1])
+        with self.lock:
+            if not self.current_animation:
+                if self.playing_animations:
+                    self.current_animation = self.playing_animations.pop(0)
+                    config = self.kc_m.getConfig()
+                    self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(), kinematic=config)
             else:
-                self.state.animation_running = False
-                self.current_animation = None
+                cmds = self.current_animation.get_commands()
+                if cmds:
+                    self.state.animation_running = True
+                    self.config = cmds[0]
+                    self.output.cosmetic_joints = np.array(cmds[1])
+                else:
+                    self.state.animation_running = False
+                    self.current_animation = None
+
+
+def load_animations(animation_address=None, min_speed=None, max_speed=None):
+    """
+    Loads the animations stored in a given address.
+
+    Args:
+        animation_address (str, optional): Path to animation folder. Defaults to <cwd>/animations.
+        min_speed (float, optional): If specified, the min_speed for all joints will be set to this value.
+        max_speed (float, optional): If specified, the max_speed for all joints will be set to this value.
+
+    Returns:
+        Dict[str, Animation]: Loaded animations
+    """
+    if not animation_address:
+        animation_address = os.path.join(os.getcwd(), "animations")
+
+    file_addr = []
+    if os.path.isdir(animation_address):
+        for root, _, files in os.walk(animation_address):
+            for name in files:
+                if name.endswith('.json'):
+                    file_addr.append(os.path.join(root, name))
+
+    animations = {}
+
+    for addr in file_addr:
+        with open(addr, 'r') as f:
+            data = json.load(f)
+            animations[os.path.basename(addr)[:-5]] = Animation.from_dict(data,
+                                                                          min_speed=min_speed,
+                                                                          max_speed=max_speed)
+
+    return animations

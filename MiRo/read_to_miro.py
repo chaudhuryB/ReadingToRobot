@@ -5,7 +5,6 @@
 
 
 import copy
-import json
 import os
 import time
 
@@ -35,7 +34,7 @@ from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from miro2.core.node_spatial import NodeSpatial
 
 # Local nodes
-from node_animation_player import NodeAnimationPlayer, Animation
+from node_animation_player import NodeAnimationPlayer, load_animations
 
 
 class Pub:
@@ -170,32 +169,11 @@ class Nodes:
         self.animation.tick()
 
 
-def load_animations(animation_address=None):
-    if not animation_address:
-        animation_address = os.path.join(os.getcwd(), "animations")
-
-    file_addr = []
-    if os.path.isdir(animation_address):
-        for root, _, files in os.walk(animation_address):
-            for name in files:
-                if name.endswith('.json'):
-                    file_addr.append(os.path.join(root, name))
-
-    animations = {}
-
-    for addr in file_addr:
-        with open(addr, 'r') as f:
-            data = json.load(f)
-            animations[os.path.basename(addr)[:-5]] = Animation.from_dict(data)
-
-    return animations
-
-
 class ReadSystem(object):
 
     def __init__(self):
         # config animations
-        self.animations = load_animations()
+        self.animations = load_animations(max_speed=0.1)
 
         # pars
         self.pars = pars.CorePars()
