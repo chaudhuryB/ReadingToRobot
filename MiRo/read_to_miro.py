@@ -3,7 +3,7 @@
 # Main script for Reading With Robots and MiRo
 #
 
-
+import argparse
 import copy
 import os
 import time
@@ -171,9 +171,9 @@ class Nodes:
 
 class ReadSystem(object):
 
-    def __init__(self):
+    def __init__(self, animation_dir=None):
         # config animations
-        self.animations = load_animations(max_speed=0.1)
+        self.animations = load_animations(animation_dir, max_speed=0.1)
 
         # pars
         self.pars = pars.CorePars()
@@ -659,8 +659,12 @@ class ReadSystem(object):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('animation_dir', nargs='?', default=os.getcwd())
+    args = parser.parse_args()
+
     # instantiate
-    app = ReadSystem()
+    app = ReadSystem(animation_dir=args.animation_dir)
 
     # execute
     app.loop()

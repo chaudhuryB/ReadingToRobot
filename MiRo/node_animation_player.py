@@ -43,8 +43,7 @@ class Trajectory:
         # movements on the robot.
         if self.return_to_initial_pose:
             self.run_angles += [current_pose]
-            self.run_times += [
-                self._get_time_update(self.run_angles[-1]-self.run_angles[-2], self.max_speed, self.run_times[-1])]
+            self.run_times += [abs(self.run_angles[-1]-self.run_angles[-2]) / self.max_speed + self.run_times[-1]]
 
         self.process_anim_cmds()
 
@@ -72,22 +71,18 @@ class Trajectory:
             target_speed = dx / dt
 
             if self.min_speed and target_speed < self.min_speed:
+                self._update_times(dx, target_speed, self.min_speed, i)
                 target_speed = self.min_speed if target_speed > 0 else -self.min_speed
-                self._update_times(dx, dt, self.min_speed, i+1)
             elif self.max_speed and target_speed > self.max_speed:
+                self._update_times(dx, target_speed, self.max_speed, i)
                 target_speed = self.max_speed if target_speed > 0 else -self.max_speed
-                self._update_times(dx, dt, self.max_speed, i+1)
 
             self.anim_vels.append(target_speed)
 
-    def _update_times(self, dx, dt, target, idx):
-        time_diff = self._get_time_update(dx, target, 0)
+    def _update_times(self, dx, v, target_v, idx):
+        time_diff = dx * (v - target_v) / (v * target_v)
         for t in xrange(idx, len(self.run_times)):
             self.run_times[t] += time_diff
-
-    @staticmethod
-    def _get_time_update(dx, tgt, dt):
-        return abs(dx / tgt) + dt
 
 
 class EmptyTrajectory(Trajectory):
