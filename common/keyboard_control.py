@@ -1,6 +1,7 @@
 from getkey import getkey, keys
 import threading
 
+
 class feel:
     NEUTRAL = 0
     HAPPY = 1
@@ -8,6 +9,7 @@ class feel:
     ANNOYED = 3
     SCARED = 4
     EXCITED = 5
+
 
 class EmotionController(threading.Thread):
     def __init__(self,

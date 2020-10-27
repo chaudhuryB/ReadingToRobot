@@ -1,12 +1,16 @@
-from naoqi import ALProxy, ALModule, ALBroker
+#!/usr/bin/python
+
+from naoqi import ALProxy
 import threading
 import argparse
-import sys, time
+import sys
+import time
 import qi
 import random
 
-from keyboard_control import *
-from nao_expression import *
+from common.keyboard_control import feel, EmotionController
+from NAO.nao_expression import *
+
 
 class HumanListener:
     """
@@ -56,7 +60,6 @@ class HumanListener:
         self.movement.rest()
         self.feel_control.stop()
 
-
     def do_feel(self, feeling=feel.NEUTRAL):
         """
         Calls robot movement based on current feel
@@ -76,7 +79,6 @@ class HumanListener:
 
             elif feeling == feel.SCARED:
                 self.be_scared()
-
 
     def do_action(self, names, keys, times, abs=True):
         """
@@ -120,7 +122,7 @@ class HumanListener:
         """
         while self.running:
             with self.feel_lock:
-                lot = random.randint(0,4)
+                lot = random.randint(0, 4)
                 if lot == 0:
                     names, keys, times = get_background_A()
                     self.do_action(names, keys, times)
@@ -156,14 +158,14 @@ class HumanListener:
         names, keys, times = get_annoyed_movement()
         if self.tracking_face:
             head_n, head_k, head_t = self.get_back_to_target(ret_time=0.8)
-            body_n, body_k, body_t = self.get_back_to_pos(names=names,ret_time=0.8)
+            body_n, body_k, body_t = self.get_back_to_pos(names=names, ret_time=0.8)
             body_n += head_n
             body_k += head_k
             body_t += head_t
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
-            body_n, body_k, body_t = self.get_back_to_pos(names=names,ret_time=0.8)
+            body_n, body_k, body_t = self.get_back_to_pos(names=names, ret_time=0.8)
             body_n += head_n
             body_k += head_k
             body_t += head_t
@@ -272,4 +274,3 @@ if __name__ == "__main__":
         human_greeter.stop()
         motion.rest()
         sys.exit(0)
-

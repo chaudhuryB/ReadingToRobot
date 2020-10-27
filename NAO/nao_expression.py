@@ -99,7 +99,7 @@ def get_sad_movement():
 
 
 #################################################
-## Background movements
+# Background movements
 
 def get_background_A():
     names = list()
@@ -131,6 +131,7 @@ def get_background_A():
     keys.append([0])
 
     return names, keys, times
+
 
 def get_background_B():
     names = list()
@@ -167,6 +168,7 @@ def get_background_B():
 
     return names, keys, times
 
+
 def get_background_C():
     names = list()
     times = list()
@@ -201,6 +203,7 @@ def get_background_C():
     keys.append([-0.750492])
 
     return names, keys, times
+
 
 def get_looking_down():
     names = list()

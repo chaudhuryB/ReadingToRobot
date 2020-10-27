@@ -20,7 +20,7 @@ import miro2.core.pars as pars
 import miro2 as miro
 from cv_bridge import CvBridge
 
-from keyboard_control import EmotionController
+from common.keyboard_control import EmotionController
 
 # nodes
 from miro2.core.node_lower import NodeLower
@@ -34,7 +34,7 @@ from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from miro2.core.node_spatial import NodeSpatial
 
 # Local nodes
-from node_animation_player import NodeAnimationPlayer, load_animations
+from MiRo.node_animation_player import NodeAnimationPlayer, load_animations
 
 
 class Pub:
