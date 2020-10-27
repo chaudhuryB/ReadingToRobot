@@ -9,7 +9,7 @@ from miro2.core import node
 
 
 class Trajectory:
-    def __init__(self, angles, times, min_speed=None, max_speed=None):
+    def __init__(self, angles, times, min_speed=None, max_speed=None, return_to_init=False):
         """
         Class defining the trajectory of a single joint.
 
@@ -18,12 +18,15 @@ class Trajectory:
             times (List[float]): Relative target times corresponding to each target position.
             min_speed (float, optional): Minimal allowed joint speed. No limit is set by default.
             max_speed (float, optional): Maximum allowed joint speed. No limit is set by default.
+            return_to_init (bool, optional): If true, the trajectory will end in the same position as it starts.
+                                             Defaults to False
         """
 
         self.angles = angles
         self.times = times
         self.min_speed = min_speed
         self.max_speed = max_speed
+        self.return_to_initial_pose = return_to_init
 
     def initialize(self, current_pose):
         """
@@ -38,7 +41,7 @@ class Trajectory:
 
         # If a max limit speed is given, the current position is set as initial and final position, to avoid drastic
         # movements on the robot.
-        if self.max_speed:
+        if self.return_to_initial_pose:
             self.run_angles += [current_pose]
             self.run_times += [
                 self._get_time_update(self.run_angles[-1]-self.run_angles[-2], self.max_speed, self.run_times[-1])]
@@ -69,16 +72,16 @@ class Trajectory:
             target_speed = dx / dt
 
             if self.min_speed and target_speed < self.min_speed:
-                target_speed = self.min_speed
-                self._update_times(dx, dt, self.min_speed, i)
+                target_speed = self.min_speed if target_speed > 0 else -self.min_speed
+                self._update_times(dx, dt, self.min_speed, i+1)
             elif self.max_speed and target_speed > self.max_speed:
-                target_speed = self.max_speed
-                self._update_times(dx, dt, self.max_speed, i)
+                target_speed = self.max_speed if target_speed > 0 else -self.max_speed
+                self._update_times(dx, dt, self.max_speed, i+1)
 
             self.anim_vels.append(target_speed)
 
     def _update_times(self, dx, dt, target, idx):
-        time_diff = self._get_time_update(dx, target, dt)
+        time_diff = self._get_time_update(dx, target, 0)
         for t in xrange(idx, len(self.run_times)):
             self.run_times[t] += time_diff
 
@@ -165,12 +168,17 @@ class Animation:
             for j in index_dict:
                 t_, p_ = [], []
                 if j in data:
-                    mn = min_speed or data[j].get('min_speed')
-                    mx = max_speed or data[j].get('min_speed')
+                    mn = max(data[j]['min_speed'], min_speed) \
+                        if min_speed and 'min_speed' in data[j] \
+                        else data[j].get('min_speed') or min_speed
+                    mx = min(data[j]['max_speed'], max_speed) \
+                        if max_speed and 'max_speed' in data[j] \
+                        else data[j].get('max_speed') or max_speed
+                    rti = data[j].get('return_to_initial_pose', False)
                     for t, p in zip(data[j]['times'], data[j]['positions']):
                         t_.append(t)
                         p_.append(p)
-                    tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx)
+                    tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx, return_to_init=rti)
                 else:
                     tr = EmptyTrajectory()
 
