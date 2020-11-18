@@ -152,57 +152,7 @@ class VADAudio(Audio):
                     yield None
                     ring_buffer.clear()
 
-def main(ARGS):
-    # Load DeepSpeech model
-    if os.path.isdir(ARGS.model):
-        model_dir = ARGS.model
-        ARGS.model = os.path.join(model_dir, 'output_graph.pb')
-        ARGS.scorer = os.path.join(model_dir, ARGS.scorer)
-
-    print('Initializing model...')
-    logging.info("ARGS.model: %s", ARGS.model)
-    model = deepspeech.Model(ARGS.model)
-    if ARGS.scorer:
-        logging.info("ARGS.scorer: %s", ARGS.scorer)
-        model.enableExternalScorer(ARGS.scorer)
-
-    # Start audio with VAD
-    vad_audio = VADAudio(aggressiveness=ARGS.vad_aggressiveness,
-                         device=ARGS.device,
-                         input_rate=ARGS.rate,
-                         file=ARGS.file)
-    print("Listening (ctrl-C to exit)...")
-    frames = vad_audio.vad_collector()
-
-    # Stream from microphone to DeepSpeech using VAD
-    spinner = None
-    if not ARGS.nospinner:
-        spinner = Halo(spinner='line')
-    stream_context = model.createStream()
-    wav_data = bytearray()
-    for frame in frames:
-        if frame is not None:
-            if spinner:
-                spinner.start()
-            logging.debug("streaming frame")
-            stream_context.feedAudioContent(np.frombuffer(frame, np.int16))
-            if ARGS.savewav:
-                wav_data.extend(frame)
-        else:
-            if spinner:
-                spinner.stop()
-            logging.debug("end utterence")
-            if ARGS.savewav:
-                vad_audio.write_wav(os.path.join(ARGS.savewav, datetime.now().strftime("savewav_%Y-%m-%d_%H-%M-%S_%f.wav")), wav_data)
-                wav_data = bytearray()
-            text = stream_context.finishStream()
-            print("Recognized: %s" % text)
-            if ARGS.keyboard:
-                from pyautogui import typewrite
-                typewrite(text)
-            stream_context = model.createStream()
-
-if __name__ == '__main__':
+def main():
     DEFAULT_SAMPLE_RATE = 16000
 
     import argparse
@@ -212,24 +162,66 @@ if __name__ == '__main__':
                         help="Set aggressiveness of VAD: an integer between 0 and 3, 0 being the least aggressive about filtering out non-speech, 3 the most aggressive. Default: 3")
     parser.add_argument('--nospinner', action='store_true',
                         help="Disable spinner")
-    parser.add_argument('-w', '--savewav',
-                        help="Save .wav files of utterences to given directory")
-    parser.add_argument('-f', '--file',
-                        help="Read from .wav file instead of microphone")
 
     parser.add_argument('-m', '--model', required=True,
-                        help="Path to the model (protocol buffer binary file, or entire directory containing all standard-named files for model)")
+                        help="Path to the model (protocol buffer binary file)")
     parser.add_argument('-s', '--scorer',
                         help="Path to the external scorer file.")
     parser.add_argument('-d', '--device', type=int, default=None,
                         help="Device input index (Int) as listed by pyaudio.PyAudio.get_device_info_by_index(). If not provided, falls back to PyAudio.get_default_device().")
     parser.add_argument('-r', '--rate', type=int, default=DEFAULT_SAMPLE_RATE,
                         help=f"Input device sample rate. Default: {DEFAULT_SAMPLE_RATE}. Your device may require 44100.")
-    parser.add_argument('-k', '--keyboard', action='store_true',
-                        help="Type output through system keyboard")
-    ARGS = parser.parse_args()
+    parser.add_argument('--hot_words', type=str,
+                        help='Hot-words and their boosts.')
 
-    if ARGS.savewav:
-        os.makedirs(ARGS.savewav, exist_ok=True)
+    args = parser.parse_args()
 
-    main(ARGS)
+    # Load DeepSpeech model
+    print('Initializing model...')
+    logging.info("model: %s", args.model)
+    ds = deepspeech.Model(args.model)
+    if args.scorer:
+        logging.info("scorer: %s", args.scorer)
+        ds.enableExternalScorer(args.scorer)
+
+    if args.hot_words:
+        logging.info('Adding hot-words %s', args.hot_words)
+        for word_boost in args.hot_words.split(','):
+            word,boost = word_boost.split(':')
+            ds.addHotWord(word,float(boost))
+
+    # Start audio with VAD
+    vad_audio = VADAudio(aggressiveness=args.vad_aggressiveness,
+                         device=args.device,
+                         input_rate=args.rate)
+    print("Listening (ctrl-C to exit)...")
+    try:
+        frames = vad_audio.vad_collector()
+
+        # Stream from microphone to DeepSpeech using VAD
+        spinner = None
+        if not args.nospinner:
+            spinner = Halo(spinner='line')
+        stream_context = ds.createStream()
+
+        for frame in frames:
+            if frame is not None:
+                if spinner:
+                    spinner.start()
+                logging.debug("streaming frame")
+                stream_context.feedAudioContent(np.frombuffer(frame, np.int16))
+
+            else:
+                if spinner:
+                    spinner.stop()
+                logging.debug("end utterence")
+                text = stream_context.finishStream()
+                print("Recognized: %s" % text)
+                stream_context = ds.createStream()
+
+    except KeyboardInterrupt:
+        print("Stopping, bye!")
+        return
+
+if __name__ == '__main__':
+    main()
