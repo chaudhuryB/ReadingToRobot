@@ -100,12 +100,28 @@ class Audio(object):
         wf.close()
 
 
-class VADAudio(Audio):
-    """Filter & segment audio with voice activity detection."""
+class ContinuousSpeech(Audio):
+    """ Get and process audio streams continuously.
+        To do this, a thread keeps storing audio in a buffer of size 1 to 5s.
+        Meanwhile, the model processes a previous buffer. Once the processing is done, we swap buffers.
+    """
 
-    def __init__(self, aggressiveness=3, device=None, input_rate=None, file=None):
+    def __init__(self, max_seconds=10, min_seconds=4, aggressiveness=3, device=None, input_rate=None, file=None):
         super().__init__(device=device, input_rate=input_rate, file=file)
         self.vad = webrtcvad.Vad(aggressiveness)
+        self.lock = threading.Lock()
+        self.max_seconds = max_seconds
+        self.min_seconds = min_seconds
+        self.time_window = max_seconds - min_seconds
+        self.wait_time = 1
+        self.main_buffer_size = self.BLOCKS_PER_SECOND * self.max_seconds
+
+        self.main_audio_buffer = []
+        self.pending_audio_queue = queue.Queue()
+        self.sampler_thread = threading.Thread(target=self.audio_sampler)
+
+    def start(self):
+        self.sampler_thread.start()
 
     def frame_generator(self):
         """Generator that yields all audio frames from microphone."""
@@ -115,6 +131,47 @@ class VADAudio(Audio):
         else:
             while True:
                 yield self.read_resampled()
+
+    def audio_sampler(self):
+        """Function storing audio buffers."""
+        triggered = False
+        num_unvoiced = 0
+        for frame in self.frame_generator():
+            # Check for speech around the robot. If there is speech, increase the translation rate.
+            if not self.vad.is_speech(frame, self.sample_rate):
+                if triggered:
+                    num_unvoiced += 1
+                    if num_unvoiced > 50:
+                        with self.lock:
+                            del self.main_audio_buffer[:]
+                        triggered = False
+                        num_unvoiced = 0
+                continue
+
+            triggered = True
+            # Put a new element in buffer.
+            with self.lock:
+                # If buffer is full, extract audio of the first n seconds until buffer size is the minimum again
+                if len(self.main_audio_buffer) > self.main_buffer_size:
+                    self.pending_audio_queue.put(self.main_audio_buffer[0:self.time_window])
+                    del self.main_audio_buffer[0:self.time_window]
+
+                self.main_audio_buffer.append(frame)
+
+    def get_audio(self, time_diff=0):
+        """ Clears part of the time buffer corresponding to the elapsed time (time_diff (seconds)), leaving at least the minimum
+            size. """
+
+        output = None
+        to_clear = max(0, int(len(self.main_audio_buffer)/self.BLOCKS_PER_SECOND - time_diff)) * self.BLOCKS_PER_SECOND
+
+        with self.lock:
+            output = self.main_audio_buffer
+            if to_clear:
+                del self.main_audio_buffer[0:to_clear]
+
+        return output
+
 
     def vad_collector(self, padding_ms=300, ratio=0.75, frames=None):
         """Generator that yields series of consecutive audio frames comprising each utterence, separated by yielding a single None.
@@ -191,33 +248,29 @@ def main():
             ds.addHotWord(word,float(boost))
 
     # Start audio with VAD
-    vad_audio = VADAudio(aggressiveness=args.vad_aggressiveness,
+    vad_audio = ContinuousSpeech(aggressiveness=args.vad_aggressiveness,
                          device=args.device,
                          input_rate=args.rate)
     print("Listening (ctrl-C to exit)...")
     try:
-        frames = vad_audio.vad_collector()
+        vad_audio.start()
+        last_step_time = time.perf_counter()
+        while True:
+            while time.perf_counter() - last_step_time < vad_audio.wait_time:
+                time.sleep(0.01)
+            # Get audio track
+            frames = vad_audio.get_audio(time.perf_counter() - last_step_time)
 
-        # Stream from microphone to DeepSpeech using VAD
-        spinner = None
-        if not args.nospinner:
-            spinner = Halo(spinner='line')
-        stream_context = ds.createStream()
+            # Start stream and timer
+            stream = ds.createStream()
 
-        for frame in frames:
-            if frame is not None:
-                if spinner:
-                    spinner.start()
-                logging.debug("streaming frame")
-                stream_context.feedAudioContent(np.frombuffer(frame, np.int16))
-
-            else:
-                if spinner:
-                    spinner.stop()
-                logging.debug("end utterence")
-                text = stream_context.finishStream()
+            for frame in frames:
+                stream.feedAudioContent(np.frombuffer(frame, np.int16))
+            text = stream.finishStream()
+            stream = ds.createStream()
+            if text:
                 print("Recognized: %s" % text)
-                stream_context = ds.createStream()
+            last_step_time = time.perf_counter()
 
     except KeyboardInterrupt:
         print("Stopping, bye!")
