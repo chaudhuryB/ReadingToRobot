@@ -4,7 +4,8 @@ import cozmo
 import time
 from threading import Lock
 from cozmo.util import degrees, distance_mm
-from ..common.keyboard_control import EmotionController, feel
+from ..common.keyboard_control import EmotionController
+from ..common.feeling_declaration import Feel
 
 from constants import (
                        START_CUBE,
@@ -25,7 +26,7 @@ class ReadEngine:
         self.robot_cubes = []
         self.my_postiion = None
         self.face = None
-        self.feel = feel.NEUTRAL
+        self.feel = Feel.NEUTRAL
         self.lock = Lock()
 
     def tap_ready(self):
@@ -119,29 +120,25 @@ class ReadEngine:
             while True:
                 with self.lock:
                     f = self.feel
-                if f == feel.NEUTRAL:
+                if f == Feel.NEUTRAL:
                     self.robot_proxy.do_listen()
                     time.sleep(1.0)
-                elif f == feel.HAPPY:
+                elif f == Feel.HAPPY:
                     self.robot_proxy.be_happy()
-                elif f == feel.SAD:
+                elif f == Feel.SAD:
                     self.robot_proxy.be_sad()
-                elif f == feel.ANNOYED:
+                elif f == Feel.ANNOYED:
                     self.robot_proxy.be_annoyed()
-                elif f == feel.SCARED:
+                elif f == Feel.SCARED:
                     self.robot_proxy.be_scared()
-                elif f == feel.EXCITED:
+                elif f == Feel.EXCITED:
                     self.robot_proxy.be_excited()
-                """
-                elif f == feel.SLEEPY:
-                    self.robot_proxy.go_to_sleep()
-                    break;
-                """
+
                 with self.lock:
-                    f = feel.NEUTRAL
+                    f = Feel.NEUTRAL
 
         except Exception as e:
-            self.feel = feel.NEUTRAL
+            self.feel = Feel.NEUTRAL
             print(e)
 
         except KeyboardInterrupt:

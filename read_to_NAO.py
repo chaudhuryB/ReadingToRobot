@@ -8,7 +8,8 @@ import time
 import qi
 import random
 
-from common.keyboard_control import feel, EmotionController
+from common.keyboard_control import EmotionController
+from common.feeling_declaration import Feel
 from NAO.nao_expression import *
 
 
@@ -60,24 +61,24 @@ class HumanListener:
         self.movement.rest()
         self.feel_control.stop()
 
-    def do_feel(self, feeling=feel.NEUTRAL):
+    def do_feel(self, feeling=Feel.NEUTRAL):
         """
         Calls robot movement based on current feel
         """
         with self.feel_lock:
-            if feeling == feel.ANNOYED:
+            if feeling == Feel.ANNOYED:
                 self.be_annoyed()
 
-            elif feeling == feel.EXCITED:
+            elif feeling == Feel.EXCITED:
                 self.be_excited()
 
-            elif feeling == feel.HAPPY:
+            elif feeling == Feel.HAPPY:
                 self.be_happy()
 
-            elif feeling == feel.SAD:
+            elif feeling == Feel.SAD:
                 self.be_sad()
 
-            elif feeling == feel.SCARED:
+            elif feeling == Feel.SCARED:
                 self.be_scared()
 
     def do_action(self, names, keys, times, abs=True):

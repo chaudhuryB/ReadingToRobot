@@ -1,7 +1,7 @@
 from getkey import getkey, keys
 import threading
 
-from ..common.feeling_declaration import feel
+from ..common.feeling_declaration import Feel
 
 
 class EmotionController(threading.Thread):
@@ -19,19 +19,19 @@ class EmotionController(threading.Thread):
         while self.is_running:
             key = getkey(blocking=True)
             if key == keys.W:
-                self.robot_proxy.do_feel(feel.HAPPY)
+                self.robot_proxy.do_feel(Feel.HAPPY)
 
             elif key == keys.S:
-                self.robot_proxy.do_feel(feel.SAD)
+                self.robot_proxy.do_feel(Feel.SAD)
 
             elif key == keys.A:
-                self.robot_proxy.do_feel(feel.ANNOYED)
+                self.robot_proxy.do_feel(Feel.ANNOYED)
 
             elif key == keys.D:
-                self.robot_proxy.do_feel(feel.EXCITED)
+                self.robot_proxy.do_feel(Feel.EXCITED)
 
             elif key == keys.X:
-                self.robot_proxy.do_feel(feel.SCARED)
+                self.robot_proxy.do_feel(Feel.SCARED)
 
             elif key == keys.N:
-                self.robot_proxy.do_feel(feel.NEUTRAL)
+                self.robot_proxy.do_feel(Feel.NEUTRAL)
