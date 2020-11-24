@@ -1,14 +1,7 @@
 from getkey import getkey, keys
 import threading
 
-
-class feel:
-    NEUTRAL = 0
-    HAPPY = 1
-    SAD = 2
-    ANNOYED = 3
-    SCARED = 4
-    EXCITED = 5
+from ..common.feeling_declaration import feel
 
 
 class EmotionController(threading.Thread):

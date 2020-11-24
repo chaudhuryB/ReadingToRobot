@@ -64,8 +64,8 @@ class ReadEngine:
         """
         self.robot_proxy = CozmoPlayerActions()
 
-        self.read_listener = EmotionController(self.robot_proxy,
-                                               self)
+        self.read_listener = SpeechReco(self.robot_proxy,
+                                        self)
         if self.robot.is_on_charger:
             self.robot.DriveOffChargerContacts().wait_for_completed()
             robot.drive_straight(distance_mm(800), speed_mmps(500)).wait_for_completed()
