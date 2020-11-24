@@ -72,6 +72,10 @@ class SpeechReco(threading.Thread):
         else:
             self.game.feel = Feel.NEUTRAL
 
+    def stop(self):
+        self.game_on = False
+        self.join()
+
     def run(self):
         self.game_on = True
         print("Say something!")
@@ -94,6 +98,7 @@ class SpeechReco(threading.Thread):
                 if text:
                     self.emotion_from_string(text)
                 last_step_time = time.perf_counter()
+            self.audio_proc.stop()
         except Exception as e:
             self.audio_proc.stop()
             raise e

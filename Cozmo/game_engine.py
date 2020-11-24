@@ -3,20 +3,14 @@ import copy
 import cozmo
 import time
 from threading import Lock
-from cozmo.util import degrees, distance_mm
-from ..common.keyboard_control import EmotionController
+from cozmo import robot
+from cozmo.util import degrees, distance_mm, speed_mmps
+from ..common.voice_recognition import SpeechReco
 from ..common.feeling_declaration import Feel
 
-from constants import (
-                       START_CUBE,
-                       END_CUBE,
-                       RED_LIGHT,
-                       GREEN_LIGHT,
-                       SEA_LIGHT,
-                       CHOICE_TEXT,
-                       )
+from constants import START_CUBE, END_CUBE
+
 from cozmo_listener import CozmoPlayerActions
-from voiceRecognition import SpeechReco
 
 
 class ReadEngine:
@@ -79,9 +73,6 @@ class ReadEngine:
         self.robot.set_head_angle(degrees(0)).wait_for_completed()
         self.robot.move_lift(-3)
         time.sleep(0.5)
-
-        cubes = []
-        faces = []
 
         try:
             self.robot.set_head_angle(cozmo.robot.MAX_HEAD_ANGLE).wait_for_completed()
