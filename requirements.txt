@@ -1,0 +1,5 @@
+deepspeech
+pyaudio
+webrtcvad
+scipy
+cozmo
