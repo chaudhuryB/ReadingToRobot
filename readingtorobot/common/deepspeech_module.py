@@ -11,7 +11,8 @@ import wave
 import webrtcvad
 from scipy import signal
 
-from configuration_loader import load_config_file
+from .configuration_loader import load_config_file
+
 
 logging.basicConfig(level=20)
 DEFAULT_SAMPLE_RATE = 16000
@@ -240,7 +241,11 @@ def load_model(configuration: dict) -> deepspeech.Model:
     if 'scorer' in configuration:
         path = configuration['scorer'].format(DEEPSPEECH_DIR=os.getenv('DEEPSPEECH_DIR', '.'))
         logging.info("scorer: %s", path)
-        ds.enableExternalScorer(path)
+    else:
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources/kenlm.scorer")
+        logging.info("scorer: %s", path)
+
+    ds.enableExternalScorer(path)
 
     if 'hot_words' in configuration:
         logging.info('Adding hot-words %s', configuration['hot_words'])
