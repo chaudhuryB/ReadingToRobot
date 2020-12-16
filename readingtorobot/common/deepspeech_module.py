@@ -150,31 +150,30 @@ class ContinuousSpeech(Audio):
 
     def audio_sampler(self):
         """Function storing audio buffers."""
-        triggered = False
-        num_unvoiced = 0
-        for frame in self.frame_generator():
-            if self.stop:
-                break
-            # Check for speech around the robot. If there is speech, increase the translation rate.
-            if not self.vad.is_speech(frame, self.sample_rate):
-                if triggered:
-                    num_unvoiced += 1
-                    if num_unvoiced > 50:
-                        with self.lock:
-                            del self.main_audio_buffer[:]
-                        triggered = False
-                        num_unvoiced = 0
-                continue
+        while not self.stopped:
+            triggered = False
+            num_unvoiced = 0
+            for frame in self.frame_generator():
+                # Check for speech around the robot. If there is speech, increase the translation rate.
+                if not self.vad.is_speech(frame, self.sample_rate):
+                    if triggered:
+                        num_unvoiced += 1
+                        if num_unvoiced > 50:
+                            with self.lock:
+                                del self.main_audio_buffer[:]
+                            triggered = False
+                            num_unvoiced = 0
+                    continue
 
-            triggered = True
-            # Put a new element in buffer.
-            with self.lock:
-                # If buffer is full, extract audio of the first n seconds until buffer size is the minimum again
-                if len(self.main_audio_buffer) > self.main_buffer_size:
-                    self.pending_audio_queue.put(self.main_audio_buffer[0:self.time_window])
-                    del self.main_audio_buffer[0:self.time_window]
+                triggered = True
+                # Put a new element in buffer.
+                with self.lock:
+                    # If buffer is full, extract audio of the first n seconds until buffer size is the minimum again
+                    if len(self.main_audio_buffer) > self.main_buffer_size:
+                        self.pending_audio_queue.put(self.main_audio_buffer[0:self.time_window])
+                        del self.main_audio_buffer[0:self.time_window]
 
-                self.main_audio_buffer.append(frame)
+                    self.main_audio_buffer.append(frame)
 
     def get_audio(self, time_diff=0):
         """ Clears part of the time buffer corresponding to the elapsed time (time_diff (seconds)), leaving at least the minimum
