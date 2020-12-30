@@ -111,23 +111,26 @@ class ReadEngine:
                     f = self.feel
                 if f == Feel.NEUTRAL:
                     self.robot_proxy.do_listen()
+                    self.do_feel(Feel.NEUTRAL)
                     time.sleep(1.0)
                 elif f == Feel.HAPPY:
                     self.robot_proxy.be_happy()
+                    self.do_feel(Feel.NEUTRAL)
                 elif f == Feel.SAD:
                     self.robot_proxy.be_sad()
+                    self.do_feel(Feel.NEUTRAL)
                 elif f == Feel.ANNOYED:
                     self.robot_proxy.be_annoyed()
+                    self.do_feel(Feel.NEUTRAL)
                 elif f == Feel.SCARED:
                     self.robot_proxy.be_scared()
+                    self.do_feel(Feel.NEUTRAL)
                 elif f == Feel.EXCITED:
                     self.robot_proxy.be_excited()
-
-                with self.lock:
-                    f = Feel.NEUTRAL
+                    self.do_feel(Feel.NEUTRAL)
 
         except Exception as e:
-            self.feel = Feel.NEUTRAL
+            self.do_feel(Feel.NEUTRAL)
             print(e)
 
         except KeyboardInterrupt:

@@ -57,27 +57,27 @@ class SpeechReco(threading.Thread):
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)
         if expression == "happy":
-            self.game.feel = Feel.HAPPY
+            self.game.do_feel(Feel.HAPPY)
             print("HAPPY")
             time.sleep(self.reaction_delay)
         elif expression == "sad":
-            self.game.feel = Feel.SAD
+            self.game.do_feel(Feel.SAD)
             print("SAD")
             time.sleep(self.reaction_delay)
         elif expression == "groan":
-            self.game.feel = Feel.ANNOYED
+            self.game.do_feel(Feel.ANNOYED)
             print("ANNOYED")
             time.sleep(self.reaction_delay)
         elif expression == "excited":
-            self.game.feel = Feel.EXCITED
+            self.game.do_feel(Feel.EXCITED)
             print("EXCITED")
             time.sleep(self.reaction_delay)
         elif expression == "scared":
-            self.game.feel = Feel.SCARED
+            self.game.do_feel(Feel.SCARED)
             print("SCARED")
             time.sleep(self.reaction_delay)
         else:
-            self.game.feel = Feel.NEUTRAL
+            self.game.do_feel(Feel.NEUTRAL)
 
     def stop(self):
         self.game_on = False
