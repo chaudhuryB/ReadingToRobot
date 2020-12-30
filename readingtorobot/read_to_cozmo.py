@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import cozmo
-from Cozmo.game_engine import ReadEngine
+from .Cozmo.game_engine import ReadEngine
 
 
 def cozmo_read_game(robot: cozmo.robot.Robot):

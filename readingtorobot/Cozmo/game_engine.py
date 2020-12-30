@@ -7,10 +7,8 @@ from cozmo import robot
 from cozmo.util import degrees, distance_mm, speed_mmps
 from ..common.voice_recognition import SpeechReco
 from ..common.feeling_declaration import Feel
-
-from constants import START_CUBE, END_CUBE
-
-from cozmo_listener import CozmoPlayerActions
+from .constants import START_CUBE, END_CUBE
+from .cozmo_listener import CozmoPlayerActions
 
 
 class ReadEngine:

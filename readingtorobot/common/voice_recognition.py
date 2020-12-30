@@ -1,10 +1,12 @@
-import threading
+import os
 import time
+import threading
 import numpy as np
 
-from ..common.feeling_declaration import Feel
-from ..common.deepspeech_module import load_model, load_vad
-from ..common.configuration_loader import load_config_file
+from .feeling_declaration import Feel
+from .deepspeech_module import load_model, load_vad
+from .configuration_loader import load_config_file
+
 
 wordlist = {
     'happy': "teeny green stem peeping out pot".split(' ') + "happy day second week".split(' ') +
@@ -36,14 +38,19 @@ def evaluate_text(text):
 class SpeechReco(threading.Thread):
     def __init__(self,
                  robot_proxy,
-                 read_game) -> None:
+                 read_game,
+                 config=None) -> None:
         threading.Thread.__init__(self)
         self.robot_proxy = robot_proxy
         self.game = read_game
         self.game_on = False
         self.not_understood_count = 0
         self.reaction_delay = 1
-        cf = load_config_file("ds_config.json")
+        if config is None:
+            config = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                  "resources/ds_config.json")
+
+        cf = load_config_file(config)
         self.ds = load_model(cf)
         self.audio_proc = load_vad(cf)
 

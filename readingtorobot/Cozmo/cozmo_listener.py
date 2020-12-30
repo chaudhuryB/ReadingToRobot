@@ -5,7 +5,7 @@ from cozmo.util import degrees
 from cozmo import event
 from random import randint, choice
 
-from game_cubes import BlinkyCube
+from .game_cubes import BlinkyCube
 
 
 cozmo.world.World.light_cube_factory = BlinkyCube

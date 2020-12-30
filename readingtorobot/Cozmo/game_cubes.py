@@ -1,7 +1,7 @@
 import asyncio
 import cozmo
 
-from constants import START_CUBE, END_CUBE, RED_LIGHT, SEA_LIGHT
+from .constants import START_CUBE, END_CUBE, RED_LIGHT, SEA_LIGHT
 
 
 class BlinkyCube(cozmo.objects.LightCube):
