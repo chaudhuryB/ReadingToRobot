@@ -116,20 +116,26 @@ class ContinuousSpeech(Audio):
         Meanwhile, the model processes a previous buffer. Once the processing is done, we swap buffers.
     """
 
-    def __init__(self, max_seconds=10, min_seconds=4, aggressiveness=3, device=None, input_rate=None, file=None):
-        super().__init__(device=device, input_rate=input_rate, file=file)
+    def __init__(self,
+                 device=None,
+                 max_seconds=10,
+                 min_seconds=4,
+                 aggressiveness=3,
+                 silence_threshold=1000,
+                 input_rate=None):
+        super().__init__(device=device, input_rate=input_rate)
         self.vad = webrtcvad.Vad(aggressiveness)
         self.lock = threading.Lock()
         self.max_seconds = max_seconds
         self.min_seconds = min_seconds
-        self.time_window = max_seconds - min_seconds
+        self.time_window = (max_seconds - min_seconds) * self.BLOCKS_PER_SECOND
         self.wait_time = 1
         self.main_buffer_size = self.BLOCKS_PER_SECOND * self.max_seconds
 
         self.main_audio_buffer = []
-        self.pending_audio_queue = queue.Queue()
         self.sampler_thread = threading.Thread(target=self.audio_sampler)
         self.stopped = False
+        self.unvoiced_threshold = silence_threshold
 
     def start(self):
         self.stopped = False
@@ -159,7 +165,7 @@ class ContinuousSpeech(Audio):
                 if not self.vad.is_speech(frame, self.sample_rate):
                     if triggered:
                         num_unvoiced += 1
-                        if num_unvoiced > 50:
+                        if num_unvoiced > self.unvoiced_threshold:
                             with self.lock:
                                 del self.main_audio_buffer[:]
                             triggered = False
@@ -171,24 +177,22 @@ class ContinuousSpeech(Audio):
                 with self.lock:
                     # If buffer is full, extract audio of the first n seconds until buffer size is the minimum again
                     if len(self.main_audio_buffer) > self.main_buffer_size:
-                        self.pending_audio_queue.put(self.main_audio_buffer[0:self.time_window])
-                        del self.main_audio_buffer[0:self.time_window]
-
-                    self.main_audio_buffer.append(frame)
+                        del self.main_audio_buffer[self.time_window:]
+                    self.main_audio_buffer.insert(0, frame)
 
     def get_audio(self, time_diff=0):
-        """ Clears part of the time buffer corresponding to the elapsed time (time_diff (seconds)), leaving at least the minimum
-            size. """
+        """ Clears part of the time buffer corresponding to the elapsed time (time_diff (seconds)), leaving at least the
+            minimum size. """
 
         output = None
-        to_clear = max(0, int(len(self.main_audio_buffer)/self.BLOCKS_PER_SECOND - time_diff)) * self.BLOCKS_PER_SECOND
-
+        to_clear = int(self.BLOCKS_PER_SECOND * max(0, (len(self.main_audio_buffer)/self.BLOCKS_PER_SECOND -
+                                                        self.min_seconds - time_diff)))
         with self.lock:
             output = self.main_audio_buffer
             if to_clear:
-                del self.main_audio_buffer[0:to_clear]
+                del self.main_audio_buffer[-to_clear:]
 
-        return output
+        return reversed(output)
 
     def vad_collector(self, padding_ms=300, ratio=0.75, frames=None):
         """ Generator that yields series of consecutive audio frames comprising each utterence, separated by yielding a
@@ -227,6 +231,14 @@ class ContinuousSpeech(Audio):
                     yield None
                     ring_buffer.clear()
 
+    @classmethod
+    def from_json(cls, data):
+        return ContinuousSpeech(max_seconds=data.get('max_seconds', 10),
+                                min_seconds=data.get('min_seconds', 4),
+                                aggressiveness=data.get('vad_aggressiveness', 3),
+                                device=data.get('device', None),
+                                input_rate=data.get('sample_rate', DEFAULT_SAMPLE_RATE))
+
 
 def load_model(configuration: dict) -> deepspeech.Model:
     ds = None
@@ -252,12 +264,6 @@ def load_model(configuration: dict) -> deepspeech.Model:
         for word in configuration['hot_words']:
             ds.addHotWord(word, float(configuration['hot_words'][word]))
     return ds
-
-
-def load_vad(configuration: dict) -> ContinuousSpeech:
-    return ContinuousSpeech(aggressiveness=configuration.get('vad_aggressiveness', 3),
-                            device=configuration.get('device', None),
-                            input_rate=configuration.get('sample_rate', DEFAULT_SAMPLE_RATE))
 
 
 def main():
@@ -313,7 +319,7 @@ def main():
     ds = load_model(configuration)
 
     # Start audio with VAD
-    vad_audio = load_vad(configuration)
+    vad_audio = ContinuousSpeech.from_json(configuration)
 
     print("Listening (ctrl-C to exit)...")
     try:

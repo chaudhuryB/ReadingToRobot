@@ -1,6 +1,5 @@
 {
     "model": "{DEEPSPEECH_DIR}/deepspeech-0.9.1-models.tflite",
-    "scorer": "{DEEPSPEECH_DIR}/deepspeech-0.9.1-models.scorer",
     "vad_aggressiveness": 0,
     "sample_rate": 44100,
     "hot_words": {

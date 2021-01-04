@@ -4,7 +4,7 @@ import threading
 import numpy as np
 
 from .feeling_declaration import Feel
-from .deepspeech_module import load_model, load_vad
+from .deepspeech_module import load_model, ContinuousSpeech
 from .configuration_loader import load_config_file
 
 
@@ -34,8 +34,10 @@ def evaluate_text(text):
     return expression
 
 
-# obtain audio from the microphone
 class SpeechReco(threading.Thread):
+    """
+        Speech recognition module.
+    """
     def __init__(self,
                  robot_proxy,
                  read_game,
@@ -52,7 +54,7 @@ class SpeechReco(threading.Thread):
 
         cf = load_config_file(config)
         self.ds = load_model(cf)
-        self.audio_proc = load_vad(cf)
+        self.audio_proc = ContinuousSpeech.from_json(cf)
 
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)
