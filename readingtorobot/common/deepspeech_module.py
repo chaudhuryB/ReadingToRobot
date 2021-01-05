@@ -10,6 +10,7 @@ import pyaudio
 import wave
 import webrtcvad
 from scipy import signal
+from speech_recognition import AudioData
 
 from .configuration_loader import load_config_file
 
@@ -31,7 +32,6 @@ class Audio(object):
 
     def __init__(self, callback=None, device=None, input_rate=RATE_PROCESS, file=None):
         def proxy_callback(in_data, frame_count, time_info, status):
-            # pylint: disable=unused-argument
             if self.chunk is not None:
                 in_data = self.wf.readframes(self.chunk)
             callback(in_data)
@@ -121,7 +121,7 @@ class ContinuousSpeech(Audio):
                  max_seconds=10,
                  min_seconds=4,
                  aggressiveness=3,
-                 silence_threshold=1000,
+                 silence_threshold=200,
                  input_rate=None):
         super().__init__(device=device, input_rate=input_rate)
         self.vad = webrtcvad.Vad(aggressiveness)
@@ -187,12 +187,21 @@ class ContinuousSpeech(Audio):
         output = None
         to_clear = int(self.BLOCKS_PER_SECOND * max(0, (len(self.main_audio_buffer)/self.BLOCKS_PER_SECOND -
                                                         self.min_seconds - time_diff)))
+        print('clearing: {}, of a total of {}'.format(to_clear, len(self.main_audio_buffer)))
         with self.lock:
             output = self.main_audio_buffer
             if to_clear:
                 del self.main_audio_buffer[-to_clear:]
 
         return reversed(output)
+
+    def frames_to_SR(self, frames):
+        return AudioData(frames, self.sample_rate, self.FORMAT)
+
+    def clear_audio(self):
+        """ Clean up the current window. """
+        with self.lock:
+            del self.main_audio_buffer[:]
 
     def vad_collector(self, padding_ms=300, ratio=0.75, frames=None):
         """ Generator that yields series of consecutive audio frames comprising each utterence, separated by yielding a
@@ -236,6 +245,7 @@ class ContinuousSpeech(Audio):
         return ContinuousSpeech(max_seconds=data.get('max_seconds', 10),
                                 min_seconds=data.get('min_seconds', 4),
                                 aggressiveness=data.get('vad_aggressiveness', 3),
+                                silence_threshold=data.get('silence_threshold', 200),
                                 device=data.get('device', None),
                                 input_rate=data.get('sample_rate', DEFAULT_SAMPLE_RATE))
 

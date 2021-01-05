@@ -2,6 +2,7 @@ import os
 import time
 import threading
 import numpy as np
+import speech_recognition as sr
 
 from .feeling_declaration import Feel
 from .deepspeech_module import load_model, ContinuousSpeech
@@ -36,12 +37,17 @@ def evaluate_text(text):
 
 class SpeechReco(threading.Thread):
     """
-        Speech recognition module.
+        Speech recognition module, using DeepSpeech or Google Cloud Speech API (through the speech_recognition module).
+
+        Interpreter options:
+        - 'ds' : DeepSpeech (default)
+        - 'gc' : Google Cloud Speech API
     """
     def __init__(self,
                  robot_proxy,
                  read_game,
-                 config=None) -> None:
+                 config=None,
+                 interpreter=None) -> None:
         threading.Thread.__init__(self)
         self.robot_proxy = robot_proxy
         self.game = read_game
@@ -53,33 +59,40 @@ class SpeechReco(threading.Thread):
                                   "resources/ds_config.json")
 
         cf = load_config_file(config)
-        self.ds = load_model(cf)
+        if interpreter is None:
+            interpreter = cf.get('interpreter', 'ds')
+
         self.audio_proc = ContinuousSpeech.from_json(cf)
+        self.ds = load_model(cf) if interpreter == 'ds' else sr.Recognizer()
+        print('Finished audio initialization')
 
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)
         if expression == "happy":
             self.game.do_feel(Feel.HAPPY)
             print("HAPPY")
+            self.audio_proc.clear_audio()
             time.sleep(self.reaction_delay)
         elif expression == "sad":
             self.game.do_feel(Feel.SAD)
             print("SAD")
+            self.audio_proc.clear_audio()
             time.sleep(self.reaction_delay)
         elif expression == "groan":
             self.game.do_feel(Feel.ANNOYED)
             print("ANNOYED")
+            self.audio_proc.clear_audio()
             time.sleep(self.reaction_delay)
         elif expression == "excited":
             self.game.do_feel(Feel.EXCITED)
             print("EXCITED")
+            self.audio_proc.clear_audio()
             time.sleep(self.reaction_delay)
         elif expression == "scared":
             self.game.do_feel(Feel.SCARED)
             print("SCARED")
+            self.audio_proc.clear_audio()
             time.sleep(self.reaction_delay)
-        else:
-            self.game.do_feel(Feel.NEUTRAL)
 
     def stop(self):
         self.game_on = False
@@ -96,17 +109,21 @@ class SpeechReco(threading.Thread):
                     time.sleep(0.01)
                 # Get audio track
                 frames = self.audio_proc.get_audio(time.perf_counter() - last_step_time)
+                last_step_time = time.perf_counter()
 
-                # Start stream and timer
-                stream = self.ds.createStream()
+                if isinstance(self.ds, sr.Recognizer):
+                    text = self.ds.recognize_google(self.audio_proc.frames_to_SR(frames))
+                else:
+                    # Start stream
+                    stream = self.ds.createStream()
 
-                for frame in frames:
-                    stream.feedAudioContent(np.frombuffer(frame, np.int16))
-                text = stream.finishStream()
-                stream = self.ds.createStream()
+                    for frame in frames:
+                        stream.feedAudioContent(np.frombuffer(frame, np.int16))
+                    text = stream.finishStream()
+
                 if text:
                     self.emotion_from_string(text)
-                last_step_time = time.perf_counter()
+
             self.audio_proc.stop()
         except Exception as e:
             self.audio_proc.stop()

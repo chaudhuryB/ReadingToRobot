@@ -1,6 +1,8 @@
 {
     "model": "{DEEPSPEECH_DIR}/deepspeech-0.9.1-models.tflite",
+    "interpreter": "ds",
     "vad_aggressiveness": 0,
+    "silence_threshold": 500,
     "sample_rate": 44100,
     "hot_words": {
         "teeny": 10,
