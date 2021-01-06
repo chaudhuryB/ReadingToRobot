@@ -4,31 +4,55 @@ import time
 from cozmo.util import degrees
 from cozmo import event
 from random import randint, choice
+from threading import Thread
+from queue import Queue, Empty
 
 from .game_cubes import BlinkyCube
+from ..common.feeling_declaration import Feel
 
 
 cozmo.world.World.light_cube_factory = BlinkyCube
 
 
-class CozmoPlayerActions(object):
+class CozmoPlayerActions(Thread):
     """
-    A singleton class defining how cozmo will act
+        Thread controlling the robot actions.
     """
+    QUEUE_TIMEOUT = 0.1
 
-    __instance = None
+    def __init__(self):
+        self.queue = Queue()
 
-    def __new__(cls):
-        if not CozmoPlayerActions.__instance:
-            CozmoPlayerActions.__instance = object.__new__(cls)
-            CozmoPlayerActions.__instance.robot = None
-            CozmoPlayerActions.__instance.face = None
-        return CozmoPlayerActions.__instance
-
-    def set_robot(self, game_robot, face):
+    def start(self, game_robot, face):
         self.robot = game_robot
         self.face = face
         self.last_head_position = cozmo.robot.MAX_HEAD_ANGLE
+        self.running_animation = None
+        self.running = True
+        super().start()
+
+    def run(self):
+        while self.running:
+            try:
+                f = self.queue.get(timeout=self.QUEUE_TIMEOUT)
+            except Empty:
+                self.do_listen()
+                continue
+
+            if f == Feel.HAPPY:
+                self.robot_proxy.be_happy()
+            elif f == Feel.SAD:
+                self.robot_proxy.be_sad()
+            elif f == Feel.ANNOYED:
+                self.robot_proxy.be_annoyed()
+            elif f == Feel.SCARED:
+                self.robot_proxy.be_scared()
+            elif f == Feel.EXCITED:
+                self.robot_proxy.be_excited()
+
+    def do_feel(self, feel):
+        self.queue.put(feel)
+        self.running_animation.abort()
 
     def be_sad(self):
         self.play_anim(
@@ -99,10 +123,11 @@ class CozmoPlayerActions(object):
 
     def play_anim(self, anim):
         try:
-            self.robot.play_anim(anim).wait_for_completed()
+            self.running_animation = self.robot.play_anim(anim).wait_for_completed()
+            self.running_animation.wait_for_completed()
         except Exception:
             print("Error while playing animation: " + anim)
-            raise
+            pass
 
     @event.oneshot
     def handle_fist_bump(self, event):

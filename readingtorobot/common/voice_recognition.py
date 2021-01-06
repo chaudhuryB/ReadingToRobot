@@ -44,12 +44,10 @@ class SpeechReco(threading.Thread):
         - 'gc' : Google Cloud Speech API
     """
     def __init__(self,
-                 robot_proxy,
                  read_game,
                  config=None,
                  interpreter=None) -> None:
         threading.Thread.__init__(self)
-        self.robot_proxy = robot_proxy
         self.game = read_game
         self.game_on = False
         self.not_understood_count = 0
@@ -68,31 +66,35 @@ class SpeechReco(threading.Thread):
 
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)
-        if expression == "happy":
-            self.game.do_feel(Feel.HAPPY)
-            print("HAPPY")
-            self.audio_proc.clear_audio()
-            time.sleep(self.reaction_delay)
-        elif expression == "sad":
-            self.game.do_feel(Feel.SAD)
-            print("SAD")
-            self.audio_proc.clear_audio()
-            time.sleep(self.reaction_delay)
-        elif expression == "groan":
-            self.game.do_feel(Feel.ANNOYED)
-            print("ANNOYED")
-            self.audio_proc.clear_audio()
-            time.sleep(self.reaction_delay)
-        elif expression == "excited":
-            self.game.do_feel(Feel.EXCITED)
-            print("EXCITED")
-            self.audio_proc.clear_audio()
-            time.sleep(self.reaction_delay)
-        elif expression == "scared":
-            self.game.do_feel(Feel.SCARED)
-            print("SCARED")
-            self.audio_proc.clear_audio()
-            time.sleep(self.reaction_delay)
+        try:
+            if expression == "happy":
+                self.game.do_feel(Feel.HAPPY)
+                print("HAPPY")
+                self.audio_proc.clear_audio()
+                time.sleep(self.reaction_delay)
+            elif expression == "sad":
+                self.game.do_feel(Feel.SAD)
+                print("SAD")
+                self.audio_proc.clear_audio()
+                time.sleep(self.reaction_delay)
+            elif expression == "groan":
+                self.game.do_feel(Feel.ANNOYED)
+                print("ANNOYED")
+                self.audio_proc.clear_audio()
+                time.sleep(self.reaction_delay)
+            elif expression == "excited":
+                self.game.do_feel(Feel.EXCITED)
+                print("EXCITED")
+                self.audio_proc.clear_audio()
+                time.sleep(self.reaction_delay)
+            elif expression == "scared":
+                self.game.do_feel(Feel.SCARED)
+                print("SCARED")
+                self.audio_proc.clear_audio()
+                time.sleep(self.reaction_delay)
+        except Exception as e:
+            print(e)
+            pass
 
     def stop(self):
         self.game_on = False

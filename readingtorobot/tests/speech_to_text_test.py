@@ -12,7 +12,7 @@ from ..common.voice_recognition import SpeechReco
 
 class SpeechRecoMock(SpeechReco):
     def __init__(self, config=None, interpreter=None):
-        super().__init__(robot_proxy=None, read_game=None, config=config, interpreter=interpreter)
+        super().__init__(read_game=None, config=config, interpreter=interpreter)
 
     @staticmethod
     def emotion_from_string(text):

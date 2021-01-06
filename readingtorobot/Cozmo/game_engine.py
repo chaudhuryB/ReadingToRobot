@@ -57,8 +57,8 @@ class ReadEngine:
         """
         self.robot_proxy = CozmoPlayerActions()
 
-        self.read_listener = SpeechReco(self.robot_proxy,
-                                        self)
+        self.read_listener = SpeechReco(self)
+
         if self.robot.is_on_charger:
             self.robot.DriveOffChargerContacts().wait_for_completed()
             robot.drive_straight(distance_mm(800), speed_mmps(500)).wait_for_completed()
@@ -82,7 +82,7 @@ class ReadEngine:
 
             face = self.robot.world.wait_for_observed_face(timeout=600, include_existing=True)
             self.face = face
-            self.robot_proxy.set_robot(self.robot, self.face)
+            self.robot_proxy.start(self.robot, self.face)
             self.robot.turn_towards_face(face).wait_for_completed()
             self.robot.play_anim("anim_greeting_happy_03").wait_for_completed()
             self.robot.go_to_pose(self.my_position.pose).wait_for_completed()
@@ -99,39 +99,13 @@ class ReadEngine:
         return True
 
     def do_feel(self, feel):
-        with self.lock:
-            self.feel = feel
+        self.robot_proxy.do_feel(feel)
 
     def listen_to_story(self):
         try:
             self.read_listener.game_on = True
             self.read_listener.start()
-            while True:
-                with self.lock:
-                    f = self.feel
-                if f == Feel.NEUTRAL:
-                    self.robot_proxy.do_listen()
-                    time.sleep(1.0)
-                elif f == Feel.HAPPY:
-                    self.robot_proxy.be_happy()
-                    self.do_feel(Feel.NEUTRAL)
-                elif f == Feel.SAD:
-                    self.robot_proxy.be_sad()
-                    self.do_feel(Feel.NEUTRAL)
-                elif f == Feel.ANNOYED:
-                    self.robot_proxy.be_annoyed()
-                    self.do_feel(Feel.NEUTRAL)
-                elif f == Feel.SCARED:
-                    self.robot_proxy.be_scared()
-                    self.do_feel(Feel.NEUTRAL)
-                elif f == Feel.EXCITED:
-                    self.robot_proxy.be_excited()
-                    self.do_feel(Feel.NEUTRAL)
-
-        except Exception as e:
-            self.do_feel(Feel.NEUTRAL)
-            print(e)
-
+            self.read_listener.join()
         except KeyboardInterrupt:
             print("\nInterrupted by user, shutting down")
             raise KeyboardInterrupt
