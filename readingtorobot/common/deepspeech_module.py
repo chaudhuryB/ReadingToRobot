@@ -1,19 +1,18 @@
-import time
-import logging
-import threading
 import collections
-import queue
+import io
+import logging
 import os
+import queue
+import threading
+
 import deepspeech
 import numpy as np
 import pyaudio
 import wave
 import webrtcvad
+
 from scipy import signal
 from speech_recognition import AudioData
-
-from .configuration_loader import load_config_file
-
 
 logging.basicConfig(level=20)
 DEFAULT_SAMPLE_RATE = 16000
@@ -196,7 +195,12 @@ class ContinuousSpeech(Audio):
         return reversed(output)
 
     def frames_to_SR(self, frames):
-        return AudioData(frames, self.sample_rate, self.FORMAT)
+        byte_frames = io.BytesIO()
+        for frame in frames:
+            byte_frames.write(frame)
+        frame_data = byte_frames.getvalue()
+        byte_frames.close()
+        return AudioData(frame_data, self.sample_rate, 2)
 
     def clear_audio(self):
         """ Clean up the current window. """
@@ -250,7 +254,7 @@ class ContinuousSpeech(Audio):
                                 input_rate=data.get('sample_rate', DEFAULT_SAMPLE_RATE))
 
 
-def load_model(configuration: dict) -> deepspeech.Model:
+def load_deepspeech_model(configuration: dict) -> deepspeech.Model:
     ds = None
     if 'model' in configuration:
         path = configuration['model'].format(DEEPSPEECH_DIR=os.getenv('DEEPSPEECH_DIR', default='.'))
@@ -274,89 +278,3 @@ def load_model(configuration: dict) -> deepspeech.Model:
         for word in configuration['hot_words']:
             ds.addHotWord(word, float(configuration['hot_words'][word]))
     return ds
-
-
-def main():
-
-    import argparse
-    parser = argparse.ArgumentParser(description="Stream from microphone to DeepSpeech using VAD")
-
-    parser.add_argument('-v', '--vad_aggressiveness', type=int,
-                        help="Set aggressiveness of VAD: an integer between 0 and 3, 0 being the least aggressive about"
-                             "filtering out non-speech, 3 the most aggressive. Default: 3")
-    parser.add_argument('-c', '--config',
-                        help="Path to the configuration file.")
-    parser.add_argument('-m', '--model',
-                        help="Path to the model (protocol buffer binary file)")
-    parser.add_argument('-s', '--scorer',
-                        help="Path to the external scorer file.")
-    parser.add_argument('-d', '--device', type=int, default=None,
-                        help="Device input index (Int) as listed by pyaudio.PyAudio.get_device_info_by_index(). If not"
-                        " provided, falls back to PyAudio.get_default_device().")
-    parser.add_argument('-r', '--rate', type=int,
-                        help=f"Input device sample rate. Default: {DEFAULT_SAMPLE_RATE}. Your device may require 44100."
-                        )
-    parser.add_argument('--hot_words', type=str,
-                        help='Hot-words and their boosts.')
-
-    args = parser.parse_args()
-
-    # Load config parameters
-    if args.config:
-        configuration = load_config_file(args.config)
-    else:
-        configuration = {}
-
-    # If given explicitly, override configuration parameters
-    if args.model:
-        configuration['model'] = args.model
-    if args.scorer:
-        configuration['scorer'] = args.scorer
-    if args.vad_aggressiveness:
-        configuration['vad_aggressiveness'] = args.vad_aggressiveness
-    if args.rate:
-        configuration['sample_rate'] = args.rate
-    if args.device:
-        configuration['device'] = args.device
-    if args.hot_words:
-        configuration['hot_words'] = {}
-        for pair in args.hot_words.split(','):
-            word, boost = pair.split(':')
-            configuration['hot_words'][word] = boost
-
-    # Load DeepSpeech model
-    print('Initializing model...')
-    ds = load_model(configuration)
-
-    # Start audio with VAD
-    vad_audio = ContinuousSpeech.from_json(configuration)
-
-    print("Listening (ctrl-C to exit)...")
-    try:
-        vad_audio.start()
-        last_step_time = time.perf_counter()
-        while True:
-            while time.perf_counter() - last_step_time < vad_audio.wait_time:
-                time.sleep(0.01)
-            # Get audio track
-            frames = vad_audio.get_audio(time.perf_counter() - last_step_time)
-
-            # Start stream and timer
-            stream = ds.createStream()
-
-            for frame in frames:
-                stream.feedAudioContent(np.frombuffer(frame, np.int16))
-            text = stream.finishStream()
-            stream = ds.createStream()
-            if text:
-                print("Recognized: %s" % text)
-            last_step_time = time.perf_counter()
-
-    except KeyboardInterrupt:
-        vad_audio.stop()
-        print("Stopping, bye!")
-        return
-
-
-if __name__ == '__main__':
-    main()
