@@ -111,7 +111,6 @@ class ReadEngine:
                     f = self.feel
                 if f == Feel.NEUTRAL:
                     self.robot_proxy.do_listen()
-                    self.do_feel(Feel.NEUTRAL)
                     time.sleep(1.0)
                 elif f == Feel.HAPPY:
                     self.robot_proxy.be_happy()

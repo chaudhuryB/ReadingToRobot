@@ -117,7 +117,8 @@ class SpeechReco(threading.Thread):
                     if query:
                         if "confidence" in query["alternative"]:
                             # return alternative with highest confidence score
-                            best_hypothesis = max(query["alternative"], key=lambda alternative: alternative["confidence"])
+                            best_hypothesis = max(query["alternative"],
+                                                  key=lambda alternative: alternative["confidence"])
                         else:
                             # when there is no confidence available, we arbitrarily choose the first hypothesis.
                             best_hypothesis = query["alternative"][0]
