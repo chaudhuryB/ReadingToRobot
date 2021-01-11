@@ -7,7 +7,7 @@ import subprocess
 import os
 from ..common.deepspeech_module import DEFAULT_SAMPLE_RATE
 from ..common.configuration_loader import load_config_file
-from ..common.voice_recognition import SpeechReco
+from ..common.voice_recognition import SpeechReco, evaluate_text
 
 
 class SpeechRecoMock(SpeechReco):
@@ -17,6 +17,7 @@ class SpeechRecoMock(SpeechReco):
     @staticmethod
     def emotion_from_string(text):
         print("\033[93mRecognized: {}\033[0m".format(text))
+        print(evaluate_text(text))
 
 
 def main():

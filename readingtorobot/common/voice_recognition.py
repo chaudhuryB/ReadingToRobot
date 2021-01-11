@@ -17,10 +17,10 @@ from .configuration_loader import load_config_file
 wordlist = {
     'happy': "teeny green stem peeping out pot".split(' ') + "happy day second week".split(' ') +
              "keep them wet and wait".split(' '),
-    'groan': "very long week sat there".split(' ') + "there was no tree seen".split(' ') + "this is silly".split(' '),
-    'excited': "Molly saw leaf".split(' ') + "peeping out pot".split(' ') + "yippee have tree".split(' '),
-    'sad': 'Molly was very sad'.split(' '),
-    'scared': 'Molly was scared'.split(' ')
+    'groan': "very long week sat".split(' ') + "there was no tree seen".split(' ') + "this is silly".split(' '),
+    'excited': "Molly saw soft green leaf".split(' ') + "peeping out pot".split(' ') + "yippee have tree".split(' '),
+    'sad': 'Molly was very sad'.split(' ') + "oh dear".split(' ') + "little tear fell down her cheek".split(' '),
+    'scared': 'eek Molly was screaming'.split(' ') + "three fat snails sneaking feet".split(' ')
     }
 
 
@@ -29,10 +29,17 @@ def evaluate_text(text):
     bestmatch = 3
     global wordlist
 
+    # Divide text into list of words, eliminate duplicates.
+    text_filtered = []
+    for w in text.split(' '):
+        if w not in text_filtered:
+            text_filtered.append(w)
+
+    # Look for matches
     for em in wordlist:
         matches = 0
         for word in wordlist[em]:
-            if word in text:
+            if word in text_filtered:
                 matches += 1
         if matches >= bestmatch:
             expression = em
