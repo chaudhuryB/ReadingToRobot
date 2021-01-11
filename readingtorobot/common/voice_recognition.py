@@ -1,3 +1,8 @@
+"""
+    Methods used in the interpretation of detected speech to trigger robot actions.
+"""
+
+
 import os
 import time
 import numpy as np

@@ -1,3 +1,7 @@
+"""
+    Cube light management.
+"""
+
 import asyncio
 import cozmo
 

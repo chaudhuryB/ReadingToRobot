@@ -1,14 +1,19 @@
-from getkey import getkey, keys
+"""
+    Method to trigger robot reactions using a keyword.
+"""
 from threading import Thread
+
+from getkey import getkey, keys
 
 from ..common.feeling_declaration import Feel
 
 
 class EmotionController(Thread):
+    """ Keyword control to trigger animations. """
     def __init__(self,
-                 robot_proxy):
+                 game):
         Thread.__init__(self)
-        self.robot_proxy = robot_proxy
+        self.robot_proxy = game
         self.running = True
 
     def stop(self):
@@ -19,19 +24,19 @@ class EmotionController(Thread):
         while self.is_running:
             key = getkey(blocking=True)
             if key == keys.W:
-                self.robot_proxy.do_feel(Feel.HAPPY)
+                self.game.do_feel(Feel.HAPPY)
 
             elif key == keys.S:
-                self.robot_proxy.do_feel(Feel.SAD)
+                self.game.do_feel(Feel.SAD)
 
             elif key == keys.A:
-                self.robot_proxy.do_feel(Feel.ANNOYED)
+                self.game.do_feel(Feel.ANNOYED)
 
             elif key == keys.D:
-                self.robot_proxy.do_feel(Feel.EXCITED)
+                self.game.do_feel(Feel.EXCITED)
 
             elif key == keys.X:
-                self.robot_proxy.do_feel(Feel.SCARED)
+                self.game.do_feel(Feel.SCARED)
 
             elif key == keys.N:
-                self.robot_proxy.do_feel(Feel.NEUTRAL)
+                self.game.do_feel(Feel.NEUTRAL)

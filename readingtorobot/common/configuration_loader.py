@@ -1,3 +1,7 @@
+"""
+    Methods to load configuration files.
+"""
+
 import os
 import json
 

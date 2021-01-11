@@ -1,3 +1,7 @@
+"""
+    Game engine.
+"""
+
 import asyncio
 import copy
 import cozmo

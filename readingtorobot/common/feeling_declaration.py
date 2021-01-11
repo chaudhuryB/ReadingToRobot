@@ -1,3 +1,7 @@
+"""
+    Declaration of available feelings.
+"""
+
 
 class Feel:
     NEUTRAL = 0

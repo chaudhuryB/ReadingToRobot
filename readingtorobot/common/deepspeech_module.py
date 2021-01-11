@@ -1,3 +1,7 @@
+"""
+    Methods to manage audio recording and interpretation.
+"""
+
 import collections
 import io
 import logging
@@ -20,8 +24,10 @@ DEFAULT_SAMPLE_RATE = 16000
 
 
 class Audio(object):
-    """ Streams raw audio from microphone. Data is received in a separate thread, and stored in a buffer, to be read
-        from.
+    """
+        Streams raw audio from microphone.
+
+        Data is received in a separate thread, and stored in a buffer.
     """
 
     FORMAT = pyaudio.paInt16
@@ -111,7 +117,9 @@ class Audio(object):
 
 
 class ContinuousSpeech(Thread, Audio):
-    """ Get and process audio streams continuously.
+    """
+        Get and process audio streams continuously.
+
         To do this, a thread keeps storing audio in a buffer of size 1 to 5s.
         Meanwhile, the model processes a previous buffer. Once the processing is done, we swap buffers.
     """
@@ -195,6 +203,7 @@ class ContinuousSpeech(Thread, Audio):
         return reversed(output)
 
     def frames_to_SR(self, frames):
+        """ Convert frames into an AudioData object (to use with Speech Recognition). """
         byte_frames = io.BytesIO()
         for frame in frames:
             byte_frames.write(frame)
@@ -255,6 +264,7 @@ class ContinuousSpeech(Thread, Audio):
 
 
 def load_deepspeech_model(configuration: dict) -> deepspeech.Model:
+    """ Initialize a deepspeech model with a specific configuration. """
     ds = None
     if 'model' in configuration:
         path = configuration['model'].format(DEEPSPEECH_DIR=os.getenv('DEEPSPEECH_DIR', default='.'))

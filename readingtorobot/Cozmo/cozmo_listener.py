@@ -1,4 +1,6 @@
-
+"""
+    Thread managing the robot animations.
+"""
 import cozmo
 import time
 from cozmo.util import degrees
