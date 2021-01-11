@@ -1,15 +1,15 @@
 from getkey import getkey, keys
-import threading
+from threading import Thread
 
 from ..common.feeling_declaration import Feel
 
 
-class EmotionController(threading.Thread):
+class EmotionController(Thread):
     def __init__(self,
                  robot_proxy):
-        threading.Thread.__init__(self)
+        Thread.__init__(self)
         self.robot_proxy = robot_proxy
-        self.is_running = True
+        self.running = True
 
     def stop(self):
         self.is_running = False

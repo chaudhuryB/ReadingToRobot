@@ -50,7 +50,7 @@ class SpeechReco(Thread):
         super().__init__()
         self.name = 'SpeechRecognition'
         self.game = read_game
-        self.game_on = False
+        self.running = False
         self.not_understood_count = 0
         self.reaction_delay = 1
         if config is None:
@@ -65,8 +65,12 @@ class SpeechReco(Thread):
         self.ds = load_deepspeech_model(cf) if interpreter == 'ds' else sr.Recognizer()
 
     def start(self):
-        self.game_on = True
+        self.running = True
         super().start()
+
+    def stop(self):
+        self.running = False
+        self.join()
 
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)
@@ -100,17 +104,12 @@ class SpeechReco(Thread):
             print(e)
             pass
 
-    def stop(self):
-        self.game_on = False
-        self.join()
-
     def run(self):
-        self.game_on = True
         print("Say something!")
         try:
             self.audio_proc.start()
             last_step_time = time.perf_counter()
-            while self.game_on:
+            while self.running:
                 while time.perf_counter() - last_step_time < self.audio_proc.wait_time:
                     time.sleep(0.01)
                 # Get audio track

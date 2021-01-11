@@ -87,7 +87,6 @@ def main():
 
     except KeyboardInterrupt:
         speech_reco.stop()
-        speech_reco.join()
         p.terminate()
         print("Stopping, bye!")
         return

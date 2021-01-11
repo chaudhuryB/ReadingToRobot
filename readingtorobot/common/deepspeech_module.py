@@ -3,13 +3,14 @@ import io
 import logging
 import os
 import queue
-import threading
 
 import deepspeech
 import numpy as np
 import pyaudio
 import wave
 import webrtcvad
+
+from threading import Thread, Lock
 
 from scipy import signal
 from speech_recognition import AudioData
@@ -29,7 +30,7 @@ class Audio(object):
     CHANNELS = 1
     BLOCKS_PER_SECOND = 50
 
-    def __init__(self, callback=None, device=None, input_rate=RATE_PROCESS, file=None):
+    def __init__(self, callback=None, device=None, input_rate=RATE_PROCESS, file=None, kwargs=None):
         def proxy_callback(in_data, frame_count, time_info, status):
             if self.chunk is not None:
                 in_data = self.wf.readframes(self.chunk)
@@ -109,7 +110,7 @@ class Audio(object):
         wf.close()
 
 
-class ContinuousSpeech(Audio):
+class ContinuousSpeech(Thread, Audio):
     """ Get and process audio streams continuously.
         To do this, a thread keeps storing audio in a buffer of size 1 to 5s.
         Meanwhile, the model processes a previous buffer. Once the processing is done, we swap buffers.
@@ -122,9 +123,10 @@ class ContinuousSpeech(Audio):
                  aggressiveness=3,
                  silence_threshold=200,
                  input_rate=None):
-        super().__init__(device=device, input_rate=input_rate)
+        super().__init__()
+        super(Thread, self).__init__(device=device, input_rate=input_rate)
         self.vad = webrtcvad.Vad(aggressiveness)
-        self.lock = threading.Lock()
+        self.lock = Lock()
         self.max_seconds = max_seconds
         self.min_seconds = min_seconds
         self.time_window = (max_seconds - min_seconds) * self.BLOCKS_PER_SECOND
@@ -132,31 +134,29 @@ class ContinuousSpeech(Audio):
         self.main_buffer_size = self.BLOCKS_PER_SECOND * self.max_seconds
 
         self.main_audio_buffer = []
-        self.sampler_thread = threading.Thread(target=self.audio_sampler)
-        self.stopped = False
+        self.running = False
         self.unvoiced_threshold = silence_threshold
 
     def start(self):
-        self.stopped = False
-        self.sampler_thread.start()
+        self.running = True
+        super().start()
 
     def stop(self):
-        with self.lock:
-            self.stopped = True
-        self.sampler_thread.join()
+        self.running = False
+        self.join()
 
     def frame_generator(self):
         """Generator that yields all audio frames from microphone."""
         if self.input_rate == self.RATE_PROCESS:
-            while True:
+            while self.running:
                 yield self.read()
         else:
-            while True:
+            while self.running:
                 yield self.read_resampled()
 
-    def audio_sampler(self):
+    def run(self):
         """Function storing audio buffers."""
-        while not self.stopped:
+        while self.running:
             triggered = False
             num_unvoiced = 0
             for frame in self.frame_generator():

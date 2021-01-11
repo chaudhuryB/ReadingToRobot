@@ -2,7 +2,6 @@ import asyncio
 import copy
 import cozmo
 import time
-from threading import Lock
 from cozmo import robot
 from cozmo.util import degrees, distance_mm, speed_mmps
 from ..common.voice_recognition import SpeechReco
@@ -19,7 +18,6 @@ class ReadEngine:
         self.my_postiion = None
         self.face = None
         self.feel = Feel.NEUTRAL
-        self.lock = Lock()
 
     def tap_ready(self):
         player_tapped = False
