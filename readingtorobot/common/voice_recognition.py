@@ -68,9 +68,6 @@ class SpeechReco(Thread):
         self.game_on = True
         super().start()
 
-    def stop(self):
-        self.game_on = False
-
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)
         try:
