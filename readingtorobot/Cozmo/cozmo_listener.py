@@ -21,15 +21,20 @@ class CozmoPlayerActions(Thread):
     QUEUE_TIMEOUT = 0.1
 
     def __init__(self):
+        super().__init__()
         self.queue = Queue()
 
     def start(self, game_robot, face):
+        self.name = 'Robot'
         self.robot = game_robot
         self.face = face
         self.last_head_position = cozmo.robot.MAX_HEAD_ANGLE
         self.running_animation = None
         self.running = True
         super().start()
+
+    def stop(self):
+        self.running = False
 
     def run(self):
         while self.running:
@@ -40,19 +45,20 @@ class CozmoPlayerActions(Thread):
                 continue
 
             if f == Feel.HAPPY:
-                self.robot_proxy.be_happy()
+                self.be_happy()
             elif f == Feel.SAD:
-                self.robot_proxy.be_sad()
+                self.be_sad()
             elif f == Feel.ANNOYED:
-                self.robot_proxy.be_annoyed()
+                self.be_annoyed()
             elif f == Feel.SCARED:
-                self.robot_proxy.be_scared()
+                self.be_scared()
             elif f == Feel.EXCITED:
-                self.robot_proxy.be_excited()
+                self.be_excited()
 
     def do_feel(self, feel):
         self.queue.put(feel)
-        self.running_animation.abort()
+        if self.running_animation is not None:
+            self.running_animation.abort()
 
     def be_sad(self):
         self.play_anim(
@@ -123,10 +129,10 @@ class CozmoPlayerActions(Thread):
 
     def play_anim(self, anim):
         try:
-            self.running_animation = self.robot.play_anim(anim).wait_for_completed()
+            self.running_animation = self.robot.play_anim(anim)
             self.running_animation.wait_for_completed()
-        except Exception:
-            print("Error while playing animation: " + anim)
+        except Exception as e:
+            print("Error while playing animation \'{}\': {}".format(anim, e))
             pass
 
     @event.oneshot

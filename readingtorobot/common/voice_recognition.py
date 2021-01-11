@@ -1,8 +1,8 @@
 import os
 import time
-import threading
 import numpy as np
 import speech_recognition as sr
+from threading import Thread
 
 from .feeling_declaration import Feel
 from .deepspeech_module import load_deepspeech_model, ContinuousSpeech
@@ -35,7 +35,7 @@ def evaluate_text(text):
     return expression
 
 
-class SpeechReco(threading.Thread):
+class SpeechReco(Thread):
     """
         Speech recognition module, using DeepSpeech or Google Cloud Speech API (through the speech_recognition module).
 
@@ -47,7 +47,8 @@ class SpeechReco(threading.Thread):
                  read_game,
                  config=None,
                  interpreter=None) -> None:
-        threading.Thread.__init__(self)
+        super().__init__()
+        self.name = 'SpeechRecognition'
         self.game = read_game
         self.game_on = False
         self.not_understood_count = 0
@@ -62,7 +63,13 @@ class SpeechReco(threading.Thread):
 
         self.audio_proc = ContinuousSpeech.from_json(cf)
         self.ds = load_deepspeech_model(cf) if interpreter == 'ds' else sr.Recognizer()
-        print('Finished audio initialization')
+
+    def start(self):
+        self.game_on = True
+        super().start()
+
+    def stop(self):
+        self.game_on = False
 
     def emotion_from_string(self, s: str) -> None:
         expression = evaluate_text(s)

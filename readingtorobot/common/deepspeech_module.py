@@ -75,11 +75,11 @@ class Audio(object):
             data (binary): Input audio stream
             input_rate (int): Input audio rate to resample from
         """
-        data16 = np.fromstring(string=data, dtype=np.int16)
+        data16 = np.frombuffer(data, dtype=np.int16)
         resample_size = int(len(data16) / self.input_rate * self.RATE_PROCESS)
         resample = signal.resample(data16, resample_size)
         resample16 = np.array(resample, dtype=np.int16)
-        return resample16.tostring()
+        return resample16.tobytes()
 
     def read_resampled(self):
         """Return a block of audio data resampled to 16000hz, blocking if necessary."""

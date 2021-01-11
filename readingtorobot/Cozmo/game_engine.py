@@ -73,6 +73,8 @@ class ReadEngine:
         time.sleep(0.5)
 
         try:
+            # Greeting action. Will identify a new face and acknowledge it before starting the listening/reaction
+            # thread.
             self.robot.set_head_angle(cozmo.robot.MAX_HEAD_ANGLE).wait_for_completed()
             """
             self.robot.drive_wheels(50, -50, duration=1)
@@ -82,7 +84,6 @@ class ReadEngine:
 
             face = self.robot.world.wait_for_observed_face(timeout=600, include_existing=True)
             self.face = face
-            self.robot_proxy.start(self.robot, self.face)
             self.robot.turn_towards_face(face).wait_for_completed()
             self.robot.play_anim("anim_greeting_happy_03").wait_for_completed()
             self.robot.go_to_pose(self.my_position.pose).wait_for_completed()
@@ -103,8 +104,11 @@ class ReadEngine:
 
     def listen_to_story(self):
         try:
-            self.read_listener.game_on = True
+            # Launch Listener and Robot threads.
+            self.robot_proxy.start(self.robot, self.face)
             self.read_listener.start()
+
+            self.robot_proxy.join()
             self.read_listener.join()
         except KeyboardInterrupt:
             print("\nInterrupted by user, shutting down")
