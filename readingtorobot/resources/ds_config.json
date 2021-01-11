@@ -3,10 +3,5 @@
     "interpreter": "ds",
     "vad_aggressiveness": 0,
     "silence_threshold": 500,
-    "sample_rate": 44100,
-    "hot_words": {
-        "teeny": 10,
-        "green": 10,
-        "peeping": 10,
-        "pot": 10}
+    "sample_rate": 44100
 }
