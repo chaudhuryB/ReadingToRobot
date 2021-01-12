@@ -3,16 +3,29 @@
 """
 
 import re
+import time
 
 from .configuration_loader import resource_file, load_book
 
 wordlist = {
-    'happy': "teeny green stem peeping out pot".split(' ') + "happy day second week".split(' ') +
+    'happy': "happy day second week".split(' ') +
              "keep them wet and wait".split(' '),
-    'groan': "very long week sat".split(' ') + "there was no tree seen".split(' ') + "this is silly".split(' '),
-    'excited': "Molly saw soft green leaf".split(' ') + "peeping out pot".split(' ') + "yippee have tree".split(' '),
-    'sad': 'Molly was very sad'.split(' ') + "oh dear".split(' ') + "little tear fell down her cheek".split(' '),
-    'scared': 'eek Molly was screaming'.split(' ') + "three fat snails sneaking feet".split(' ')
+
+    'groan': "very long week sat".split(' ') +
+             "there was no tree seen".split(' ') +
+             "this is silly".split(' '),
+
+    'excited': "teeny green stem peeping out pot".split(' ') +
+               "molly saw soft green leaf".split(' ') +
+               "yippee have tree".split(' '),
+
+    'sad': "teeny green stem and soft green leaf had vanished".split(' ') +
+           "molly was very sad".split(' ') +
+           "oh dear she said".split(' ') +
+           "little tear fell down her cheek".split(' '),
+
+    'scared': "eek molly was screaming".split(' ') +
+              "three fat snails sneaking feet".split(' ')
     }
 
 
@@ -28,6 +41,8 @@ class Book:
         self.reaction_idx = 0
         self.match_thresh = 3
         self.win_size = 2
+        self.expression_cooldown = 10
+        self.last_expression_time = time.perf_counter()
 
     def evaluate_text_rolling_window(self, text):
         # Divide text into list of words, eliminate duplicates.
@@ -75,8 +90,10 @@ class Book:
 
         return reaction
 
-    @staticmethod
-    def evaluate_text(text):
+    def evaluate_text(self, text):
+        if self._in_expression_cooldown():
+            return None
+
         expression = None
         bestmatch = 3
         global wordlist
@@ -96,7 +113,14 @@ class Book:
             if matches >= bestmatch:
                 expression = em
                 bestmatch = matches
+
+        if expression is not None:
+            self.last_expression_time = time.perf_counter()
+
         return expression
+
+    def _in_expression_cooldown(self):
+        return (time.perf_counter() - self.last_expression_time) < self.expression_cooldown
 
     @staticmethod
     def extract_keywords(text):
