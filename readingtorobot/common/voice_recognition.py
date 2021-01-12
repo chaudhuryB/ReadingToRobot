@@ -2,8 +2,6 @@
     Methods used in the interpretation of detected speech to trigger robot actions.
 """
 
-
-import os
 import time
 import numpy as np
 import speech_recognition as sr
@@ -11,40 +9,8 @@ from threading import Thread
 
 from .feeling_declaration import Feel
 from .deepspeech_module import load_deepspeech_model, ContinuousSpeech
-from .configuration_loader import load_config_file
-
-
-wordlist = {
-    'happy': "teeny green stem peeping out pot".split(' ') + "happy day second week".split(' ') +
-             "keep them wet and wait".split(' '),
-    'groan': "very long week sat".split(' ') + "there was no tree seen".split(' ') + "this is silly".split(' '),
-    'excited': "Molly saw soft green leaf".split(' ') + "peeping out pot".split(' ') + "yippee have tree".split(' '),
-    'sad': 'Molly was very sad'.split(' ') + "oh dear".split(' ') + "little tear fell down her cheek".split(' '),
-    'scared': 'eek Molly was screaming'.split(' ') + "three fat snails sneaking feet".split(' ')
-    }
-
-
-def evaluate_text(text):
-    expression = None
-    bestmatch = 3
-    global wordlist
-
-    # Divide text into list of words, eliminate duplicates.
-    text_filtered = []
-    for w in text.split(' '):
-        if w not in text_filtered:
-            text_filtered.append(w)
-
-    # Look for matches
-    for em in wordlist:
-        matches = 0
-        for word in wordlist[em]:
-            if word in text_filtered:
-                matches += 1
-        if matches >= bestmatch:
-            expression = em
-            bestmatch = matches
-    return expression
+from .configuration_loader import load_config_file, resource_file
+from .book_reactions import Book
 
 
 class SpeechReco(Thread):
@@ -66,8 +32,7 @@ class SpeechReco(Thread):
         self.not_understood_count = 0
         self.reaction_delay = 1
         if config is None:
-            config = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                  "resources/ds_config.json")
+            config = resource_file("ds_config.json")
 
         cf = load_config_file(config)
         if interpreter is None:
@@ -75,6 +40,8 @@ class SpeechReco(Thread):
 
         self.audio_proc = ContinuousSpeech.from_json(cf)
         self.ds = load_deepspeech_model(cf) if interpreter == 'ds' else sr.Recognizer()
+
+        self.book = Book("the_teeny_tree_literal.txt")
 
     def start(self):
         self.running = True
@@ -85,7 +52,7 @@ class SpeechReco(Thread):
         self.join()
 
     def emotion_from_string(self, s: str) -> None:
-        expression = evaluate_text(s)
+        expression = self.book.evaluate_text(s)
         try:
             if expression == "happy":
                 self.game.do_feel(Feel.HAPPY)

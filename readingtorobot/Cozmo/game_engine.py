@@ -117,10 +117,8 @@ class ReadEngine:
             raise KeyboardInterrupt
 
         finally:
-            if self.read_listener.game_on:
-                self.read_listener.game_on = False
-            self.read_listener.join()
             print("Thank you for reading to Cozmo")
-
+            self.read_listener.stop()
             self.end_session()
             self.robot_proxy.do_fist_bump()
+            self.robot_proxy.stop()

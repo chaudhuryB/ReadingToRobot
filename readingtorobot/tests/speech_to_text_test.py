@@ -5,19 +5,20 @@
 import time
 import subprocess
 import os
-from ..common.deepspeech_module import DEFAULT_SAMPLE_RATE
-from ..common.configuration_loader import load_config_file
-from ..common.voice_recognition import SpeechReco, evaluate_text
+from readingtorobot.common.deepspeech_module import DEFAULT_SAMPLE_RATE
+from readingtorobot.common.configuration_loader import load_config_file, resource_file
+from readingtorobot.common.voice_recognition import SpeechReco
 
 
 class SpeechRecoMock(SpeechReco):
     def __init__(self, config=None, interpreter=None):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 
-    @staticmethod
-    def emotion_from_string(text):
+    def emotion_from_string(self, text):
         print("\033[93mRecognized: {}\033[0m".format(text))
-        print(evaluate_text(text))
+        op = self.book.evaluate_text(text)
+        if op is not None:
+            print("\033[93mEvaluate text thinks: {}".format(op))
 
 
 def main():
@@ -78,7 +79,7 @@ def main():
     try:
         speech_reco.start()
         script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "common/play_text.sh")
-        process = [script, "Pip saw a teeny green stem peeping out of the pot"]
+        process = [script, resource_file('the_teeny_tree_literal.txt')]
         p = subprocess.Popen(process)
         while True:
             if p.poll() is not None:
