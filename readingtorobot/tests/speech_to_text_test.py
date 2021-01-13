@@ -52,6 +52,9 @@ def main():
                         help="Plays automatically different audio samples on a loop. If not specified, the model will"
                              "just keep listening to any input.")
 
+    parser.add_argument('-p', '--play', type=str, default=resource_file('the_teeny_tree_literal.txt'),
+                        help="The audio to play on a loop, if not specified, the book will be read using espeak")
+
     args = parser.parse_args()
 
     # Load config parameters
@@ -80,10 +83,13 @@ def main():
     # Create speech recognition object
     speech_reco = SpeechRecoMock(config=args.config)
 
+    # Resource to play:
+    reading_file = args.play
+
     try:
         speech_reco.start()
         script = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "common/play_text.sh")
-        process = [script, resource_file('the_teeny_tree_literal.txt')]
+        process = [script, reading_file]
         p = subprocess.Popen(process)
         while True:
             if p.poll() is not None:
