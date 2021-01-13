@@ -1,16 +1,22 @@
 """
     Methods to load configuration files.
+
+    [Requires Python 2.7 compatibility]
 """
 
 import os
 import json
 
 
-def resource_file(filename: str) -> str:
-    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources/{}".format(filename))
+def module_file(filename):
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), filename)
 
 
-def load_config_file(path: str) -> dict:
+def resource_file(filename):
+    return module_file("resources/{}".format(filename))
+
+
+def load_config_file(path):
     if os.path.isfile(path) and path.endswith('json'):
         with open(path, 'r') as f:
             return json.load(f)
@@ -18,7 +24,7 @@ def load_config_file(path: str) -> dict:
         raise ValueError("Wrong file path: {}".format(path))
 
 
-def load_book(path: str) -> list:
+def load_book(path):
     if os.path.isfile(path) and path.endswith('txt'):
         with open(path, 'r') as f:
             return f.read().splitlines()
