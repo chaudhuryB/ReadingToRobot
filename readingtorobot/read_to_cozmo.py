@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import logging
+
 import cozmo
 from .Cozmo.game_engine import ReadEngine
 
@@ -13,4 +15,5 @@ def cozmo_read_game(robot: cozmo.robot.Robot):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
     cozmo.run_program(cozmo_read_game)

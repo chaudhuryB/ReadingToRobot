@@ -2,6 +2,7 @@
     Book reaction class
 """
 
+import logging
 import re
 import time
 
@@ -30,7 +31,7 @@ wordlist = {
 
 
 class Book:
-    def __init__(self, source):
+    def __init__(self, source, debug=False):
         self.text = load_book(resource_file(source))
         self.filtered_text = self.extract_keywords(self.text)
         self.window = (0, len(self.text))  # This window covers the possible pages where we are reading
@@ -43,6 +44,9 @@ class Book:
         self.win_size = 2
         self.expression_cooldown = 10
         self.last_expression_time = time.perf_counter()
+        self.DEBUG = debug
+
+        self.logger = logging.getLogger(name=__name__)
 
     def evaluate_text_rolling_window(self, text):
         # Divide text into list of words, eliminate duplicates.
@@ -76,10 +80,9 @@ class Book:
             self.sentence[i]['score'] = 0
 
         # self.window = (best_match, min(len(self.text), best_match + self.win_size))
-        print('yay! {}, {}'.format(self.window[0], self.window[1]))
-        print(likely_idx)
-        print(best_match)
-        print(self.sentence[best_match]['text'])
+        self.logger.debug('Window: [{}, {}]'.format(self.window[0], self.window[1]))
+        self.logger.debug('Likely idxs: {}'.format(likely_idx))
+        self.logger.debug('Best match, idx: {}, sentence: {}'.format(best_match, self.sentence[best_match]['text']))
 
         # If the most likely string contains an action, return the action and delete it from the action list
         reaction = None

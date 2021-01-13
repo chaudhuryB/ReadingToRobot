@@ -2,6 +2,7 @@
     Methods used in the interpretation of detected speech to trigger robot actions.
 """
 
+import logging
 import time
 import numpy as np
 import speech_recognition as sr
@@ -43,6 +44,8 @@ class SpeechReco(Thread):
 
         self.book = Book("the_teeny_tree_literal.txt")
 
+        self.logger = logging.getLogger(name=__name__)
+
     def start(self):
         self.running = True
         super().start()
@@ -53,38 +56,39 @@ class SpeechReco(Thread):
 
     def emotion_from_string(self, s: str) -> None:
         expression = self.book.evaluate_text(s)
+        self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
         try:
             if expression == "happy":
                 self.game.do_feel(Feel.HAPPY)
-                print("HAPPY")
+                self.logger.debug("Feeling {}".format("Happy"))
                 self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "sad":
                 self.game.do_feel(Feel.SAD)
-                print("SAD")
+                self.logger.debug("Feeling {}".format("Sad"))
                 self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "groan":
                 self.game.do_feel(Feel.ANNOYED)
-                print("ANNOYED")
+                self.logger.debug("Feeling {}".format("Groan"))
                 self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "excited":
                 self.game.do_feel(Feel.EXCITED)
-                print("EXCITED")
+                self.logger.debug("Feeling {}".format("Excited"))
                 self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "scared":
                 self.game.do_feel(Feel.SCARED)
-                print("SCARED")
+                self.logger.debug("Feeling {}".format("Scared"))
                 self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
         except Exception as e:
-            print(e)
+            self.logger.warning(e)
             pass
 
     def run(self):
-        print("Say something!")
+        self.logger.info("Say something!")
         try:
             self.audio_proc.start()
             last_step_time = time.perf_counter()

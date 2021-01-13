@@ -19,7 +19,6 @@ from threading import Thread, Lock
 from scipy import signal
 from speech_recognition import AudioData
 
-logging.basicConfig(level=20)
 DEFAULT_SAMPLE_RATE = 16000
 
 
@@ -72,6 +71,8 @@ class Audio(object):
 
         self.stream = self.pa.open(**kwargs)
         self.stream.start_stream()
+
+        self.logger = logging.getLogger(name=__name__)
 
     def resample(self, data, input_rate):
         """
@@ -194,7 +195,9 @@ class ContinuousSpeech(Thread, Audio):
         output = None
         to_clear = int(self.BLOCKS_PER_SECOND * max(0, (len(self.main_audio_buffer)/self.BLOCKS_PER_SECOND -
                                                         self.min_seconds - time_diff)))
-        print('clearing: {}, of a total of {}'.format(to_clear, len(self.main_audio_buffer)))
+        self.logger.debug('Clearing: {}, of a total of {}'
+                          .format(to_clear, len(self.main_audio_buffer)))
+
         with self.lock:
             output = self.main_audio_buffer
             if to_clear:

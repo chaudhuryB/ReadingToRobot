@@ -4,8 +4,10 @@
 
 import asyncio
 import copy
-import cozmo
+import logging
 import time
+import cozmo
+
 from cozmo import robot
 from cozmo.util import degrees, distance_mm, speed_mmps
 from ..common.voice_recognition import SpeechReco
@@ -22,6 +24,7 @@ class ReadEngine:
         self.my_postiion = None
         self.face = None
         self.feel = Feel.NEUTRAL
+        self.logger = logging.getLogger(name=__name__)
 
     def tap_ready(self):
         player_tapped = False
@@ -91,12 +94,12 @@ class ReadEngine:
             self.robot.go_to_pose(self.my_position.pose).wait_for_completed()
 
         except asyncio.TimeoutError:
-            print("Didn't find any face :-(")
+            self.logger.warning("Didn't find any face :-(")
 
         finally:
             # look_around.stop()
             if self.face is None:
-                print("Didn't find anyone :-(")
+                self.logger.warning("Didn't find anyone :-(")
                 return False
 
         return True
@@ -113,11 +116,11 @@ class ReadEngine:
             self.robot_proxy.join()
             self.read_listener.join()
         except KeyboardInterrupt:
-            print("\nInterrupted by user, shutting down")
+            self.logger.info("\nInterrupted by user, shutting down")
             raise KeyboardInterrupt
 
         finally:
-            print("Thank you for reading to Cozmo")
+            self.logger.info("Thank you for reading to Cozmo")
             self.read_listener.stop()
             self.end_session()
             self.robot_proxy.do_fist_bump()

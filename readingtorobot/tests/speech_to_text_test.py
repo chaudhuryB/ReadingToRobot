@@ -2,6 +2,8 @@
     Integration test for speech to text conversion.
 """
 
+import argparse
+import logging
 import time
 import subprocess
 import os
@@ -15,15 +17,16 @@ class SpeechRecoMock(SpeechReco):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 
     def emotion_from_string(self, text):
-        print("\033[93mRecognized: {}\033[0m".format(text))
+        self.logger.debug("\033[93mRecognized: {}\033[0m".format(text))
         op = self.book.evaluate_text(text)
         if op is not None:
-            print("\033[93mEvaluate text thinks: {}".format(op))
+            self.logger.debug("\033[93mEvaluate text thinks: {}\033[0m".format(op))
 
 
 def main():
 
-    import argparse
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
+
     parser = argparse.ArgumentParser(description="Stream from microphone to DeepSpeech using VAD")
 
     parser.add_argument('-v', '--vad_aggressiveness', type=int,
@@ -90,7 +93,7 @@ def main():
     except KeyboardInterrupt:
         speech_reco.stop()
         p.terminate()
-        print("Stopping, bye!")
+        logging.info("Stopping, bye!")
         return
 
 

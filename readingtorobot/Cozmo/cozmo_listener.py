@@ -1,13 +1,15 @@
 """
     Thread managing the robot animations.
 """
-import cozmo
+import logging
 import time
-from cozmo.util import degrees
-from cozmo import event
 from random import randint, choice
 from threading import Thread
 from queue import Queue, Empty
+
+import cozmo
+from cozmo.util import degrees
+from cozmo import event
 
 from .game_cubes import BlinkyCube
 from ..common.feeling_declaration import Feel
@@ -33,6 +35,7 @@ class CozmoPlayerActions(Thread):
         self.last_head_position = cozmo.robot.MAX_HEAD_ANGLE
         self.running_animation = None
         self.running = True
+        self.logger = logging.getLogger(name=__name__)
         super().start()
 
     def stop(self):
@@ -102,7 +105,7 @@ class CozmoPlayerActions(Thread):
         # Do little look down/up nods:
         play_wait = randint(0, 3)
         if play_wait == 0:
-            print("Looking away")
+            self.logger.debug("Looking away")
             self.robot.set_head_angle(degrees(0)).wait_for_completed()
             self.play_anim(
                 choice(['anim_speedtap_wait_short',
@@ -111,7 +114,7 @@ class CozmoPlayerActions(Thread):
                         'anim_speedtap_wait_medium_03',
                         'anim_speedtap_wait_long']))
         else:
-            print("Looking at face")
+            self.logger.debug("Looking at face")
             if self.face:
                 # start turning towards the face
                 self.robot.set_head_angle(self.last_head_position).wait_for_completed()
@@ -121,11 +124,11 @@ class CozmoPlayerActions(Thread):
             time.sleep(0.5)
 
     def go_to_sleep(self):
-        print("That was a vey soothing story. Cozmo has just dozed off")
+        self.logger.info("That was a vey soothing story. Cozmo has just dozed off")
         self.robot.play_anim('anim_gotosleep_sleeping_01').wait_for_completed()
 
     def start_free_play(self):
-        print("What is Cozmo up to?")
+        self.logger.info("What is Cozmo up to?")
         self.robot.start_freeplay_behaviors()
         time.sleep(90)
         self.robot.stop_freeplay_behaviors()
@@ -135,16 +138,16 @@ class CozmoPlayerActions(Thread):
             self.running_animation = self.robot.play_anim(anim)
             self.running_animation.wait_for_completed()
         except Exception as e:
-            print("Error while playing animation \'{}\': {}".format(anim, e))
+            self.logger.warning("Error while playing animation \'{}\': {}".format(anim, e))
             pass
 
     @event.oneshot
     def handle_fist_bump(self, event):
-        print(event)
+        self.logger.info(event)
         self.fist_bump_success = True
 
     def do_fist_bump(self):
-        print("Fist bump?")
+        self.logger.info("Fist bump?")
         wait_time = 10.0
         self.fist_bump_success = False
 
@@ -163,19 +166,19 @@ class CozmoPlayerActions(Thread):
         if not self.fist_bump_success:
             # No fist bumo yet request again
             wait_time = 10.0
-            print("Please fist bump")
+            self.logger.info("Please fist bump")
             self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpRequestRetry).wait_for_completed()
             while not self.fist_bump_success and wait_time > 0:
                 time.sleep(0.5)
                 wait_time -= 0.5
 
         if self.fist_bump_success:
-            print("hehe fist bumped")
+            self.logger.info("hehe fist bumped")
             self.robot.move_lift(-3)
             time.sleep(.2)
             self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpSuccess).wait_for_completed()
         else:
-            print("Cozmo is sad, no fist bump")
+            self.logger.info("Cozmo is sad, no fist bump")
             self.robot.move_lift(-3)
             time.sleep(2)
             self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpLeftHanging).wait_for_completed()
