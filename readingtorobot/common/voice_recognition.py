@@ -54,7 +54,7 @@ class SpeechReco(Thread):
         self.running = False
         self.join()
 
-    def emotion_from_string(self, s: str) -> None:
+    def process_text(self, s: str) -> None:
         expression = self.book.evaluate_text(s)
         self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
         try:
@@ -122,7 +122,7 @@ class SpeechReco(Thread):
                     text = stream.finishStream()
 
                 if text:
-                    self.emotion_from_string(text)
+                    self.process_text(text)
 
             self.audio_proc.stop()
         except Exception as e:

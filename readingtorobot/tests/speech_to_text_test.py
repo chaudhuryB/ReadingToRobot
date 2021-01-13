@@ -16,7 +16,7 @@ class SpeechRecoMock(SpeechReco):
     def __init__(self, config=None, interpreter=None):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 
-    def emotion_from_string(self, text):
+    def process_text(self, text):
         self.logger.debug("\033[93mRecognized: {}\033[0m".format(text))
         op = self.book.evaluate_text(text)
         if op is not None:
@@ -25,7 +25,8 @@ class SpeechRecoMock(SpeechReco):
 
 def main():
 
-    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s:SpeechTest:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
+                        level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description="Stream from microphone to DeepSpeech using VAD")
 
