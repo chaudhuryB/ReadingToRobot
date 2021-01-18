@@ -29,9 +29,28 @@ wordlist = {
               "three fat snails sneaking feet".split(' ')
     }
 
+sentencelist = {
+    'happy': ["then one happy day in the second week",
+              "keep them wet and wait"],
+
+    'groan': ["but for one very long week the pots just sat there",
+              "there was no tree to be seen",
+              "this is silly"],
+
+    'excited': ["pip saw a teeny green stem peeping out of the pot",
+                "and molly saw a soft green leaf",
+                "you have a tree said mr beam"],
+
+    'sad': ["but the next day the teeny green stem and the soft green leaf had vanished",
+            "molly was very sad",
+            "oh dear she said and a little tear fell down her cheek"],
+
+    'scared': ["three fat snails were sneaking along mr mister beams feet"]
+}
+
 
 class Book:
-    def __init__(self, source, debug=False):
+    def __init__(self, source='the_teeny_tree_literal.txt'):
         self.text = load_book(resource_file(source))
         self.filtered_text = self.extract_keywords(self.text)
         self.window = (0, len(self.text))  # This window covers the possible pages where we are reading
@@ -44,9 +63,12 @@ class Book:
         self.win_size = 2
         self.expression_cooldown = 10
         self.last_expression_time = time.perf_counter()
-        self.DEBUG = debug
 
         self.logger = logging.getLogger(name=__name__)
+
+        self.sentences = [{'sentence': sen.split(' '), 'emotion': em}
+                          for em in sentencelist for sen in sentencelist[em]]
+        self.match_score_thresh = 0.5
 
     def evaluate_text_rolling_window(self, text):
         # Divide text into list of words, eliminate duplicates.
@@ -92,6 +114,46 @@ class Book:
             self.window = (self.reactions[self.reaction_idx]['idx'], len(self.text))
 
         return reaction
+
+    def evaluate_static_sentence_validity(self, text):
+        text_list = text.split(' ')
+        matching_sentences = {}
+        # For all evaluated sentences, check if any of the words in it match to the given text. Then, find the position
+        # where the match occurs, and get the length of the possible matching sentence.
+        for i, s in enumerate(self.sentences):
+            first_match_id = None
+            matched_sentence_length = 0
+            sentence = s['sentence']
+            for k, word in enumerate(sentence):
+                if first_match_id is None:
+                    for text_word in text_list:
+                        if text_word == word:
+                            first_match_id = text_list.index(text_word) - k
+                            break
+                else:
+                    matched_sentence_length = min(len(text_list[first_match_id:]), len(sentence))
+                    if matched_sentence_length / len(sentence) > self.match_score_thresh:
+                        matching_sentences[i] = {'first_id': first_match_id, 'lenght': matched_sentence_length}
+                    break
+        # Once we have the matches, compare word by word the elements in the possible matches.
+        best_score = self.match_score_thresh
+        best_em = None
+        for i in matching_sentences:
+            recorded = text_list[matching_sentences[i]['first_id']:(matching_sentences[i]['first_id'] +
+                                                                    matching_sentences[i]['lenght'])]
+            template = self.sentences[i]['sentence'][0:matching_sentences[i]['lenght']]
+            score = 0
+            self.logger.debug('slen: {}\nrec: {}\ntem: {}'.format(matching_sentences[i]['lenght'], recorded, template))
+            for rec, tem in zip(recorded, template):
+                if rec == tem:
+                    score += 1
+            norm_score = score / len(self.sentences[i]['sentence'])
+            if norm_score > best_score:
+                best_score = norm_score
+                best_em = self.sentences[i]['emotion']
+
+        # Return the best matching emotion
+        return best_em
 
     def evaluate_text(self, text):
         if self._in_expression_cooldown():
