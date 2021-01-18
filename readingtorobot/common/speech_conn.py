@@ -56,11 +56,15 @@ class SpeechReceiver(threading.Thread):
                 if not ready[0]:
                     continue
                 raw_frame, address = self.sock.recvfrom(self.buffer_size)
+            except KeyboardInterrupt:
+                self.running = False
+                raise
             except Exception as e:
                 self.logger.warning("Failed to receive frame: {}".format(e))
                 continue
 
             self.command_callback(raw_frame.decode('utf-8'))
+
         self.logger.info('Stopped speech recognition processes.')
 
 
