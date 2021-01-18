@@ -130,6 +130,7 @@ class ContinuousSpeech(Thread, Audio):
                  max_seconds=10,
                  min_seconds=4,
                  aggressiveness=3,
+                 processing_interval=0.5,
                  silence_threshold=200,
                  input_rate=None):
         super().__init__()
@@ -139,7 +140,7 @@ class ContinuousSpeech(Thread, Audio):
         self.max_seconds = max_seconds
         self.min_seconds = min_seconds
         self.time_window = (max_seconds - min_seconds) * self.BLOCKS_PER_SECOND
-        self.wait_time = 1
+        self.wait_time = processing_interval
         self.main_buffer_size = self.BLOCKS_PER_SECOND * self.max_seconds
 
         self.main_audio_buffer = []
@@ -214,10 +215,13 @@ class ContinuousSpeech(Thread, Audio):
         byte_frames.close()
         return AudioData(frame_data, self.sample_rate, 2)
 
-    def clear_audio(self):
+    def clear_audio(self, clear_all=False):
         """ Clean up the current window. """
         with self.lock:
-            del self.main_audio_buffer[:]
+            if clear_all:
+                del self.main_audio_buffer[:]
+            else:
+                del self.main_audio_buffer[self.time_window:]
 
     def vad_collector(self, padding_ms=300, ratio=0.75, frames=None):
         """ Generator that yields series of consecutive audio frames comprising each utterence, separated by yielding a
@@ -263,6 +267,7 @@ class ContinuousSpeech(Thread, Audio):
                                 aggressiveness=data.get('vad_aggressiveness', 3),
                                 silence_threshold=data.get('silence_threshold', 200),
                                 device=data.get('device', None),
+                                processing_interval=data.get('processing_interval', 0.5),
                                 input_rate=data.get('sample_rate', DEFAULT_SAMPLE_RATE))
 
 
