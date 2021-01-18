@@ -61,27 +61,22 @@ class SpeechReco(Thread):
             if expression == "happy":
                 self.game.do_feel(Feel.HAPPY)
                 self.logger.debug("Feeling {}".format("Happy"))
-                self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "sad":
                 self.game.do_feel(Feel.SAD)
                 self.logger.debug("Feeling {}".format("Sad"))
-                self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "groan":
                 self.game.do_feel(Feel.ANNOYED)
                 self.logger.debug("Feeling {}".format("Groan"))
-                self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "excited":
                 self.game.do_feel(Feel.EXCITED)
                 self.logger.debug("Feeling {}".format("Excited"))
-                self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
             elif expression == "scared":
                 self.game.do_feel(Feel.SCARED)
                 self.logger.debug("Feeling {}".format("Scared"))
-                self.audio_proc.clear_audio()
                 time.sleep(self.reaction_delay)
         except Exception as e:
             self.logger.warning(e)
