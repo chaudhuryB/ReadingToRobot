@@ -8,7 +8,7 @@ import time
 import qi
 import random
 
-from common.keyboard_control import EmotionController
+from common.keyboard_control import DetachedSpeechReco
 from common.feeling_declaration import Feel
 from NAO.nao_expression import *
 
@@ -37,7 +37,7 @@ class HumanListener:
         self.feel_lock = threading.Lock()
         self.ap = session.service("ALAudioPlayer")
         self.ap.loadSoundSet("Aldebaran")
-        self.feel_control = EmotionController(self)
+        self.feel_control = DetachedSpeechReco(self)
 
         # Tracking
         self.tracker = session.service("ALTracker")

@@ -12,6 +12,7 @@ import threading
 import os
 
 from .configuration_loader import module_file
+from .feeling_declaration import Feel
 
 
 class SpeechReceiver(threading.Thread):
@@ -61,3 +62,32 @@ class SpeechReceiver(threading.Thread):
 
             self.command_callback(raw_frame.decode('utf-8'))
         self.logger.info('Stopped speech recognition processes.')
+
+
+class DetachedSpeechReco(SpeechReceiver):
+    def __init__(self, read_game):
+        super(DetachedSpeechReco, self).__init__(self.process_text)
+        self.game = read_game
+
+    def process_text(self, s):
+        expression = self.book.evaluate_text(s)
+        self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
+        try:
+            if expression == "happy":
+                self.game.do_feel(Feel.HAPPY)
+                self.logger.debug("Feeling {}".format("Happy"))
+            elif expression == "sad":
+                self.game.do_feel(Feel.SAD)
+                self.logger.debug("Feeling {}".format("Sad"))
+            elif expression == "groan":
+                self.game.do_feel(Feel.ANNOYED)
+                self.logger.debug("Feeling {}".format("Groan"))
+            elif expression == "excited":
+                self.game.do_feel(Feel.EXCITED)
+                self.logger.debug("Feeling {}".format("Excited"))
+            elif expression == "scared":
+                self.game.do_feel(Feel.SCARED)
+                self.logger.debug("Feeling {}".format("Scared"))
+        except Exception as e:
+            self.logger.warning(e)
+            pass

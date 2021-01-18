@@ -20,7 +20,8 @@ import miro2.core.pars as pars
 import miro2 as miro
 from cv_bridge import CvBridge
 
-from common.keyboard_control import EmotionController
+from .common.speech_conn import DetachedSpeechReco
+from .common.feeling_declaration import Feel
 
 # nodes
 from miro2.core.node_lower import NodeLower
@@ -183,7 +184,7 @@ class ReadSystem(object):
         self.bridge = CvBridge()
 
         # emotion expression management
-        self.emotion = EmotionController(self)
+        self.emotion = DetachedSpeechReco(self)
         self.emotion.start()
 
         # init ROS
@@ -310,12 +311,12 @@ class ReadSystem(object):
                    data_type)
 
     def do_feel(self, feeling):
-        if feeling == 1:
+        if feeling == Feel.HAPPY:
             self.state.user_touch = 2.0
             self.state.emotion.valence = 1.0
             self.state.emotion.arousal = 1.0
             print "feeling happy"
-        elif feeling == 2:
+        elif feeling == Feel.SAD:
             self.nodes.animation.play_animation(self.animations['sad'])
             print "feeling sad"
 
