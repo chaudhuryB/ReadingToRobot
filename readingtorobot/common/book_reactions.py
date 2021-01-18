@@ -69,6 +69,7 @@ class Book:
         self.sentences = [{'sentence': sen.split(' '), 'emotion': em}
                           for em in sentencelist for sen in sentencelist[em]]
         self.match_score_thresh = 0.5
+        self.last_matched_sentence = -1
 
     def evaluate_text_rolling_window(self, text):
         # Divide text into list of words, eliminate duplicates.
@@ -121,6 +122,9 @@ class Book:
         # For all evaluated sentences, check if any of the words in it match to the given text. Then, find the position
         # where the match occurs, and get the length of the possible matching sentence.
         for i, s in enumerate(self.sentences):
+            # Skip this sentence if it corresponds to the last match (it is unlikely that we process twice the same)
+            if i == self.last_matched_sentence:
+                continue
             first_match_id = None
             matched_sentence_length = 0
             sentence = s['sentence']
@@ -151,6 +155,7 @@ class Book:
             if norm_score > best_score:
                 best_score = norm_score
                 best_em = self.sentences[i]['emotion']
+                self.last_matched_sentence = i
 
         # Return the best matching emotion
         return best_em
