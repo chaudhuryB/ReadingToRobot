@@ -7,8 +7,9 @@
 import logging
 import select
 import socket
-import threading
 import subprocess
+import threading
+import os
 
 from .configuration_loader import module_file
 
@@ -33,7 +34,7 @@ class SpeechReceiver(threading.Thread):
         self.buffer_size = 1024
         self.running = False
         self.command_callback = callback
-        self.sp = subprocess.Popen(module_file('common/speech_service.py'))
+        self.sp = subprocess.Popen(module_file(os.path.join('common', 'speech_service.py')))
 
     def start(self):
         self.running = True
@@ -47,6 +48,9 @@ class SpeechReceiver(threading.Thread):
     def run(self):
         while self.running:
             try:
+                if self.sp.poll() is not None:
+                    self.running = False
+                    continue
                 ready = select.select((self.sock,), (), (), 0.5)
                 if not ready[0]:
                     continue
@@ -56,3 +60,4 @@ class SpeechReceiver(threading.Thread):
                 continue
 
             self.command_callback(raw_frame.decode('utf-8'))
+        self.logger.info('Stopped speech recognition processes.')

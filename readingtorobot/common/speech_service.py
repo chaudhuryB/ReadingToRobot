@@ -19,17 +19,29 @@ class SpeechSender(SpeechReco):
     def __init__(self, config=None, interpreter=None):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((self.HOST, self.PORT))
+        self.sock_connected = False
 
     def process_text(self, text):
-        op = self.book.evaluate_text(text)
+        if not self.sock_connected:
+            try:
+                self.sock.connect((self.HOST, self.PORT))
+                self.sock_connected = True
+            except Exception as e:
+                self.logger.warning('Socket connection failed: {}'.format(e))
+                return
+        op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
-            self.sock.send(op.encode('utf-8'))
+            try:
+                self.sock.send(op.encode('utf-8'))
+            except Exception as e:
+                self.logger.error('Socket connection lost: {}'.format(e))
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.sock_connected = False
 
 
 def main():
 
-    logging.basicConfig(format='%(asctime)s:SpeechTest:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
+    logging.basicConfig(format='%(asctime)s:SpeechService:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
                         level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description="Stream from microphone to DeepSpeech using VAD")
@@ -82,7 +94,7 @@ def main():
             configuration['hot_words'][word] = boost
 
     # Create speech recognition object
-    speech_reco = SpeechReco(config=args.config)
+    speech_reco = SpeechSender(config=args.config)
 
     try:
         speech_reco.start()
