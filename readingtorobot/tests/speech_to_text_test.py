@@ -18,7 +18,7 @@ class SpeechRecoMock(SpeechReco):
 
     def process_text(self, text):
         self.logger.debug("\033[93mRecognized: {}\033[0m".format(text))
-        op = self.book.evaluate_text(text)
+        op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
             self.logger.debug("\033[93mEvaluate text thinks: {}\033[0m".format(op))
 

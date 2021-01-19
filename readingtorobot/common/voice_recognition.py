@@ -55,7 +55,7 @@ class SpeechReco(Thread):
         self.join()
 
     def process_text(self, s: str) -> None:
-        expression = self.book.evaluate_text(s)
+        expression = self.book.evaluate_static_sentence_validity(s)
         self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
         try:
             if expression == "happy":
