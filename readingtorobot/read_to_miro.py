@@ -5,6 +5,7 @@
 
 import argparse
 import copy
+import logging
 import os
 import time
 
@@ -35,7 +36,7 @@ from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from miro2.core.node_spatial import NodeSpatial
 
 # Local nodes
-from MiRo.node_animation_player import NodeAnimationPlayer, load_animations
+from .MiRo.node_animation_player import NodeAnimationPlayer, load_animations
 
 
 class Pub:
@@ -173,6 +174,9 @@ class Nodes:
 class ReadSystem(object):
 
     def __init__(self, animation_dir=None):
+        # logger
+        self.logger = logging.getLogger(name=__name__)
+
         # config animations
         self.animations = load_animations(animation_dir, max_speed=0.1)
 
@@ -201,7 +205,7 @@ class ReadSystem(object):
 
         # debug
         if self.pars.dev.START_CAMS_HORIZ:
-            print "adjusting camera start position to horizontal"
+            self.logger.debug("Adjusting camera start position to horizontal")
             self.kc_m = miro.utils.kc_interf.kc_miro_cams_horiz()
             self.kc_s = miro.utils.kc_interf.kc_miro_cams_horiz()
 
@@ -293,7 +297,7 @@ class ReadSystem(object):
         self.subscribe('sensors/stream', std_msgs.msg.UInt16MultiArray, self.callback_stream)
 
         # wait for connection before moving off
-        print "waiting for connection..."
+        self.logger.info("Waiting for connection to robot...")
         time.sleep(1)
 
         # set active
@@ -302,7 +306,7 @@ class ReadSystem(object):
     def subscribe(self, topic_name, data_type, callback):
 
         full_topic_name = self.topic_base_name + topic_name
-        print "subscribing to", full_topic_name, "..."
+        self.logger.debug("Subscribing to {}...".format(full_topic_name))
         self.sub.append(rospy.Subscriber(full_topic_name, data_type, callback, queue_size=1, tcp_nodelay=True))
 
     def publish(self, topic_name, data_type):
@@ -315,16 +319,16 @@ class ReadSystem(object):
             self.state.user_touch = 2.0
             self.state.emotion.valence = 1.0
             self.state.emotion.arousal = 1.0
-            print "feeling happy"
+            self.logger.debug("Feeling happy")
         elif feeling == Feel.SAD:
             self.nodes.animation.play_animation(self.animations['sad'])
-            print "feeling sad"
+            self.logger.debug("Feeling sad")
 
     def callback_config_command(self, msg):
 
         # report command
         cmd = msg.data
-        print "callback_config_command", cmd
+        self.logger.debug("Callback_config_command {}".format(cmd))
 
         # handle command
         if len(cmd) == 0:
@@ -333,7 +337,7 @@ class ReadSystem(object):
             pass
         elif cmd[0] == "f":
             flag = cmd[1]
-            print "toggle", flag
+            self.logger.debug("Toggle {}".format(flag))
             if flag in self.pars.demo_flags:
                 self.pars.demo_flags = self.pars.demo_flags.replace(flag, '')
             else:
@@ -342,11 +346,11 @@ class ReadSystem(object):
         elif cmd[0] == "p":
             q = float(cmd[1]) * 0.2
             self.pars.action.action_prob = q
-            print "action_prob", self.pars.action.action_prob
+            self.logger.debug("action_prob {}".format(self.pars.action.action_prob))
             self.pars.lower.interact_prob = q
-            print "interact_prob", self.pars.lower.interact_prob
+            self.logger.debug("interact_prob {}".format(self.pars.lower.interact_prob))
         else:
-            print "command not understood"
+            self.logger.warning("command not understood: {}".format(cmd))
 
         # return state
         self.pub_config.msg.data = "demo_flags=" + self.pars.demo_flags + \
@@ -413,7 +417,7 @@ class ReadSystem(object):
         if self.pars.flags.BODY_ENABLE_TRANSLATION == 0:
             platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_TRANSLATION
         if self.platform_flags != platform_flags:
-            print "publishing flags", "{0:08x}".format(platform_flags)
+            self.logger.debug("publishing flags {0:08x}".format(platform_flags))
             self.platform_flags = platform_flags
             self.pub_flags.msg.data = platform_flags
             self.pub_flags.publish()
@@ -542,7 +546,7 @@ class ReadSystem(object):
 
         # update config (from run state file)
         if os.path.isfile(self.trigger_filename):
-            print "saw trigger file, (re)finalizing parameters"
+            self.logger.debug("saw trigger file, (re)finalizing parameters")
             self.pars.finalize()
             os.remove(self.trigger_filename)
 
@@ -631,7 +635,7 @@ class ReadSystem(object):
             # check dev stop
             if self.pars.dev.DEBUG_AUTO_STOP:
                 if self.state.tick >= 400:  # set this value manually
-                    print "DEV_DEBUG_AUTO_STOP"
+                    self.logger.debug("DEV_DEBUG_AUTO_STOP")
                     with open("/tmp/DEV_DEBUG_AUTO_STOP", "w") as file:
                         file.write("")
                     break
@@ -640,18 +644,17 @@ class ReadSystem(object):
             if self.pars.dev.SHOW_LOC_EYE:
                 x = miro.utils.get("LOC_EYE_L_HEAD")
                 y = self.kc_m.changeFrameAbs(miro.constants.LINK_HEAD, miro.constants.LINK_WORLD, x)
-                print "LOC_EYE_L_HEAD_WORLD", y
+                self.logger.debug("LOC_EYE_L_HEAD_WORLD {}".format(y))
 
         # set inactive
         self.active = False
 
         # timing
         if self.timing0 is not None:
-            print "\n\n\n"
             np.set_printoptions(precision=6, linewidth=1000000)
             for i in range(3):
                 tt = self.timing[i]
-                print np.array(tt)
+                self.logger.debug("\n\n\n{}".format(np.array(tt)))
 
     def term(self):
         self.emotion.stop()
@@ -660,6 +663,9 @@ class ReadSystem(object):
 
 
 if __name__ == "__main__":
+
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('animation_dir', nargs='?', default=os.getcwd())
     args = parser.parse_args()
