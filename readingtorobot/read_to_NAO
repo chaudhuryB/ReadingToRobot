@@ -8,9 +8,9 @@ import time
 import qi
 import random
 
-from common.keyboard_control import DetachedSpeechReco
-from common.feeling_declaration import Feel
-from NAO.nao_expression import *
+from readingtorobot.common.keyboard_control import DetachedSpeechReco
+from readingtorobot.common.feeling_declaration import Feel
+from readingtorobot.NAO.nao_expression import *
 
 
 class HumanListener:

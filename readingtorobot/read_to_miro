@@ -7,7 +7,7 @@ import argparse
 import logging
 import os
 
-from .MiRo.robot_manager import RobotManager
+from readingtorobot.MiRo.robot_manager import RobotManager
 
 
 if __name__ == "__main__":

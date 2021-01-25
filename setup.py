@@ -1,7 +1,10 @@
+import io
 import setuptools
 
-with open("README.md", "r", encoding="utf-8") as fh:
+
+with io.open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
+
 
 setuptools.setup(
     name="readingtorobot",
@@ -19,5 +22,10 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    scripts=[
+        'readingtorobot/read_to_cozmo',
+        'readingtorobot/read_to_NAO',
+        'readingtorobot/read_to_miro'
+    ],
+    python_requires='>=3.7',
 )
