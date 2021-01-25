@@ -24,11 +24,12 @@ from .helper_classes import Input, Nodes, Output, Pub, State
 from .node_animation_player import load_animations
 from ..common.feeling_declaration import Feel
 from ..common.speech_conn import DetachedSpeechReco
+from ..common.keyboard_control import EmotionController
 
 
 class RobotManager(object):
 
-    def __init__(self, animation_dir=None):
+    def __init__(self, animation_dir=None, keyboard_control=False):
         # logger
         self.logger = logging.getLogger(name=__name__)
 
@@ -43,7 +44,7 @@ class RobotManager(object):
         self.bridge = CvBridge()
 
         # emotion expression management
-        self.emotion = DetachedSpeechReco(self)
+        self.emotion = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
         self.emotion.start()
 
         # init ROS

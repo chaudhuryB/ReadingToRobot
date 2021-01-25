@@ -8,6 +8,7 @@ import logging
 import os
 
 from readingtorobot.MiRo.robot_manager import RobotManager
+from readingtorobot.common.configuration_loader import module_file
 
 
 if __name__ == "__main__":
@@ -15,11 +16,13 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('animation_dir', nargs='?', default=os.getcwd())
+    parser.add_argument('animation_dir', nargs='?', default=module_file(os.path.join('MiRo', 'animations')))
+    parser.add_argument('-k', '--keyboard-control', action='store_true',
+                        help="Trigger emotion animations manually using keyboard.")
     args = parser.parse_args()
 
     # instantiate
-    app = RobotManager(animation_dir=args.animation_dir)
+    app = RobotManager(animation_dir=args.animation_dir, keyboard_control=args.keyboard_control)
 
     # execute
     app.loop()

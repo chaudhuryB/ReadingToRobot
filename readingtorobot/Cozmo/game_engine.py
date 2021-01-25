@@ -10,14 +10,15 @@ import cozmo
 
 from cozmo import robot
 from cozmo.util import degrees, distance_mm, speed_mmps
-from ..common.voice_recognition import SpeechReco
 from ..common.feeling_declaration import Feel
+from ..common.keyboard_control import EmotionController
+from ..common.voice_recognition import SpeechReco
 from .constants import START_CUBE, END_CUBE
 from .cozmo_listener import CozmoPlayerActions
 
 
 class ReadEngine:
-    def __init__(self, game_robot):
+    def __init__(self, game_robot, keyboard_control=False):
         self.robot = game_robot
         self.robot_proxy = None
         self.robot_cubes = []
@@ -25,6 +26,7 @@ class ReadEngine:
         self.face = None
         self.feel = Feel.NEUTRAL
         self.logger = logging.getLogger(name=__name__)
+        self.read_listener = EmotionController(self) if keyboard_control else SpeechReco(self)
 
     def tap_ready(self):
         player_tapped = False
@@ -61,8 +63,6 @@ class ReadEngine:
         Cozmo to find all three cubes and then order them in position for Rock/Paper/Scissor
         """
         self.robot_proxy = CozmoPlayerActions()
-
-        self.read_listener = SpeechReco(self)
 
         if self.robot.is_on_charger:
             self.robot.DriveOffChargerContacts().wait_for_completed()

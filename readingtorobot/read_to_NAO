@@ -8,7 +8,8 @@ import time
 import qi
 import random
 
-from readingtorobot.common.keyboard_control import DetachedSpeechReco
+from readingtorobot.common.speech_conn import DetachedSpeechReco
+from readingtorobot.common.keyboard_control import EmotionController
 from readingtorobot.common.feeling_declaration import Feel
 from readingtorobot.NAO.nao_expression import *
 
@@ -17,7 +18,7 @@ class HumanListener:
     """
     Class managing the movement of NAO, adding expressions when listening
     """
-    def __init__(self, app):
+    def __init__(self, app, keyboard_control=False):
         """
         Initialisation of qi framework and event detection.
         """
@@ -37,7 +38,7 @@ class HumanListener:
         self.feel_lock = threading.Lock()
         self.ap = session.service("ALAudioPlayer")
         self.ap.loadSoundSet("Aldebaran")
-        self.feel_control = DetachedSpeechReco(self)
+        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
 
         # Tracking
         self.tracker = session.service("ALTracker")
@@ -243,6 +244,8 @@ if __name__ == "__main__":
                         "Choregraphe")
     parser.add_argument("--mov", type=str, default=None,
                         help="Robot movement: run, wave, choose-left -right -center, sad, happy")
+    parser.add_argument('-k', '--keyboard-control', action='store_true',
+                        help="Trigger emotion animations manually using keyboard.")
 
     args = parser.parse_args()
 
@@ -259,7 +262,7 @@ if __name__ == "__main__":
 
     motion.wakeUp()
 
-    human_greeter = HumanListener(app)
+    human_greeter = HumanListener(app, keyboard_control=args.keyboard_control)
     human_greeter.start()
     # Keep robot running
     try:
