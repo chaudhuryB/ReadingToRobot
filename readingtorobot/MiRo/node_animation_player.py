@@ -97,10 +97,22 @@ class EmptyTrajectory(Trajectory):
         return self.run_angles, True
 
 
+class EmotionTrajectory:
+    def __init__(self, value):
+        self.value = value
+
+    def initialize(self):
+        pass
+
+    def get_target_pose(self, t):
+        return self.value, True
+
+
 class Animation:
 
     cosmetic_name_idx = {'tail_droop': 0, 'tail_wag': 1, 'eyel': 2, 'eyer': 3, 'earl': 4, 'earr': 5}
     kinematic_name_idx = {'tilt': 0, 'lift': 1, 'yaw': 2, 'pitch': 3}
+    emotion_name_idx = {'valence': 0, 'arousal': 1}
 
     def __init__(self, trajectories):
         """Robot animation class, containing trajectories for the joints that will be active.
@@ -120,7 +132,7 @@ class Animation:
                 self.trajectories[j]['traj'].initialize(kinematic[self.trajectories[j]['idx']])
 
     def get_commands(self):
-        kin_j, cos_j = [0.0]*4, [0.0]*6
+        kin_j, cos_j, emotion = [0.0] * 4, [0.0] * 6, [0.0] * 2
         dt = (datetime.datetime.now() - self.ref_time).total_seconds()
         finished = True
         for traj in self.trajectories:
@@ -128,12 +140,14 @@ class Animation:
             finished &= t_ended
             if self.trajectories[traj]['group'] == 'cosmetic':
                 cos_j[self.trajectories[traj]['idx']] = cmd
-            else:
+            elif self.trajectories[traj]['group'] == 'kinematic':
                 kin_j[self.trajectories[traj]['idx']] = cmd
+            else:
+                emotion[self.trajectories[traj]['idx']] = cmd
         if finished:
             return None
         else:
-            return kin_j, cos_j
+            return {'kinematic': kin_j, 'cosmetic': cos_j, 'emotion': emotion}
 
     @classmethod
     def from_dict(cls, data, min_speed=None, max_speed=None):
@@ -163,17 +177,20 @@ class Animation:
             for j in index_dict:
                 t_, p_ = [], []
                 if j in data:
-                    mn = max(data[j]['min_speed'], min_speed) \
-                        if min_speed and 'min_speed' in data[j] \
-                        else data[j].get('min_speed') or min_speed
-                    mx = min(data[j]['max_speed'], max_speed) \
-                        if max_speed and 'max_speed' in data[j] \
-                        else data[j].get('max_speed') or max_speed
-                    rti = data[j].get('return_to_initial_pose', False)
-                    for t, p in zip(data[j]['times'], data[j]['positions']):
-                        t_.append(t)
-                        p_.append(p)
-                    tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx, return_to_init=rti)
+                    if 'value' in data[j]:
+                        tr = EmotionTrajectory(data[j]['value'])
+                    else:
+                        mn = max(data[j]['min_speed'], min_speed) \
+                            if min_speed and 'min_speed' in data[j] \
+                            else data[j].get('min_speed') or min_speed
+                        mx = min(data[j]['max_speed'], max_speed) \
+                            if max_speed and 'max_speed' in data[j] \
+                            else data[j].get('max_speed') or max_speed
+                        rti = data[j].get('return_to_initial_pose', False)
+                        for t, p in zip(data[j]['times'], data[j]['positions']):
+                            t_.append(t)
+                            p_.append(p)
+                        tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx, return_to_init=rti)
                 else:
                     tr = EmptyTrajectory()
 
@@ -216,8 +233,10 @@ class NodeAnimationPlayer(node.Node):
                 cmds = self.current_animation.get_commands()
                 if cmds:
                     self.state.animation_running = True
-                    self.config = cmds[0]
-                    self.output.cosmetic_joints = np.array(cmds[1])
+                    self.config = cmds['kinematic']
+                    self.output.cosmetic_joints = np.array(cmds['cosmetic'])
+                    self.otuput.state.emotion.valence = cmds['emotion'][0]
+                    self.output.state.emotion.arousal = cmds['emotion'][0]
                 else:
                     self.state.animation_running = False
                     self.current_animation = None

@@ -19,5 +19,11 @@
         "positions": [0.6, 0.7, 0.8],
         "max_speed": 0.5,
         "return_to_initial_pose": true
+    },
+    "valence": {
+        "value": 0.0
+    },
+    "arousal": {
+        "value": 0.0
     }
 }
