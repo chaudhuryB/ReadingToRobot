@@ -235,8 +235,8 @@ class NodeAnimationPlayer(node.Node):
                     self.state.animation_running = True
                     self.config = cmds['kinematic']
                     self.output.cosmetic_joints = np.array(cmds['cosmetic'])
-                    self.otuput.state.emotion.valence = cmds['emotion'][0]
-                    self.output.state.emotion.arousal = cmds['emotion'][0]
+                    self.output.animal_state.emotion.valence = cmds['emotion'][0]
+                    self.output.animal_state.emotion.arousal = cmds['emotion'][0]
                 else:
                     self.state.animation_running = False
                     self.current_animation = None

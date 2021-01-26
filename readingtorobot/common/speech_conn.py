@@ -43,7 +43,8 @@ class SpeechReceiver(threading.Thread):
 
     def stop(self):
         self.running = False
-        self.sp.terminate()
+        if self.sp.poll() is None:
+            self.sp.terminate()
         self.join()
 
     def run(self):
