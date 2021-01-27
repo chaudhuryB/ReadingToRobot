@@ -100,12 +100,16 @@ class EmptyTrajectory(Trajectory):
 class EmotionTrajectory:
     def __init__(self, value):
         self.value = value
+        self.run_value = 0.5
 
-    def initialize(self):
-        pass
+    def initialize(self, current_value):
+        self.run_value = current_value
 
     def get_target_pose(self, t):
         return self.value, True
+
+    def get_initial_value(self):
+        return self.run_value
 
 
 class Animation:
@@ -123,13 +127,15 @@ class Animation:
         self.trajectories = trajectories
         self.ref_time = 0.0
 
-    def initialize(self, cosmetic, kinematic):
+    def initialize(self, cosmetic, kinematic, emotion):
         self.ref_time = datetime.datetime.now()
         for j in self.trajectories:
             if self.trajectories[j]['group'] == 'cosmetic':
                 self.trajectories[j]['traj'].initialize(cosmetic[self.trajectories[j]['idx']])
-            else:
+            elif self.trajectories[j]['group'] == 'kinematic':
                 self.trajectories[j]['traj'].initialize(kinematic[self.trajectories[j]['idx']])
+            elif self.trajectories[j]['group'] == 'emotion':
+                self.trajectories[j]['traj'].initialize(emotion[self.trajectories[j]['idx']])
 
     def get_commands(self):
         kin_j, cos_j, emotion = [0.0] * 4, [0.0] * 6, [0.0] * 2
@@ -142,12 +148,19 @@ class Animation:
                 cos_j[self.trajectories[traj]['idx']] = cmd
             elif self.trajectories[traj]['group'] == 'kinematic':
                 kin_j[self.trajectories[traj]['idx']] = cmd
-            else:
+            elif self.trajectories[traj]['group'] == 'emotion':
                 emotion[self.trajectories[traj]['idx']] = cmd
         if finished:
             return None
         else:
             return {'kinematic': kin_j, 'cosmetic': cos_j, 'emotion': emotion}
+
+    def get_initial_emotion_level(self):
+        emotion = [0.0, 0.0]
+        for j in self.trajectories:
+            if self.trajectories[j]['group'] == 'emotion':
+                emotion[self.trajectories[j]['idx']] = self.trajectories[j]['traj'].get_initial_value()
+        return emotion
 
     @classmethod
     def from_dict(cls, data, min_speed=None, max_speed=None):
@@ -202,6 +215,7 @@ class Animation:
 
         gen_traj(cls.cosmetic_name_idx, 'cosmetic')
         gen_traj(cls.kinematic_name_idx, 'kinematic')
+        gen_traj(cls.emotion_name_idx, 'emotion')
 
         return cls(trajectories=trajectories)
 
@@ -213,7 +227,7 @@ class NodeAnimationPlayer(node.Node):
         self.current_animation = None
         # Kinematics target joint positions (config in the MDK)
         self.config = [0.0] * 4
-        self.lock = Lock()
+        self.emotion = self.output.animal_state.emotion
 
     def play_animation(self, anim):
         self.playing_animations.append(anim)
@@ -223,23 +237,27 @@ class NodeAnimationPlayer(node.Node):
 
     def tick(self):
         """ Calculate next step in the animation."""
-        with self.lock:
-            if not self.current_animation:
-                if self.playing_animations:
-                    self.current_animation = self.playing_animations.pop(0)
-                    config = self.kc_m.getConfig()
-                    self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(), kinematic=config)
+        if not self.current_animation:
+            if self.playing_animations:
+                self.current_animation = self.playing_animations.pop(0)
+                config = self.kc_m.getConfig()
+                self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(),
+                                                  kinematic=config,
+                                                  emotion=(self.emotion.valence, self.emotion.arousal))
+        else:
+            cmds = self.current_animation.get_commands()
+            if cmds:
+                self.state.animation_running = True
+                self.state.vocalize = True
+                self.config = cmds['kinematic']
+                self.output.cosmetic_joints = np.array(cmds['cosmetic'])
+                self.emotion.valence = cmds['emotion'][0]
+                self.emotion.arousal = cmds['emotion'][1]
             else:
-                cmds = self.current_animation.get_commands()
-                if cmds:
-                    self.state.animation_running = True
-                    self.config = cmds['kinematic']
-                    self.output.cosmetic_joints = np.array(cmds['cosmetic'])
-                    self.output.animal_state.emotion.valence = cmds['emotion'][0]
-                    self.output.animal_state.emotion.arousal = cmds['emotion'][0]
-                else:
-                    self.state.animation_running = False
-                    self.current_animation = None
+                self.emotion.valence, self.emotion.arousal = self.current_animation.get_initial_emotion_level()
+                self.state.animation_running = False
+                self.state.vocalize = False
+                self.current_animation = None
 
 
 def load_animations(animation_address=None, min_speed=None, max_speed=None):

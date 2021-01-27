@@ -58,6 +58,7 @@ class State:
         self.camera_model_mini = None
 
         self.animation_running = False
+        self.vocalize = False
 
         # system
         self.tick = 0
