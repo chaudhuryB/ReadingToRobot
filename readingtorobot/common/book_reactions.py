@@ -30,19 +30,18 @@ wordlist = {
     }
 
 sentencelist = {
-    'happy':    ["then one happy day in the second week",
+    'happy':    ["pip saw a teeny green stem peeping out of the pot",
                  "keep them wet and wait"],
 
     'groan':    ["but for one very long week the pots just sat there",
                  "there was no tree to be seen",
                  "this is silly"],
 
-    'excited':  ["pip saw a teeny green stem peeping out of the pot",
+    'excited':  ["yippee said Pip and Molly",
                  "and molly saw a soft green leaf",
                  "you have a tree said mr beam"],
 
-    'sad':      ["but the next day the teeny green stem and the soft green leaf had vanished",
-                 "molly was very sad",
+    'sad':      ["molly was very sad",
                  "oh dear she said and a little tear fell down her cheek"],
 
     'scared':   ["and if we look X molly was screaming",
