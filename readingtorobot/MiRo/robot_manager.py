@@ -270,8 +270,6 @@ class RobotManager(object):
         if self.state.user_touch == 0:
             platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_KIN_IDLE
 
-        if self.pars.flags.BODY_ENABLE_TRANSLATION == 0:
-            platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_TRANSLATION
         if self.platform_flags != platform_flags:
             self.logger.debug("publishing flags {0:08x}".format(platform_flags))
             self.platform_flags = platform_flags
@@ -298,23 +296,16 @@ class RobotManager(object):
         # at runtime).
         self.output.animal_state.flags = 0
 
-        # Uncomment this to allow vocalization
-        # if self.pars.flags.EXPRESS_THROUGH_VOICE != 0:
-        # 	 self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
-        if self.pars.flags.EXPRESS_THROUGH_NECK != 0:
-            self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_NECK
-        # if self.pars.flags.EXPRESS_THROUGH_WHEELS != 0:
-        # 	 self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
-        if self.pars.flags.SALIENCE_FROM_MOTION != 0:
-            self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_MOTION
-        if self.pars.flags.SALIENCE_FROM_BALL != 0:
-            self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_BALL
-        if self.pars.flags.SALIENCE_FROM_FACE != 0:
-            self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_FACE
-        if self.pars.flags.SALIENCE_FROM_SOUND != 0:
-            self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_SOUND
-        if self.pars.flags.SALIENCE_FROM_APRIL != 0:
-            self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_APRIL
+        # Allow vocalization when possible.
+        if self.state.vocalize or (self.input.voice_state is not None and self.input.voice_state.vocalising):
+            self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
+        self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_NECK
+        # self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_MOTION
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_BALL
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_FACE
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_SOUND
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_APRIL
 
         # publish core states
         self.pub_animal_state.publish()
