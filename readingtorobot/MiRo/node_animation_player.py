@@ -69,7 +69,13 @@ class Trajectory:
         for i in xrange(1, len(self.run_angles)):
             dx = self.run_angles[i] - self.run_angles[i-1]
             dt = self.run_times[i] - self.run_times[i-1]
-            target_speed = dx / dt
+            try:
+                target_speed = dx / dt
+            except ZeroDivisionError as e:
+                if dx == dt == 0:
+                    target_speed = 0
+                else:
+                    raise
 
             if self.min_speed and target_speed < self.min_speed:
                 self._update_times(dx, target_speed, self.min_speed, i)
