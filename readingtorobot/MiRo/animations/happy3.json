@@ -1,0 +1,14 @@
+{
+    "pitch": {
+        "times": [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 3.0],
+        "positions": [0.1, -0.1, 0.1, -0.1, 0.1, -0.1, 0.010, 0.010],
+        "max_speed": 2,
+        "return_to_initial_pose": true
+    },
+    "valence": {
+        "value": 1.0
+    },
+    "arousal": {
+        "value": 1.0
+    }
+}

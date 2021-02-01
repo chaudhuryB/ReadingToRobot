@@ -3,6 +3,7 @@ import datetime
 import json
 import numpy as np
 import os
+from random import choice
 from threading import Lock
 
 from miro2.core import node
@@ -254,10 +255,15 @@ class NodeAnimationPlayer(node.Node):
                 self.emotion.valence = cmds['emotion'][0]
                 self.emotion.arousal = cmds['emotion'][1]
             else:
-                self.emotion.valence, self.emotion.arousal = self.current_animation.get_initial_emotion_level()
+                emotion = self.current_animation.get_initial_emotion_level()
+                self.state.emotion.valence, self.state.emotion.arousal = emotion
                 self.state.animation_running = False
                 self.state.vocalize = False
                 self.current_animation = None
+
+
+def choose_animation(animations, emotion_key):
+    return choice([anim for anim in animations if emotion_key in anim])
 
 
 def load_animations(animation_address=None, min_speed=None, max_speed=None):

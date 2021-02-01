@@ -1,0 +1,14 @@
+{
+    "lift": {
+        "times": [1, 2],
+        "positions": [0.5, 0.5],
+        "max_speed": 2,
+        "return_to_initial_pose": true
+    },
+    "valence": {
+        "value": 1.0
+    },
+    "arousal": {
+        "value": 1.0
+    }
+}

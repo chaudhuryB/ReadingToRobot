@@ -21,7 +21,7 @@ from cv_bridge import CvBridge
 
 # Local nodes
 from .helper_classes import Input, Nodes, Output, Pub, State
-from .node_animation_player import load_animations
+from .node_animation_player import choose_animation, load_animations
 from ..common.feeling_declaration import Feel
 from ..common.speech_conn import DetachedSpeechReco
 from ..common.keyboard_control import EmotionController
@@ -34,7 +34,7 @@ class RobotManager(object):
         self.logger = logging.getLogger(name=__name__)
 
         # config animations
-        self.animations = load_animations(animation_dir, max_speed=0.1)
+        self.animations = load_animations(animation_dir, max_speed=1)
 
         # pars
         self.pars = pars.CorePars()
@@ -171,13 +171,14 @@ class RobotManager(object):
                    data_type)
 
     def do_feel(self, feeling):
+        self.state.user_touch = 2.0
         if feeling == Feel.HAPPY:
-            self.state.user_touch = 2.0
-            self.state.emotion.valence = 1.0
-            self.state.emotion.arousal = 1.0
+            # self.state.emotion.valence = 1.0
+            # self.state.emotion.arousal = 1.0
+            self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'happy')])
             self.logger.debug("Feeling happy")
         elif feeling == Feel.SAD:
-            self.nodes.animation.play_animation(self.animations['sad'])
+            self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'sad')])
             self.logger.debug("Feeling sad")
 
     def callback_config_command(self, msg):
