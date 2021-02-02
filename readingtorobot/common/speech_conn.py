@@ -30,7 +30,7 @@ class SpeechReceiver(threading.Thread):
 
     def __init__(self, callback):
         super(SpeechReceiver, self).__init__()
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.logger = logging.getLogger(__name__)
         self.buffer_size = 1024
         self.running = False
