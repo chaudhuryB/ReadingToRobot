@@ -34,7 +34,7 @@ class RobotManager(object):
         self.logger = logging.getLogger(name=__name__)
 
         # config animations
-        self.animations = load_animations(animation_dir, max_speed=1)
+        self.animations = load_animations(animation_dir, max_speed=10)
 
         # pars
         self.pars = pars.CorePars()
@@ -180,6 +180,13 @@ class RobotManager(object):
         elif feeling == Feel.SAD:
             self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'sad')])
             self.logger.debug("Feeling sad")
+        elif feeling == Feel.ANNOYED:
+            self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'annoyed')])
+            self.logger.debug("Feeling annoyed")
+        elif feeling == Feel.EXCITED:
+            self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'excited')])
+            self.logger.debug("Feeling excited")
+
 
     def callback_config_command(self, msg):
 
