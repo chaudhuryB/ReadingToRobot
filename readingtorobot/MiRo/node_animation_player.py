@@ -144,8 +144,9 @@ class Animation:
             elif self.trajectories[j]['group'] == 'emotion':
                 self.trajectories[j]['traj'].initialize(emotion[self.trajectories[j]['idx']])
 
-    def get_commands(self):
-        kin_j, cos_j, emotion = [0.0] * 4, [0.0] * 6, [0.0] * 2
+    def get_commands(self, kin, cos):
+        kin_j, cos_j = kin, cos
+        emotion = [0.0] * 2
         dt = (datetime.datetime.now() - self.ref_time).total_seconds()
         finished = True
         for traj in self.trajectories:
@@ -211,14 +212,12 @@ class Animation:
                             t_.append(t)
                             p_.append(p)
                         tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx, return_to_init=rti)
-                else:
-                    tr = EmptyTrajectory()
 
-                trajectories[j] = {
-                    'traj': tr,
-                    'group': group,
-                    'idx': index_dict[j]
-                }
+                    trajectories[j] = {
+                        'traj': tr,
+                        'group': group,
+                        'idx': index_dict[j]
+                    }
 
         gen_traj(cls.cosmetic_name_idx, 'cosmetic')
         gen_traj(cls.kinematic_name_idx, 'kinematic')
@@ -252,14 +251,14 @@ class NodeAnimationPlayer(node.Node):
                                                   kinematic=config,
                                                   emotion=(self.emotion.valence, self.emotion.arousal))
         else:
-            cmds = self.current_animation.get_commands()
+            cmds = self.current_animation.get_commands(self.config, self.output.cosmetic_joints)
             if cmds:
                 self.state.animation_running = True
                 self.state.vocalize = True
                 self.config = cmds['kinematic']
                 self.output.cosmetic_joints = np.array(cmds['cosmetic'])
-                self.emotion.valence = cmds['emotion'][0]
-                self.emotion.arousal = cmds['emotion'][1]
+                self.state.emotion.valence = cmds['emotion'][0]
+                self.state.emotion.arousal = cmds['emotion'][1]
             else:
                 emotion = self.current_animation.get_initial_emotion_level()
                 self.state.emotion.valence, self.state.emotion.arousal = emotion
