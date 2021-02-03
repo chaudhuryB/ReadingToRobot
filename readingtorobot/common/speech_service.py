@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.5
 """
     Server launching a Speech Recognition instance.
 """
@@ -59,7 +59,7 @@ def main():
                         help="Device input index (Int) as listed by pyaudio.PyAudio.get_device_info_by_index(). If not"
                         " provided, falls back to PyAudio.get_default_device().")
     parser.add_argument('-r', '--rate', type=int,
-                        help=f"Input device sample rate. Default: {DEFAULT_SAMPLE_RATE}. Your device may require 44100."
+                        help="Input device sample rate. Default: {DEFAULT_SAMPLE_RATE}. Your device may require 44100."
                         )
     parser.add_argument('--hot_words', type=str,
                         help='Hot-words and their boosts.')

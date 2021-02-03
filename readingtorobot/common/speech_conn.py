@@ -30,12 +30,16 @@ class SpeechReceiver(threading.Thread):
 
     def __init__(self, callback):
         super(SpeechReceiver, self).__init__()
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ser_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ser_sock.bind((self.HOST, self.PORT))
         self.logger = logging.getLogger(__name__)
         self.buffer_size = 1024
         self.running = False
         self.command_callback = callback
-        self.sp = subprocess.Popen(module_file(os.path.join('common', 'speech_service.py')))
+        mf = module_file(os.path.join('common', 'speech_service.py'))
+        self.sp = subprocess.Popen(mf)
+        self.ser_sock.listen(2)
+        self.sock, _ = self.ser_sock.accept()
 
     def start(self):
         self.running = True
@@ -53,6 +57,7 @@ class SpeechReceiver(threading.Thread):
                 if self.sp.poll() is not None:
                     self.running = False
                     continue
+                cli_sock, cli_add = self.sock.accept()
                 ready = select.select((self.sock,), (), (), 0.5)
                 if not ready[0]:
                     continue
