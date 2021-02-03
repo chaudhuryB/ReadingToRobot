@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.7
 """
     Server launching a Speech Recognition instance.
 """
@@ -13,7 +13,7 @@ from readingtorobot.common.voice_recognition import SpeechReco
 
 
 class SpeechSender(SpeechReco):
-    HOST = '127.0.0.1'
+    HOST = socket.gethostbyname(socket.gethostname())
     PORT = 44111
 
     def __init__(self, config=None, interpreter=None):
@@ -32,7 +32,7 @@ class SpeechSender(SpeechReco):
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
             try:
-                self.sock.send(op.encode('utf-8'))
+                self.sock.sendto(op.encode('utf-8'), (self.HOST, self.PORT))
             except Exception as e:
                 self.logger.error('Socket connection lost: {}'.format(e))
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

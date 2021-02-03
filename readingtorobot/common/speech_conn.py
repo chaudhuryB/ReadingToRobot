@@ -25,7 +25,7 @@ class SpeechReceiver(threading.Thread):
 
     """
 
-    HOST = '127.0.0.1'
+    HOST = socket.gethostbyname(socket.gethostname())
     PORT = 44111
 
     def __init__(self, callback):
