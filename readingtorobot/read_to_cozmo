@@ -4,7 +4,7 @@ import argparse
 import logging
 
 import cozmo
-from readingtorobot.Cozmo.game_engine import ReadEngine
+from readingtorobot.Cozmo import ReadEngine
 
 
 if __name__ == "__main__":
