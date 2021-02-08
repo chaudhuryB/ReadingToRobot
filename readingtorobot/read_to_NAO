@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     motion.wakeUp()
 
-    human_greeter = HumanListener(app, keyboard_control=args.keyboard_control)
+    human_greeter = RobotManager(app, keyboard_control=args.keyboard_control)
     human_greeter.start()
     # Keep robot running
     try:
