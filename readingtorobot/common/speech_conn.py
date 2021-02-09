@@ -38,8 +38,7 @@ class SpeechReceiver(threading.Thread):
         self.command_callback = callback
         mf = module_file(os.path.join('common', 'speech_service.py'))
         self.sp = subprocess.Popen(mf)
-        self.ser_sock.listen(2)
-        self.sock, _ = self.ser_sock.accept()
+        self.sock = None
 
     def start(self):
         self.running = True
@@ -54,6 +53,9 @@ class SpeechReceiver(threading.Thread):
     def run(self):
         while self.running:
             try:
+                if self.sock is None:
+                    self.ser_sock.listen(2)
+                    self.sock, _ = self.ser_sock.accept()
                 if self.sp.poll() is not None:
                     self.running = False
                     continue

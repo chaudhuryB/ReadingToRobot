@@ -308,7 +308,7 @@ class RobotManager(object):
         if self.state.vocalize or (self.input.voice_state is not None and self.input.voice_state.vocalising):
             self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
         self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_NECK
-        # self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
+        self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
         self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_MOTION
         self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_BALL
         self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_FACE
@@ -338,8 +338,8 @@ class RobotManager(object):
             # publish
             self.pub_kin.msg.position = config
             self.pub_kin.publish()
-            self.pub_cmd_vel.msg.twist.linear.x = dpose[0]
-            self.pub_cmd_vel.msg.twist.angular.z = dpose[1]
+            self.pub_cmd_vel.msg.twist.linear.x = 0
+            self.pub_cmd_vel.msg.twist.angular.z = 0
             self.pub_cmd_vel.publish()
 
         # clear pushes for external kc
