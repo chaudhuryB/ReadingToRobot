@@ -29,6 +29,7 @@ wordlist = {
                 "three fat snails sneaking feet".split(' ')
     }
 
+# The teeny tree
 sentencelist = {
     'happy':    ["pip saw a teeny green stem peeping out of the pot",
                  "keep them wet and wait"],
@@ -47,6 +48,42 @@ sentencelist = {
     'scared':   ["and if we look X molly was screaming",
                  "three fat snails were sneaking along mr mister beams feet"]
 }
+
+# At the fun run
+sentencelist['happy'] += ['we run to the hut and on to the dam',
+                          'we can not win but it is fun to run in the fun run']
+sentencelist['groan'] += ['The sun is hot',
+                          'We get hot',
+                          'I fan my mum']
+sentencelist['excited'] += [' At the end mum and I hug',
+                            'we met my dad',
+                            'we hug him too']
+sentencelist['scared'] += ['I cut my leg',
+                           'Mum got the man',
+                           'can he fix it']
+
+# Mud
+sentencelist['happy'] += ['we had buns and cans of pop yum',
+                          'We dig it up and it hops on the bud']
+sentencelist['groan'] += ['It can hop',
+                          'it is not in my net']
+
+# In the log hut
+sentencelist['happy'] += ['The hut is set up',
+                          'we had jam buns in it',
+                          'the hut is fun']
+
+# On the bus
+sentencelist['happy'] += ['The man got up for my mum']
+sentencelist['groan'] += ['She can not sit']
+sentencelist['excited'] += ['His dog had six pups']
+
+
+# The big red box
+sentencelist['happy'] += ['In the box is his sax and his wig for his job at the pub']
+sentencelist['excited'] += ['Dad is lots of fun']
+sentencelist['scared'] += ['Sam runs at the box',
+                           'He rips at the lid']
 
 
 class Book:
