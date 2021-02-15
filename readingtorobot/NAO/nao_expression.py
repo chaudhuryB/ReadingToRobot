@@ -219,3 +219,68 @@ def get_looking_down():
     keys.append([0.0])
 
     return names, keys, times
+
+
+# Base pose transitions
+def go_to_fwd_lean():
+    names = list()
+    times = list()
+    keys = list()
+
+    names.append("LAnklePitch")
+    times.append([3.12])
+    keys.append([-0.0436332])
+
+    names.append("LAnkleRoll")
+    times.append([3.12])
+    keys.append([-0.141372])
+
+    names.append("LHipPitch")
+    times.append([3.12])
+    keys.append([-1.48004])
+
+    names.append("LHipRoll")
+    times.append([3.12])
+    keys.append([-0.0436332])
+
+    names.append("LHipYawPitch")
+    times.append([3.12])
+    keys.append([-0.694641])
+
+    names.append("LKneePitch")
+    times.append([3.12])
+    keys.append([-0.0296706])
+
+    names.append("LShoulderPitch")
+    times.append([0.84])
+    keys.append([0.610865])
+
+    names.append("RAnklePitch")
+    times.append([3.12])
+    keys.append([0.20944])
+
+    names.append("RAnkleRoll")
+    times.append([3.12])
+    keys.append([-0.0279253])
+
+    names.append("RHipPitch")
+    times.append([3.12])
+    keys.append([-1.53589])
+
+    names.append("RHipRoll")
+    times.append([3.12])
+    keys.append([-0.479966])
+
+    names.append("RHipYawPitch")
+    times.append([3.12])
+    keys.append([-0.694641])
+
+    names.append("RKneePitch")
+    times.append([3.12])
+    keys.append([-0.0925025])
+
+    names.append("RShoulderPitch")
+    times.append([0.84])
+    keys.append([0.623083])
+
+    return names, keys, times

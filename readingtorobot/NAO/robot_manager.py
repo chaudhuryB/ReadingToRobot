@@ -6,7 +6,9 @@ import threading
 from ..common.speech_conn import DetachedSpeechReco
 from ..common.keyboard_control import EmotionController
 from ..common.feeling_declaration import Feel
-from ..NAO.nao_expression import *
+from .nao_expression import get_scared_movement, get_annoyed_movement, get_excited_movement, get_sad_movement, \
+                            get_background_A, get_background_B, get_background_C, get_looking_down
+
 
 class RobotManager:
     """
