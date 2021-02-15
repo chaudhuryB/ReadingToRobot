@@ -1,4 +1,4 @@
-from robot_manager import RobotManager
+from .robot_manager import RobotManager
 
 __all__ = [
     "RobotManager"
