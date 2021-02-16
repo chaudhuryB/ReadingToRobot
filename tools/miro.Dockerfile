@@ -1,7 +1,7 @@
 
 ARG ARCH=arm64v8
 # Get xenial container
-FROM $ARCH/ros:kinetic-ros-base-xenial
+FROM $ARCH/ros:kinetic-perception
 
 # Install tools
 RUN apt-get update \
