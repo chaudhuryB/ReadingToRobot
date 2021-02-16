@@ -28,16 +28,20 @@ class SpeechReceiver(threading.Thread):
     HOST = socket.gethostbyname(socket.gethostname())
     PORT = 44111
 
-    def __init__(self, callback):
+    def __init__(self, callback, launch_speech=False, hostname=None, port=None):
         super(SpeechReceiver, self).__init__()
         self.ser_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ser_sock.bind((self.HOST, self.PORT))
+
+        self.ser_sock.bind((hostname or self.HOST, port or self.PORT))
         self.logger = logging.getLogger(__name__)
         self.buffer_size = 1024
         self.running = False
         self.command_callback = callback
-        mf = module_file(os.path.join('common', 'speech_service.py'))
-        self.sp = subprocess.Popen(mf)
+        if launch_speech:
+            mf = module_file(os.path.join('common', 'speech_service.py'))
+            self.sp = subprocess.Popen(mf)
+        else:
+            self.sp = None
         self.sock = None
 
     def start(self):
@@ -46,7 +50,7 @@ class SpeechReceiver(threading.Thread):
 
     def stop(self):
         self.running = False
-        if self.sp.poll() is None:
+        if self.sp is not None and self.sp.poll() is None:
             self.sp.terminate()
         self.join()
 
@@ -56,7 +60,7 @@ class SpeechReceiver(threading.Thread):
                 if self.sock is None:
                     self.ser_sock.listen(2)
                     self.sock, _ = self.ser_sock.accept()
-                if self.sp.poll() is not None:
+                if self.sp is not None and self.sp.poll() is not None:
                     self.running = False
                     continue
                 cli_sock, cli_add = self.sock.accept()
@@ -79,8 +83,8 @@ class SpeechReceiver(threading.Thread):
 
 
 class DetachedSpeechReco(SpeechReceiver):
-    def __init__(self, read_game):
-        super(DetachedSpeechReco, self).__init__(self.process_text)
+    def __init__(self, read_game, *args, **kwargs):
+        super(DetachedSpeechReco, self).__init__(self.process_text, *args, **kwargs)
         self.game = read_game
 
     def process_text(self, s):

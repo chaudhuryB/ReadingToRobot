@@ -17,6 +17,10 @@ if __name__ == "__main__":
     parser.add_argument("--robotIP", type=str,  default="172.17.0.1",
                         help="IP address of the robot, use 'localhost' for virtual Nao in" \
                         "Choregraphe")
+    parser.add_argument("--speechIP", type=str, default=None,
+                        help="Ip of speech server.")
+    parser.add_argument("--speechPort", type=int, default=None,
+                        help="Port of speech server.")
     parser.add_argument("--mov", type=str, default=None,
                         help="Robot movement: run, wave, choose-left -right -center, sad, happy")
     parser.add_argument('-k', '--keyboard-control', action='store_true',
@@ -37,7 +41,10 @@ if __name__ == "__main__":
 
     motion.wakeUp()
 
-    human_greeter = RobotManager(app, keyboard_control=args.keyboard_control)
+    human_greeter = RobotManager(app,
+                                 keyboard_control=args.keyboard_control,
+                                 speech_host=args.speechIP,
+                                 speech_port=args.speechPort)
     human_greeter.start()
     # Keep robot running
     try:

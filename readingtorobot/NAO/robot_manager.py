@@ -14,7 +14,7 @@ class RobotManager:
     """
     Class managing the movement of NAO, adding expressions when listening
     """
-    def __init__(self, app, keyboard_control=False):
+    def __init__(self, app, keyboard_control=False, speech_host=None, speech_port=None):
         """
         Initialisation of qi framework and event detection.
         """
@@ -34,7 +34,9 @@ class RobotManager:
         self.feel_lock = threading.Lock()
         self.ap = session.service("ALAudioPlayer")
         self.ap.loadSoundSet("Aldebaran")
-        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
+        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self,
+                                                                                                hostname=speech_host,
+                                                                                                port=speech_port)
 
         # Tracking
         self.tracker = session.service("ALTracker")
