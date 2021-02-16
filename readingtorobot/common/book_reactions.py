@@ -8,6 +8,11 @@ import time
 
 from .configuration_loader import resource_file, load_book
 
+
+class NoMatchFound(Exception):
+    pass
+
+
 wordlist = {
     'happy':    "happy day second week".split(' ') +
                 "keep them wet and wait".split(' '),
@@ -52,38 +57,38 @@ sentencelist = {
 # At the fun run
 sentencelist['happy'] += ['we run to the hut and on to the dam',
                           'we can not win but it is fun to run in the fun run']
-sentencelist['groan'] += ['The sun is hot',
-                          'We get hot',
+sentencelist['groan'] += ['the sun is hot',
+                          'we get hot',
                           'I fan my mum']
-sentencelist['excited'] += [' At the end mum and I hug',
+sentencelist['excited'] += ['at the end mum and I hug',
                             'we met my dad',
                             'we hug him too']
 sentencelist['scared'] += ['I cut my leg',
-                           'Mum got the man',
+                           'mum got the man',
                            'can he fix it']
 
 # Mud
 sentencelist['happy'] += ['we had buns and cans of pop yum',
-                          'We dig it up and it hops on the bud']
-sentencelist['groan'] += ['It can hop',
+                          'we dig it up and it hops on the bud']
+sentencelist['groan'] += ['it can hop',
                           'it is not in my net']
 
 # In the log hut
-sentencelist['happy'] += ['The hut is set up',
+sentencelist['happy'] += ['the hut is set up',
                           'we had jam buns in it',
                           'the hut is fun']
 
 # On the bus
-sentencelist['happy'] += ['The man got up for my mum']
-sentencelist['groan'] += ['She can not sit']
-sentencelist['excited'] += ['His dog had six pups']
+sentencelist['happy'] += ['the man got up for my mum']
+sentencelist['groan'] += ['she can not sit']
+sentencelist['excited'] += ['his dog had six pups']
 
 
 # The big red box
-sentencelist['happy'] += ['In the box is his sax and his wig for his job at the pub']
-sentencelist['excited'] += ['Dad is lots of fun']
-sentencelist['scared'] += ['Sam runs at the box',
-                           'He rips at the lid']
+sentencelist['happy'] += ['in the box is his sax and his wig for his job at the pub']
+sentencelist['excited'] += ['dad is lots of fun']
+sentencelist['scared'] += ['sam runs at the box',
+                           'he rips at the lid']
 
 
 class Book:
@@ -163,27 +168,30 @@ class Book:
             # Skip this sentence if it corresponds to the last match (it is unlikely that we process twice the same)
             if s['emotion'] == self.last_matched_emotion:
                 continue
-            first_match_id = None
-            matched_sentence_length = 0
-            sentence = s['sentence']
-            for k, word in enumerate(sentence):
-                if first_match_id is None:
-                    for text_word in text_list:
-                        if text_word == word:
-                            first_match_id = text_list.index(text_word) - k
-                            break
-                else:
-                    matched_sentence_length = min(len(text_list[first_match_id:]), len(sentence))
-                    if matched_sentence_length / len(sentence) > self.match_score_thresh:
-                        matching_sentences[i] = {'first_id': first_match_id, 'lenght': matched_sentence_length}
-                    break
+
+            # 1. Find first word match
+            try:
+                first_match_text, first_match_sentence = self.find_match_start_point(text_list, s['sentence'])
+            except NoMatchFound:
+                continue
+
+            # 2. Find last word match
+            matched_sentence_length = min(len(text_list[first_match_text:]), len(sentence[first_match_sentence:]))
+            if matched_sentence_length / len(sentence) > self.match_score_thresh:
+                matching_sentences[i] = {'first_id_text': first_match_text,
+                                         'first_id_sentence': first_match_sentence,
+                                         'lenght': matched_sentence_length}
+
+
         # Once we have the matches, compare word by word the elements in the possible matches.
         best_score = self.match_score_thresh
         best_em = None
         for i in matching_sentences:
-            recorded = text_list[matching_sentences[i]['first_id']:(matching_sentences[i]['first_id'] +
-                                                                    matching_sentences[i]['lenght'])]
-            template = self.sentences[i]['sentence'][0:matching_sentences[i]['lenght']]
+            recorded = text_list[matching_sentences[i]['first_id_text']:(matching_sentences[i]['first_id_text'] +
+                                                                         matching_sentences[i]['lenght'])]
+            tem_slice = slice(matching_sentences[i]['first_id_sentence'], (matching_sentences[i]['first_id_sentence'] +
+                                                                           matching_sentences[i]['lenght']))
+            template = self.sentences[i]['sentence'][tem_slice]
             score = 0
             self.logger.debug('slen: {}\nrec: {}\ntem: {}'.format(matching_sentences[i]['lenght'], recorded, template))
             for rec, tem in zip(recorded, template):
@@ -256,3 +264,17 @@ class Book:
                 filtered.append(sentence)
 
         return filtered
+
+    @staticmethod
+    def find_match_start_point(rec, template):
+        for k, word in enumerate(template):
+            for text_word in rec:
+                if text_word == word:
+                    if rec.index(text_word) - k >= 0:
+                        first_idx_rec = rec.index(text_word) - k
+                        first_idx_tem = 0
+                    else:
+                        first_idx_rec = 0
+                        first_idx_tem = k - rec.index(text_word)
+                    return (first_idx_rec, first_idx_tem)
+        raise NoMatchFound

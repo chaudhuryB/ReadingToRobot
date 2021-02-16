@@ -71,7 +71,9 @@ class SpeechReceiver(threading.Thread):
                 self.logger.warning("Failed to receive frame: {}".format(e))
                 continue
 
-            self.command_callback(raw_frame.decode('utf-8'))
+            msg = raw_frame.decode('utf-8')
+            self.logger.info('Recieved message: {}'.format(msg))
+            self.command_callback(msg)
 
         self.logger.info('Stopped speech recognition processes.')
 
@@ -82,22 +84,21 @@ class DetachedSpeechReco(SpeechReceiver):
         self.game = read_game
 
     def process_text(self, s):
-        expression = self.book.evaluate_static_sentence_validity(s)
         self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
         try:
-            if expression == "happy":
+            if s == "happy":
                 self.game.do_feel(Feel.HAPPY)
                 self.logger.debug("Feeling {}".format("Happy"))
-            elif expression == "sad":
+            elif s == "sad":
                 self.game.do_feel(Feel.SAD)
                 self.logger.debug("Feeling {}".format("Sad"))
-            elif expression == "groan":
+            elif s == "groan":
                 self.game.do_feel(Feel.ANNOYED)
                 self.logger.debug("Feeling {}".format("Groan"))
-            elif expression == "excited":
+            elif s == "excited":
                 self.game.do_feel(Feel.EXCITED)
                 self.logger.debug("Feeling {}".format("Excited"))
-            elif expression == "scared":
+            elif s == "scared":
                 self.game.do_feel(Feel.SCARED)
                 self.logger.debug("Feeling {}".format("Scared"))
         except Exception as e:
