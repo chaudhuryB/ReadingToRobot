@@ -169,39 +169,43 @@ class Book:
             if s['emotion'] == self.last_matched_emotion:
                 continue
 
-            # 1. Find first word match
             try:
-                first_match_text, first_match_sentence = self.find_match_start_point(text_list, s['sentence'])
+                match_loc = -1
+                # Run until no match is found
+                while True:
+                    # 1. Find first word match
+                    first_match_text, first_match_sentence, match_loc = self.find_match_start_point(text_list,
+                                                                                                    s['sentence'],
+                                                                                                    match_loc + 1)
+                    # 2. Find last word match
+                    matched_sentence_length = min(len(text_list[first_match_text:]),
+                                                  len(s['sentence'][first_match_sentence:]))
+                    if matched_sentence_length / len(s['sentence']) > self.match_score_thresh:
+                        entry = {'first_id_text': first_match_text,
+                                 'first_id_sentence': first_match_sentence,
+                                 'lenght': matched_sentence_length}
+                        matching_sentences[i] = matching_sentences[i] + [entry] if i in matching_sentences else [entry]
             except NoMatchFound:
                 continue
-
-            # 2. Find last word match
-            matched_sentence_length = min(len(text_list[first_match_text:]), len(sentence[first_match_sentence:]))
-            if matched_sentence_length / len(sentence) > self.match_score_thresh:
-                matching_sentences[i] = {'first_id_text': first_match_text,
-                                         'first_id_sentence': first_match_sentence,
-                                         'lenght': matched_sentence_length}
-
 
         # Once we have the matches, compare word by word the elements in the possible matches.
         best_score = self.match_score_thresh
         best_em = None
         for i in matching_sentences:
-            recorded = text_list[matching_sentences[i]['first_id_text']:(matching_sentences[i]['first_id_text'] +
-                                                                         matching_sentences[i]['lenght'])]
-            tem_slice = slice(matching_sentences[i]['first_id_sentence'], (matching_sentences[i]['first_id_sentence'] +
-                                                                           matching_sentences[i]['lenght']))
-            template = self.sentences[i]['sentence'][tem_slice]
-            score = 0
-            self.logger.debug('slen: {}\nrec: {}\ntem: {}'.format(matching_sentences[i]['lenght'], recorded, template))
-            for rec, tem in zip(recorded, template):
-                if rec == tem:
-                    score += 1
-            norm_score = score / len(self.sentences[i]['sentence'])
-            if norm_score > best_score:
-                best_score = norm_score
-                best_em = self.sentences[i]['emotion']
-                self.last_matched_emotion = best_em
+            for entry in matching_sentences[i]:
+                recorded = text_list[entry['first_id_text']:(entry['first_id_text'] + entry['lenght'])]
+                template = self.sentences[i]['sentence'][entry['first_id_sentence']:(entry['first_id_sentence'] +
+                                                                                     entry['lenght'])]
+                score = 0
+                self.logger.debug('slen: {}\nrec: {}\ntem: {}'.format(entry['lenght'], recorded, template))
+                for rec, tem in zip(recorded, template):
+                    if rec == tem:
+                        score += 1
+                norm_score = score / len(self.sentences[i]['sentence'])
+                if norm_score > best_score:
+                    best_score = norm_score
+                    best_em = self.sentences[i]['emotion']
+                    self.last_matched_emotion = best_em
 
         # Return the best matching emotion
         return best_em
@@ -266,8 +270,9 @@ class Book:
         return filtered
 
     @staticmethod
-    def find_match_start_point(rec, template):
-        for k, word in enumerate(template):
+    def find_match_start_point(rec, template, start_point=0):
+        for k in range(start_point, len(template)):
+            word = template[k]
             for text_word in rec:
                 if text_word == word:
                     if rec.index(text_word) - k >= 0:
@@ -276,5 +281,5 @@ class Book:
                     else:
                         first_idx_rec = 0
                         first_idx_tem = k - rec.index(text_word)
-                    return (first_idx_rec, first_idx_tem)
+                    return (first_idx_rec, first_idx_tem, k)
         raise NoMatchFound

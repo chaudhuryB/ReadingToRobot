@@ -50,12 +50,15 @@ class BookTests(unittest.TestCase):
                  {'text': 'some more and more this is silly blah text',
                   'res': 'groan'},
                  {'text': 'some more and more this blah silly blah text',
-                  'res': 'groan'}
+                  'res': 'groan'},
+                 {'text': 'the the the the the hut is set up',
+                  'res': 'happy'},
                   ]
 
         for test in tests:
             res = book.evaluate_static_sentence_validity(test['text'])
             self.assertEqual(res, test['res'])
+            book.last_matched_emotion = None
 
 
 if __name__ == '__main__':
