@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int,  default="9559",
                         help="Needed for connecting to virtual Choregraphe Nao")
-    parser.add_argument("--robotIP", type=str,  default="172.17.0.1",
+    parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
                         help="IP address of the robot, use 'localhost' for virtual Nao in" \
                         "Choregraphe")
     parser.add_argument("--speechIP", type=str, default=None,
