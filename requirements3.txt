@@ -3,3 +3,4 @@ pyaudio
 webrtcvad
 scipy
 cozmo
+getkey

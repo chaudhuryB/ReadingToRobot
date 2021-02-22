@@ -1,4 +1,5 @@
 import io
+import os
 import setuptools
 import sys
 
@@ -12,9 +13,17 @@ if sys.version_info[0] < 3:
     scripts = [
         'readingtorobot/read_to_NAO',
         'readingtorobot/read_to_miro']
+    requirementPath = './requirements2.txt'
+    requires = ">=2.7"
 else:
     scripts = ['readingtorobot/read_to_cozmo']
+    requirementPath = './requirements3.txt'
+    requires = ">=3.7"
 
+with open(requirementPath) as f:
+    install_requires = f.read().splitlines()
+
+install_requires.append(requires)
 
 setuptools.setup(
     name="readingtorobot",
