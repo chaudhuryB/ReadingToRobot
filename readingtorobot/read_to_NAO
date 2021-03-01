@@ -2,6 +2,7 @@
 
 from naoqi import ALProxy
 import argparse
+import logging
 import sys
 import time
 import qi
@@ -11,16 +12,16 @@ from readingtorobot.NAO import RobotManager
 
 if __name__ == "__main__":
 
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int,  default="9559",
                         help="Needed for connecting to virtual Choregraphe Nao")
     parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
                         help="IP address of the robot, use 'localhost' for virtual Nao in" \
                         "Choregraphe")
-    parser.add_argument("--speechIP", type=str, default=None,
+    parser.add_argument("--mqttIP", type=str, default=None,
                         help="Ip of speech server.")
-    parser.add_argument("--speechPort", type=int, default=None,
-                        help="Port of speech server.")
     parser.add_argument("--mov", type=str, default=None,
                         help="Robot movement: run, wave, choose-left -right -center, sad, happy")
     parser.add_argument('-k', '--keyboard-control', action='store_true',
@@ -43,12 +44,11 @@ if __name__ == "__main__":
 
     human_greeter = RobotManager(app,
                                  keyboard_control=args.keyboard_control,
-                                 speech_host=args.speechIP,
-                                 speech_port=args.speechPort)
+                                 mqtt_ip=args.mqttIP)
     human_greeter.start()
     # Keep robot running
     try:
-        while True:
+        while not human_greeter.done:
             time.sleep(1)
     except KeyboardInterrupt:
         print "\nInterrupted by user, shutting down"

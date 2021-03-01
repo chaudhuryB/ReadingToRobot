@@ -4,3 +4,4 @@ webrtcvad
 scipy
 cozmo
 getkey
+paho-mqtt

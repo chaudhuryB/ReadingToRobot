@@ -19,10 +19,12 @@ if __name__ == "__main__":
     parser.add_argument('animation_dir', nargs='?', default=module_file(os.path.join('MiRo', 'animations')))
     parser.add_argument('-k', '--keyboard-control', action='store_true',
                         help="Trigger emotion animations manually using keyboard.")
+    parser.add_argument("--mqttIP", type=str, default='127.0.0.1',
+                        help="Ip of speech server.")
     args = parser.parse_args()
 
     # instantiate
-    app = RobotManager(animation_dir=args.animation_dir, keyboard_control=args.keyboard_control)
+    app = RobotManager(animation_dir=args.animation_dir, keyboard_control=args.keyboard_control, mqtt_ip=args.mqttIP)
 
     # execute
     app.loop()

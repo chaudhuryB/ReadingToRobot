@@ -8,6 +8,7 @@ import os
 import time
 
 import numpy as np
+import paho.mqtt.client as mqtt
 
 import geometry_msgs
 import rospy
@@ -29,7 +30,7 @@ from ..common.keyboard_control import EmotionController
 
 class RobotManager(object):
 
-    def __init__(self, animation_dir=None, keyboard_control=False):
+    def __init__(self, animation_dir=None, keyboard_control=False, mqtt_ip=None):
         # logger
         self.logger = logging.getLogger(name=__name__)
 
@@ -43,9 +44,20 @@ class RobotManager(object):
         # resources
         self.bridge = CvBridge()
 
+        # Connection to command server
+        self.mqtt_client = mqtt.Client(mqtt_ip)
+        self.mqtt_client.message_callback_add("miro/stop", self.mqtt_stop_callback)
+        self.mqtt_client.message_callback_add("speech/cmd", self.mqtt_process_text)
+        self.mqtt_client.on_connect = self.mqtt_on_connect
+        self.mqtt_client.connect(mqtt_ip)
+        self.mqtt_client.subscribe("miro/stop", 0)
+        self.mqtt_client.subscribe("speech/cmd", 0)
+        self.mqtt_timeout = timeout
+        self.connected_flag = False
+
         # emotion expression management
+        self.keyboard_control = keyboard_control
         self.emotion = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
-        self.emotion.start()
 
         # init ROS
         rospy.init_node(self.pars.ros.robot_name + "_client_main", log_level=self.pars.ros.log_level)
@@ -158,6 +170,18 @@ class RobotManager(object):
 
         # set active
         self.active = True
+
+        # MQTT connection
+        self.mqtt_client.loop_start()
+
+        # Wait for connection
+        for _ in xrange(self.mqtt_timeout):
+            if self.connected_flag:
+                break
+            time.sleep(1)
+        else:
+            self.logger.error("MQTT connection timed out, exiting.")
+            self.stop()
 
     def subscribe(self, topic_name, data_type, callback):
 
@@ -479,6 +503,25 @@ class RobotManager(object):
         self.state.audio_events_for_spatial.append(q)
         self.state.audio_events_for_50Hz.append(q)
 
+    def mqtt_stop_callback(self, cli, obj, msg):
+        self.logger.info("Stop message recieved: {}".format(msg.topic))
+        self.state.keep_running = False
+
+    def mqtt_process_text(self, cli, obj, msg):
+        if not self.keyboard_control:
+            self.feel_control.process_text(msg.payload)
+        else:
+            self.logger.warning("Keyboard control is enabled, speech msg ignored: {}".format(msg.topic,
+                                                                                             msg.qos,
+                                                                                             msg.payload))
+
+    def mqtt_on_connect(self, client, userdata, flags, rc):
+        if rc==0:
+            self.connected_flag = True
+            self.logger.info("Connected to MQTT broker.")
+        else:
+            self.logger.error("Bad connection to mqtt, returned code: {}".format(rc))
+
     def loop(self):
 
         # main loop
@@ -512,6 +555,13 @@ class RobotManager(object):
                 self.logger.debug("\n\n\n{}".format(np.array(tt)))
 
     def term(self):
-        self.emotion.stop()
+        self.mqtt_client.loop_stop()
         # remove state file
         os.remove(self.demo_state_filename)
+        # Add mqtt response saying we finished.
+        self.logger.info("Sending response.")
+
+        self.mqtt_client.publish("miro/stopped_clean", "0")
+        time.sleep(5)
+        self.mqtt_client.loop_stop()
+        self.mqtt_client.disconnect()

@@ -1,7 +1,10 @@
 
+import logging
 import random
 import time
 import threading
+
+import paho.mqtt.client as mqtt
 
 from ..common.speech_conn import DetachedSpeechReco
 from ..common.keyboard_control import EmotionController
@@ -14,12 +17,26 @@ class RobotManager:
     """
     Class managing the movement of NAO, adding expressions when listening
     """
-    def __init__(self, app, keyboard_control=False, speech_host=None, speech_port=None):
+    def __init__(self, app, keyboard_control=False, mqtt_ip=None, timeout=20):
         """
         Initialisation of qi framework and event detection.
         """
         app.start()
         session = app.session
+        self.logger = logging.getLogger(__name__)
+        self.keyboard_control = keyboard_control
+        self.done = False
+
+        # Connection to command server
+        self.mqtt_client = mqtt.Client(mqtt_ip)
+        self.mqtt_client.message_callback_add("nao/stop", self.stop_callback)
+        self.mqtt_client.message_callback_add("speech/cmd", self.process_text)
+        self.mqtt_client.on_connect = self.on_connect
+        self.mqtt_client.connect(mqtt_ip)
+        self.mqtt_client.subscribe("nao/stop", 0)
+        self.mqtt_client.subscribe("speech/cmd", 0)
+        self.mqtt_timeout = timeout
+        self.connected_flag = False
 
         # Movement
         self.movement = session.service("ALMotion")
@@ -34,9 +51,7 @@ class RobotManager:
         self.feel_lock = threading.Lock()
         self.ap = session.service("ALAudioPlayer")
         self.ap.loadSoundSet("Aldebaran")
-        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self,
-                                                                                                hostname=speech_host,
-                                                                                                port=speech_port)
+        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
 
         # Tracking
         self.tracker = session.service("ALTracker")
@@ -48,9 +63,28 @@ class RobotManager:
         self.running = True
         self.movement.wakeUp()
         self.posture.goToPosture('Sit', 2.0)
-        self.feel_control.start()
         self.movement.setStiffnesses("Body", 1.0)
         self.background_thread.start()
+        self.mqtt_client.loop_start()
+
+        # Wait for connection
+        for _ in xrange(self.mqtt_timeout):
+            if self.connected_flag:
+                break
+            time.sleep(1)
+        else:
+            self.logger.error("MQTT connection timed out, exiting.")
+            self.stop()
+
+    def stop_callback(self, cli, obj, msg):
+        self.logger.info("Stop message recieved: {}".format(msg.topic))
+        self.stop()
+        # Add mqtt response saying we finished.
+        self.logger.info("Sending response.")
+        self.mqtt_client.publish("nao/stopped_clean", "0")
+        time.sleep(5)
+        self.mqtt_client.loop_stop()
+        self.done = True
 
     def stop(self):
         self.running = False
@@ -58,7 +92,6 @@ class RobotManager:
         self.tracker.unregisterAllTargets()
         self.background_thread.join()
         self.movement.rest()
-        self.feel_control.stop()
 
     def do_feel(self, feeling=Feel.NEUTRAL):
         """
@@ -231,3 +264,17 @@ class RobotManager:
         self.tracker.track('Face')
         self.tracking_face = True
 
+    def process_text(self, cli, obj, msg):
+        if not self.keyboard_control:
+            self.feel_control.process_text(msg.payload)
+        else:
+            self.logger.warning("Keyboard control is enabled, speech msg ignored: {}".format(msg.topic,
+                                                                                             msg.qos,
+                                                                                             msg.payload))
+
+    def on_connect(self, client, userdata, flags, rc):
+        if rc==0:
+            self.connected_flag = True
+            self.logger.info("Connected to MQTT broker.")
+        else:
+            self.logger.error("Bad connection to mqtt, returned code: {}".format(rc))

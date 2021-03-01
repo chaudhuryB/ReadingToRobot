@@ -7,6 +7,9 @@ import argparse
 import logging
 import socket
 
+import paho.mqtt.client as mqtt
+
+
 from readingtorobot.common.deepspeech_module import DEFAULT_SAMPLE_RATE
 from readingtorobot.common.configuration_loader import load_config_file
 from readingtorobot.common.voice_recognition import SpeechReco
@@ -18,25 +21,43 @@ class SpeechSender(SpeechReco):
 
     def __init__(self, config=None, interpreter=None):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock_connected = False
+
+        # Connection to command server
+        self.mqtt_client = mqtt.Client(self.HOST)
+        self.mqtt_client.message_callback_add("speech/stop", self.stop_callback)
+        self.mqtt_client.on_connect = self.on_connect
+        self.mqtt_client.connect(mqtt_ip)
+        self.mqtt_client.subscribe("speech/stop", 0)
+        self.mqtt_timeout = timeout
+        self.connected_flag = False
+
+    def start(self):
+        self.mqtt_client.loop_start()
+        # Wait for connection
+        for _ in xrange(self.mqtt_timeout):
+            if self.connected_flag:
+                break
+            time.sleep(1)
+        else:
+            self.logger.error("MQTT connection timed out, exiting.")
+            self.stop()
+
+        super().start()
+
+    def stop_callback(self, cli, obj, msg):
+        self.logger.info("Stop message recieved: {}".format(msg.topic))
+        self.stop()
+        # Add mqtt response saying we finished.
+        self.logger.info("Sending response.")
+        self.mqtt_client.publish("speech/stopped_clean", "0")
+        time.sleep(5)
+        self.mqtt_client.loop_stop()
+        self.done = True
 
     def process_text(self, text):
-        if not self.sock_connected:
-            try:
-                self.sock.connect((self.HOST, self.PORT))
-                self.sock_connected = True
-            except Exception as e:
-                self.logger.warning('Socket connection failed: {}'.format(e))
-                return
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
-            try:
-                self.sock.sendto(op.encode('utf-8'), (self.HOST, self.PORT))
-            except Exception as e:
-                self.logger.error('Socket connection lost: {}'.format(e))
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock_connected = False
+            self.mqtt_client.publish(text, "speech/cmd")
 
 
 def main():
