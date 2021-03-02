@@ -1,4 +1,4 @@
-deepspeech
+SpeechRecognition
 pyaudio
 webrtcvad
 scipy

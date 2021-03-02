@@ -10,7 +10,7 @@ import time
 
 import paho.mqtt.client as mqtt
 
-from readingtorobot.common.deepspeech_module import DEFAULT_SAMPLE_RATE
+from readingtorobot.common.continuous_speech import DEFAULT_SAMPLE_RATE
 from readingtorobot.common.configuration_loader import load_config_file
 from readingtorobot.common.voice_recognition import SpeechReco
 

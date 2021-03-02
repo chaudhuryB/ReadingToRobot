@@ -9,7 +9,7 @@ import speech_recognition as sr
 from threading import Thread
 
 from .feeling_declaration import Feel
-from .deepspeech_module import load_deepspeech_model, ContinuousSpeech
+from .continuous_speech import ContinuousSpeech
 from .configuration_loader import load_config_file, resource_file
 from .book_reactions import Book
 
@@ -40,7 +40,11 @@ class SpeechReco(Thread):
             interpreter = cf.get('interpreter', 'ds')
 
         self.audio_proc = ContinuousSpeech.from_json(cf)
-        self.ds = load_deepspeech_model(cf) if interpreter == 'ds' else sr.Recognizer()
+        if interpreter == 'ds':
+            from .deepspeech_module import load_deepspeech_model
+            self.ds = load_deepspeech_model(cf)
+        else:
+            self.ds = sr.Recognizer()
 
         self.book = Book("the_teeny_tree_literal.txt")
 
@@ -96,7 +100,7 @@ class SpeechReco(Thread):
 
                 if isinstance(self.ds, sr.Recognizer):
                     audio = self.audio_proc.frames_to_SR(frames)
-                    query = self.ds.recognize_google(audio, show_all=True)
+                    query = self.ds.recognize_google(audio, show_all=True, language="en-AU")
                     if query:
                         if "confidence" in query["alternative"]:
                             # return alternative with highest confidence score
