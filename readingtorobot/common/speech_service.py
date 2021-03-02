@@ -17,7 +17,6 @@ from readingtorobot.common.voice_recognition import SpeechReco
 
 class SpeechSender(SpeechReco):
     HOST = socket.gethostbyname(socket.gethostname())
-    PORT = 44111
 
     def __init__(self, config=None, interpreter=None, timeout=20):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
@@ -36,17 +35,18 @@ class SpeechSender(SpeechReco):
         # Wait for connection
         for _ in range(self.mqtt_timeout):
             if self.connected_flag:
+                super().start()
                 break
             time.sleep(1)
         else:
             self.logger.error("MQTT connection timed out, exiting.")
             self.stop()
 
-        super().start()
-
     def stop_callback(self, cli, obj, msg):
         self.logger.info("Stop message recieved: {}".format(msg.topic))
         self.stop()
+
+    def send_stopped(self):
         # Add mqtt response saying we finished.
         self.logger.info("Sending response.")
         self.mqtt_client.publish("speech/stopped_clean", "0")
@@ -58,6 +58,10 @@ class SpeechSender(SpeechReco):
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
             self.mqtt_client.publish(text, "speech/cmd")
+
+    def on_connect(self, client, userdata, flags, rc):
+        self.connected_flag = True
+        self.logger.info("Connected to MQTT broker on host: {}".format(self.HOST))
 
 
 def main():
@@ -120,12 +124,14 @@ def main():
 
     try:
         speech_reco.start()
-        speech_reco.join()
+        if speech_reco.is_alive():
+            speech_reco.join()
 
     except KeyboardInterrupt:
         speech_reco.stop()
         logging.info("Stopping, bye!")
 
+    speech_reco.send_stopped()
 
 if __name__ == '__main__':
     main()

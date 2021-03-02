@@ -56,7 +56,8 @@ class SpeechReco(Thread):
 
     def stop(self):
         self.running = False
-        self.join()
+        if self.is_alive():
+            self.join()
 
     def process_text(self, s: str) -> None:
         expression = self.book.evaluate_static_sentence_validity(s)

@@ -10,7 +10,7 @@ import paho.mqtt.client as mqtt
 
 
 def s_callback(cli, obj, msg):
-    print "Recieved message: {} {} {}".format(msg.topic, msg.qos, msg.payload)
+    print("Recieved message: {} {} {}".format(msg.topic, msg.qos, msg.payload))
     sys.exit()
 
 

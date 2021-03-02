@@ -1,5 +1,5 @@
 
-ARG ARCH=arm64v8
+ARG ARCH=arm32v7
 # Get xenial container
 FROM $ARCH/ros:kinetic-perception
 
@@ -8,7 +8,7 @@ RUN apt-get update \
     && apt-get -y install ssh build-essential cmake cppcheck valgrind htop\
     python python-matplotlib python-tk ffmpeg wget \
     net-tools python-pip python-flake8 flake8
-RUN python -m pip install flake8 apriltag getkey
+RUN python -m pip install flake8 apriltag getkey paho-mqtt
 
 # Install reading to robot
 COPY . reading_to_robot
