@@ -30,7 +30,7 @@ from ..common.keyboard_control import EmotionController
 
 class RobotManager(object):
 
-    def __init__(self, animation_dir=None, keyboard_control=False, mqtt_ip=None):
+    def __init__(self, animation_dir=None, keyboard_control=False, mqtt_ip=None, timeout=20):
         # logger
         self.logger = logging.getLogger(name=__name__)
 

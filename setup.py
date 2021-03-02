@@ -12,11 +12,14 @@ with io.open("README.md", "r", encoding="utf-8") as fh:
 if sys.version_info[0] < 3:
     scripts = [
         'readingtorobot/read_to_NAO',
-        'readingtorobot/read_to_miro']
+        'readingtorobot/read_to_miro',
+        'tools/launch_nao.sh',
+        'tools/launch_miro.sh']
     requirementPath = './requirements2.txt'
     requires = ">=2.7"
 else:
-    scripts = ['readingtorobot/read_to_cozmo']
+    scripts = ['readingtorobot/read_to_cozmo',
+               'readingtorobot/common/speech_service.py']
     requirementPath = './requirements3.txt'
     requires = ">=3.7"
 
@@ -42,5 +45,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     scripts=scripts,
-    python_requires=install_requires,
+    python_requires=requires,
 )

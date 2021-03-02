@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3
 """
     Server launching a Speech Recognition instance.
 """
@@ -6,9 +6,9 @@
 import argparse
 import logging
 import socket
+import time
 
 import paho.mqtt.client as mqtt
-
 
 from readingtorobot.common.deepspeech_module import DEFAULT_SAMPLE_RATE
 from readingtorobot.common.configuration_loader import load_config_file
@@ -19,14 +19,14 @@ class SpeechSender(SpeechReco):
     HOST = socket.gethostbyname(socket.gethostname())
     PORT = 44111
 
-    def __init__(self, config=None, interpreter=None):
+    def __init__(self, config=None, interpreter=None, timeout=20):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 
         # Connection to command server
         self.mqtt_client = mqtt.Client(self.HOST)
         self.mqtt_client.message_callback_add("speech/stop", self.stop_callback)
         self.mqtt_client.on_connect = self.on_connect
-        self.mqtt_client.connect(mqtt_ip)
+        self.mqtt_client.connect(self.HOST)
         self.mqtt_client.subscribe("speech/stop", 0)
         self.mqtt_timeout = timeout
         self.connected_flag = False
@@ -34,7 +34,7 @@ class SpeechSender(SpeechReco):
     def start(self):
         self.mqtt_client.loop_start()
         # Wait for connection
-        for _ in xrange(self.mqtt_timeout):
+        for _ in range(self.mqtt_timeout):
             if self.connected_flag:
                 break
             time.sleep(1)
@@ -80,7 +80,8 @@ def main():
                         help="Device input index (Int) as listed by pyaudio.PyAudio.get_device_info_by_index(). If not"
                         " provided, falls back to PyAudio.get_default_device().")
     parser.add_argument('-r', '--rate', type=int,
-                        help="Input device sample rate. Default: {DEFAULT_SAMPLE_RATE}. Your device may require 44100."
+                        help="Input device sample rate. Default: {}. Your device may require 44100."
+                        .format(DEFAULT_SAMPLE_RATE)
                         )
     parser.add_argument('--hot_words', type=str,
                         help='Hot-words and their boosts.')
