@@ -28,7 +28,7 @@ class RobotManager:
         self.done = False
 
         # Connection to command server
-        self.mqtt_client = mqtt.Client(mqtt_ip)
+        self.mqtt_client = mqtt.Client("nao")
         self.mqtt_client.message_callback_add("nao/stop", self.stop_callback)
         self.mqtt_client.message_callback_add("speech/cmd", self.process_text)
         self.mqtt_client.on_connect = self.on_connect

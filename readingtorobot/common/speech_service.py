@@ -22,7 +22,7 @@ class SpeechSender(SpeechReco):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 
         # Connection to command server
-        self.mqtt_client = mqtt.Client(self.HOST)
+        self.mqtt_client = mqtt.Client("speech")
         self.mqtt_client.message_callback_add("speech/stop", self.stop_callback)
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.connect(self.HOST)

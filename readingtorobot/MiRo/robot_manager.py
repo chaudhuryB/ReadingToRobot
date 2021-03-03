@@ -45,7 +45,7 @@ class RobotManager(object):
         self.bridge = CvBridge()
 
         # Connection to command server
-        self.mqtt_client = mqtt.Client(mqtt_ip)
+        self.mqtt_client = mqtt.Client("miro")
         self.mqtt_client.message_callback_add("miro/stop", self.mqtt_stop_callback)
         self.mqtt_client.message_callback_add("speech/cmd", self.mqtt_process_text)
         self.mqtt_client.on_connect = self.mqtt_on_connect
