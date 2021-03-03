@@ -44,7 +44,7 @@ class SpeechSender(SpeechReco):
 
     def stop_callback(self, cli, obj, msg):
         self.logger.info("Stop message recieved: {}".format(msg.topic))
-        self.stop()
+        self.running = False
 
     def send_stopped(self):
         # Add mqtt response saying we finished.
@@ -57,7 +57,7 @@ class SpeechSender(SpeechReco):
     def process_text(self, text):
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
-            self.mqtt_client.publish(text, "speech/cmd")
+            self.mqtt_client.publish("speech/cmd", text)
 
     def on_connect(self, client, userdata, flags, rc):
         self.connected_flag = True
