@@ -57,7 +57,7 @@ class SpeechSender(SpeechReco):
     def process_text(self, text):
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
-            self.mqtt_client.publish("speech/cmd", text)
+            self.mqtt_client.publish("speech/cmd", op)
 
     def on_connect(self, client, userdata, flags, rc):
         self.connected_flag = True
