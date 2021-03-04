@@ -55,17 +55,16 @@ sentencelist = {
 }
 
 # At the fun run
-sentencelist['happy'] += ['we run to the hut and on to the dam',
-                          'we can not win but it is fun to run in the fun run']
+sentencelist['happy'] += ['at the end mum and I hug',
+                          'we met my dad',
+                          'we hug him too']
 sentencelist['groan'] += ['the sun is hot',
                           'we get hot',
                           'I fan my mum']
-sentencelist['excited'] += ['at the end mum and I hug',
-                            'we met my dad',
-                            'we hug him too']
+sentencelist['excited'] += ['we run to the hut and on to the dam',
+                            'we run on and on']
 sentencelist['scared'] += ['I cut my leg',
-                           'mum got the man',
-                           'can he fix it']
+                           'mum got the man']
 
 # Mud
 sentencelist['happy'] += ['we had buns and cans of pop yum',
@@ -79,9 +78,12 @@ sentencelist['happy'] += ['the hut is set up',
                           'the hut is fun']
 
 # On the bus
-sentencelist['happy'] += ['the man got up for my mum']
-sentencelist['groan'] += ['she can not sit']
-sentencelist['excited'] += ['his dog had six pups']
+sentencelist['happy'] += ['his dog had six pups',
+                          'kaz and her pups nap in the box']
+sentencelist['groan'] += ['she got on it',
+                          'she can not sit']
+sentencelist['scared'] += ['the man has his pet dog kaz on the bus',
+                           'she is in her box']
 
 
 # The big red box
