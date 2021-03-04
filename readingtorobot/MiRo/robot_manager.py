@@ -164,13 +164,6 @@ class RobotManager(object):
         self.subscribe('core/audio_level', std_msgs.msg.Float32MultiArray, self.callback_audio_level)
         self.subscribe('sensors/stream', std_msgs.msg.UInt16MultiArray, self.callback_stream)
 
-        # wait for connection before moving off
-        self.logger.info("Waiting for connection to robot...")
-        time.sleep(1)
-
-        # set active
-        self.active = True
-
         # MQTT connection
         self.mqtt_client.loop_start()
 
@@ -181,7 +174,14 @@ class RobotManager(object):
             time.sleep(1)
         else:
             self.logger.error("MQTT connection timed out, exiting.")
-            self.stop()
+            return
+
+        # wait for connection before moving off
+        self.logger.info("Waiting for connection to robot...")
+        time.sleep(1)
+
+        # set active
+        self.active = True
 
     def subscribe(self, topic_name, data_type, callback):
 
@@ -509,7 +509,7 @@ class RobotManager(object):
 
     def mqtt_process_text(self, cli, obj, msg):
         if not self.keyboard_control:
-            self.feel_control.process_text(msg.payload)
+            self.emotion.process_text(msg.payload)
         else:
             self.logger.warning("Keyboard control is enabled, speech msg ignored: {}".format(msg.topic,
                                                                                              msg.qos,
