@@ -516,7 +516,7 @@ class RobotManager(object):
                                                                                              msg.payload))
 
     def mqtt_on_connect(self, client, userdata, flags, rc):
-        if rc==0:
+        if rc == 0:
             self.connected_flag = True
             self.logger.info("Connected to MQTT broker.")
         else:

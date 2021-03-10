@@ -268,12 +268,12 @@ class RobotManager:
         if not self.keyboard_control:
             self.feel_control.process_text(msg.payload)
         else:
-            self.logger.warning("Keyboard control is enabled, speech msg ignored: {}".format(msg.topic,
-                                                                                             msg.qos,
-                                                                                             msg.payload))
+            self.logger.warning("Keyboard control is enabled, speech msg ignored: {}, {}, {}".format(msg.topic,
+                                                                                                     msg.qos,
+                                                                                                     msg.payload))
 
     def on_connect(self, client, userdata, flags, rc):
-        if rc==0:
+        if rc == 0:
             self.connected_flag = True
             self.logger.info("Connected to MQTT broker.")
         else:

@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import socket
 
 import cozmo
 from readingtorobot.Cozmo import ReadEngine
@@ -13,11 +14,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-k', '--keyboard-control', action='store_true',
                         help="Trigger emotion animations manually using keyboard.")
+    parser.add_argument("--mqttIP", type=str, default=socket.gethostbyname(socket.gethostname()),
+                        help="Ip of speech server.")
     args = parser.parse_args()
 
     def cozmo_read_game(robot: cozmo.robot.Robot):
         # Initialize all the game engines screens and listners
-        read_game = ReadEngine(robot, keyboard_control=args.keyboard_control)
+        read_game = ReadEngine(robot, keyboard_control=args.keyboard_control, mqtt_ip=args.mqttIP)
         if read_game.tap_ready():
             if read_game.cozmo_setup_game():
                 read_game.listen_to_story()
