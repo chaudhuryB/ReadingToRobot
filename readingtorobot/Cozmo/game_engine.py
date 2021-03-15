@@ -28,6 +28,7 @@ class ReadEngine:
         self.face = None
         self.feel = Feel.NEUTRAL
         self.logger = logging.getLogger(name=__name__)
+        self.keyboard_control = keyboard_control
         self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
 
         # Connection to command server
@@ -73,9 +74,15 @@ class ReadEngine:
             cube.set_lights_off()
 
     def cozmo_setup_game(self):
-        """
-        Cozmo to find all three cubes and then order them in position for Rock/Paper/Scissor
-        """
+        # Wait for mqtt connection
+        for _ in range(self.mqtt_timeout):
+            if self.connected_flag:
+                break
+            time.sleep(1)
+        else:
+            self.logger.error("MQTT connection timed out, exiting.")
+            self.robot_proxy.stop()
+
         self.robot_proxy = CozmoPlayerActions()
 
         if self.robot.is_on_charger:
@@ -125,15 +132,6 @@ class ReadEngine:
         try:
             # Launch Listener and Robot threads.
             self.robot_proxy.start(self.robot, self.face)
-            # Wait for connection
-            for _ in range(self.mqtt_timeout):
-                if self.connected_flag:
-                    break
-                time.sleep(1)
-            else:
-                self.logger.error("MQTT connection timed out, exiting.")
-                self.robot_proxy.stop()
-
             self.robot_proxy.join()
         except KeyboardInterrupt:
             self.logger.info("\nInterrupted by user, shutting down")
@@ -142,7 +140,6 @@ class ReadEngine:
         finally:
             self.logger.info("Thank you for reading to Cozmo")
             self.end_session()
-            self.robot_proxy.do_fist_bump()
             self.robot_proxy.stop()
 
     def stop_callback(self, cli, obj, msg):
@@ -153,11 +150,10 @@ class ReadEngine:
         self.mqtt_client.publish("cozmo/stopped_clean", "0")
         time.sleep(5)
         self.mqtt_client.loop_stop()
-        self.done = True
 
     def process_text(self, cli, obj, msg):
         if not self.keyboard_control:
-            self.feel_control.process_text(msg.payload)
+            self.feel_control.process_text(msg.payload.decode('ascii'))
         else:
             self.logger.warning("Keyboard control is enabled, speech msg ignored: {}, {}, {}".format(msg.topic,
                                                                                                      msg.qos,

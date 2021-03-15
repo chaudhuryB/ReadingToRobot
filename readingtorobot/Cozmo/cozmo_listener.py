@@ -40,7 +40,8 @@ class CozmoPlayerActions(Thread):
 
     def stop(self):
         self.running = False
-        self.join()
+        if self.is_alive():
+            self.join()
 
     def run(self):
         while self.running:
