@@ -519,8 +519,10 @@ class RobotManager(object):
         if rc == 0:
             self.connected_flag = True
             self.logger.info("Connected to MQTT broker.")
+            self.mqtt_client.publish("miro/started", 1)
         else:
             self.logger.error("Bad connection to mqtt, returned code: {}".format(rc))
+            self.mqtt_client.publish("miro/started", 0)
 
     def loop(self):
 
