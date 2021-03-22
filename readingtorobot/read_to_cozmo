@@ -9,7 +9,10 @@ from readingtorobot.Cozmo import ReadEngine
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
+                        level=logging.DEBUG,
+                        filename=os.path.join(os.getenv('HOME'), 'logs/nao.log'),
+                        filemode='a')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-k', '--keyboard-control', action='store_true',

@@ -14,7 +14,10 @@ from readingtorobot.common import module_file
 
 if __name__ == "__main__":
 
-    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
+                        level=logging.DEBUG,
+                        filename='/logs/miro.log',
+                        filemode='a')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('animation_dir', nargs='?', default=module_file(os.path.join('MiRo', 'animations')))
