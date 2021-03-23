@@ -11,7 +11,7 @@ from readingtorobot.Cozmo import ReadEngine
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
                         level=logging.DEBUG,
-                        filename=os.path.join(os.getenv('HOME'), 'logs/nao.log'),
+                        filename=os.path.join(os.getenv('HOME'), 'logs/cozmo.log'),
                         filemode='a')
 
     parser = argparse.ArgumentParser()
