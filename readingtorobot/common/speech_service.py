@@ -69,7 +69,7 @@ def main():
 
     logging.basicConfig(format='%(asctime)s:SpeechService:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
                         level=logging.DEBUG,
-                        filename=os.path.join(os.getenv('HOME'), 'logs/speech.log'),
+                        filename='/home/ubuntu/logs/speech.log',
                         filemode='a')
 
     parser = argparse.ArgumentParser(description="Stream from microphone to DeepSpeech using VAD")
