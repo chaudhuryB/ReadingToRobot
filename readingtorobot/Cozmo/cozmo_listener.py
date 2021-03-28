@@ -1,6 +1,8 @@
 """
     Thread managing the robot animations.
 """
+
+import asyncio
 import logging
 import time
 from random import randint, choice
@@ -28,10 +30,10 @@ class CozmoPlayerActions(Thread):
         super().__init__()
         self.queue = Queue()
 
-    def start(self, game_robot, face):
+    def start(self, game_robot):
         self.name = 'Robot'
         self.robot = game_robot
-        self.face = face
+        self.face = None
         self.last_head_position = cozmo.robot.MAX_HEAD_ANGLE
         self.running_animation = None
         self.running = True
@@ -45,6 +47,14 @@ class CozmoPlayerActions(Thread):
 
     def run(self):
         while self.running:
+            if not self.face:
+                try:
+                    self.robot.set_head_angle(cozmo.robot.MAX_HEAD_ANGLE).wait_for_completed()
+                    self.face = self.robot.world.wait_for_observed_face(timeout=1, include_existing=True)
+                    self.robot.turn_towards_face(self.face).wait_for_completed()
+                except asyncio.TimeoutError:
+                    self.logger.warning("Didn't find any face.")
+
             try:
                 f = self.queue.get(timeout=self.QUEUE_TIMEOUT)
             except Empty:

@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import os
 import socket
 
 import cozmo
@@ -25,7 +24,7 @@ if __name__ == "__main__":
     def cozmo_read_game(robot: cozmo.robot.Robot):
         # Initialize all the game engines screens and listners
         read_game = ReadEngine(robot, keyboard_control=args.keyboard_control, mqtt_ip=args.mqttIP)
-        if read_game.cozmo_setup_game():
-            read_game.listen_to_story()
+        read_game.cozmo_setup_game()
+        read_game.listen_to_story()
 
     cozmo.run_program(cozmo_read_game)
