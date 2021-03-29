@@ -32,7 +32,7 @@ class RobotManager(object):
 
     def __init__(self, animation_dir=None, keyboard_control=False, mqtt_ip=None, timeout=20):
         # logger
-        self.logger = logging.getLogger(name=__name__)
+        self.logger = logging.getLogger(f'rosout.{__name__}')
 
         # config animations
         self.animations = load_animations(animation_dir, max_speed=10)
@@ -57,7 +57,7 @@ class RobotManager(object):
 
         # emotion expression management
         self.keyboard_control = keyboard_control
-        self.emotion = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
+        self.emotion = EmotionController(self) if keyboard_control else DetachedSpeechReco(self, logger=self.logger)
 
         # init ROS
         rospy.init_node(self.pars.ros.robot_name + "_client_main", log_level=self.pars.ros.log_level)
@@ -508,7 +508,7 @@ class RobotManager(object):
 
     def mqtt_process_text(self, cli, obj, msg):
         if not self.keyboard_control:
-            self.emotion.process_text(msg.payload)
+            self.emotion.process_text(msg.payload.decode())
         else:
             self.logger.warning("Keyboard control is enabled, speech msg ignored: {} : {} : {}".format(msg.topic,
                                                                                                        msg.qos,

@@ -28,10 +28,10 @@ class SpeechReceiver(threading.Thread):
     HOST = socket.gethostbyname(socket.gethostname())
     PORT = 44111
 
-    def __init__(self, callback, launch_speech=False, hostname=None, port=None):
+    def __init__(self, callback, launch_speech=False, hostname=None, port=None, logger=None):
         super(SpeechReceiver, self).__init__()
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
         self.buffer_size = 1024
         self.running = False
         self.command_callback = callback
@@ -45,7 +45,7 @@ class SpeechReceiver(threading.Thread):
         self.ser_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ser_sock.bind((self.HOST, self.PORT))
 
-        if launch_speech:
+        if self.launch_speech:
             mf = module_file(os.path.join('common', 'speech_service.py'))
             self.sp = subprocess.Popen(mf)
         else:
