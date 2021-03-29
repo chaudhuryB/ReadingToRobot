@@ -1,7 +1,7 @@
 
 ARG ARCH=arm32v7
 # Get xenial container
-FROM $ARCH/ros:kinetic-perception
+FROM $ARCH/ros:noetic-perception
 
 # Install tools
 RUN apt-get update \

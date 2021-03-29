@@ -101,11 +101,7 @@ class CozmoPlayerActions(Thread):
                     'anim_reacttoblock_frustrated_int2_01']))
 
     def be_scared(self):
-        self.play_anim(
-            choice(['anim_rtpmemorymatch_no_01',
-                    'anim_speedtap_playerno_01',
-                    'anim_memorymatch_failhand_02',
-                    'anim_energy_cubenotfound_02']))
+        pass
 
     def be_excited(self):
         self.play_anim(
