@@ -4,7 +4,6 @@ import json
 import numpy as np
 import os
 from random import choice
-from threading import Lock
 
 from miro2.core import node
 
@@ -59,19 +58,19 @@ class Trajectory:
         Returns:
             Tuple[float, bool]: Returns the target position, plus a bool indicating if the animation has ended.
         """
-        for i in xrange(len(self.anim_vels)):
+        for i in range(len(self.anim_vels)):
             if self.run_times[i+1] > t:
                 return self.anim_vels[i] * (t - self.run_times[i]) + self.run_angles[i], False
         return self.run_angles[i+1], True
 
     def process_anim_cmds(self):
         self.anim_vels = []
-        for i in xrange(1, len(self.run_angles)):
+        for i in range(1, len(self.run_angles)):
             dx = self.run_angles[i] - self.run_angles[i-1]
             dt = self.run_times[i] - self.run_times[i-1]
             try:
                 target_speed = dx / dt
-            except ZeroDivisionError as e:
+            except ZeroDivisionError:
                 if dx == dt == 0:
                     target_speed = 0
                 else:
@@ -88,7 +87,7 @@ class Trajectory:
 
     def _update_times(self, dx, v, target_v, idx):
         time_diff = dx * (v - target_v) / (v * target_v)
-        for t in xrange(idx, len(self.run_times)):
+        for t in range(idx, len(self.run_times)):
             self.run_times[t] += time_diff
 
 

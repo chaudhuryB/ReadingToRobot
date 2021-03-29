@@ -64,8 +64,8 @@ class RobotManager(object):
         self.topic_base_name = "/" + self.pars.ros.robot_name + "/"
 
         # subs
-        self.kc_m = miro.utils.kc_interf.kc_miro()
-        self.kc_s = miro.utils.kc_interf.kc_miro()
+        self.kc_m = miro.lib.kc_interf.kc_miro()
+        self.kc_s = miro.lib.kc_interf.kc_miro()
         self.input = Input()
         self.state = State(self.pars)
         self.output = Output()
@@ -168,7 +168,7 @@ class RobotManager(object):
         self.mqtt_client.loop_start()
 
         # Wait for connection
-        for _ in xrange(self.mqtt_timeout):
+        for _ in range(self.mqtt_timeout):
             if self.connected_flag:
                 break
             time.sleep(1)
@@ -210,7 +210,6 @@ class RobotManager(object):
         elif feeling == Feel.EXCITED:
             self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'excited')])
             self.logger.debug("Feeling excited")
-
 
     def callback_config_command(self, msg):
 
@@ -290,7 +289,7 @@ class RobotManager(object):
         if state != self.state_file_contents:
             self.state_file_contents = state
             with open(self.demo_state_filename, 'wb') as file:
-                file.write(state)
+                file.write(state.encode())
 
         # publish flags only if they have changed
         platform_flags = 0
@@ -353,7 +352,7 @@ class RobotManager(object):
         else:
             # get config & dpose from kc
             config = self.kc_m.getConfig()
-            dpose = self.kc_m.getPoseChange() * miro.constants.PLATFORM_TICK_HZ
+            # dpose = self.kc_m.getPoseChange() * miro.constants.PLATFORM_TICK_HZ
 
             # handle wakefulness
             w = self.state.wakefulness
@@ -511,9 +510,9 @@ class RobotManager(object):
         if not self.keyboard_control:
             self.emotion.process_text(msg.payload)
         else:
-            self.logger.warning("Keyboard control is enabled, speech msg ignored: {}".format(msg.topic,
-                                                                                             msg.qos,
-                                                                                             msg.payload))
+            self.logger.warning("Keyboard control is enabled, speech msg ignored: {} : {} : {}".format(msg.topic,
+                                                                                                       msg.qos,
+                                                                                                       msg.payload))
 
     def mqtt_on_connect(self, client, userdata, flags, rc):
         if rc == 0:

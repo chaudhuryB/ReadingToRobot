@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 #
 # Main script for Reading With Robots and MiRo
 #
@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(format='%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
                         level=logging.DEBUG,
-                        filename='/logs/miro.log',
+                        filename='/home/ubuntu/logs/miro.log',
                         filemode='a')
 
     parser = argparse.ArgumentParser()
