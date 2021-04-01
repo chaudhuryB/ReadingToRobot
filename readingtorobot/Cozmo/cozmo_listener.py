@@ -71,6 +71,10 @@ class CozmoPlayerActions(Thread):
                 self.be_scared()
             elif f == Feel.EXCITED:
                 self.be_excited()
+            elif f == Feel.START:
+                self.play_anim('anim_speedtap_wingame_intensity03_01')
+            elif f == Feel.END:
+                self.do_fist_bump()
 
     def do_feel(self, feel):
         self.queue.put(feel)

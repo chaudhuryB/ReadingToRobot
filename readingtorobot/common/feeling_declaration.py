@@ -10,3 +10,6 @@ class Feel:
     ANNOYED = 3
     SCARED = 4
     EXCITED = 5
+
+    START = 6
+    END = 7

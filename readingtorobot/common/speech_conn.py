@@ -112,6 +112,12 @@ class DetachedSpeechReco(SpeechReceiver):
             elif s == "scared":
                 self.game.do_feel(Feel.SCARED)
                 self.logger.debug("Feeling {}".format("Scared"))
+            elif s == "start":
+                self.game.do_feel(Feel.START)
+                self.logger.debug("Running interaction starting animation.")
+            elif s == "end":
+                self.game.do_feel(Feel.END)
+                self.logger.debug("Running interaction final animation.")
         except Exception as e:
             self.logger.warning(e)
             pass
