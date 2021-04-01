@@ -1,0 +1,30 @@
+{
+    "eyel": {
+        "times": [1, 6],
+        "positions": [0.5, 0.5],
+        "return_to_initial_pose": true
+    },
+    "eyer": {
+        "times": [1, 6],
+        "positions": [0.5, 0.5],
+        "return_to_initial_pose": true
+    },
+    "lift": {
+        "times": [1, 6],
+        "positions": [0.3, 0.3],
+        "max_speed": 0.3,
+        "return_to_initial_pose": true
+    },
+    "pitch": {
+        "times": [1, 6],
+        "positions": [-0.5, -0.5],
+        "max_speed": 0.3,
+        "return_to_initial_pose": true
+    },
+    "valence": {
+        "value": 1.0
+    },
+    "arousal": {
+        "value": 1.0
+    }
+}

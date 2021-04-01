@@ -210,6 +210,12 @@ class RobotManager(object):
         elif feeling == Feel.EXCITED:
             self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'excited')])
             self.logger.debug("Feeling excited")
+        elif feeling == Feel.START:
+            self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'start')])
+            self.logger.debug("Starting interaction")
+        elif feeling == Feel.END:
+            self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'end')])
+            self.logger.debug("Finishing interaction")
 
     def callback_config_command(self, msg):
 
