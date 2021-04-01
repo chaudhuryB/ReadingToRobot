@@ -10,7 +10,8 @@ from ..common.speech_conn import DetachedSpeechReco
 from ..common.keyboard_control import EmotionController
 from ..common.feeling_declaration import Feel
 from .nao_expression import get_scared_movement, get_annoyed_movement, get_excited_movement, get_sad_movement, \
-                            get_background_A, get_background_B, get_background_C, get_looking_down
+                            get_background_A, get_background_B, get_background_C, get_looking_down, get_arms_up, \
+                            get_dab_movement
 
 
 class RobotManager:
@@ -112,6 +113,12 @@ class RobotManager:
 
             elif feeling == Feel.SCARED:
                 self.be_scared()
+
+            elif feeling == Feel.STARTED:
+                self.run_start_anim()
+
+            elif feeling == Feel.End:
+                self.run_end_anim()
 
     def do_action(self, names, keys, times, abs=True):
         """
@@ -263,6 +270,39 @@ class RobotManager:
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
+
+    def run_start_anim(self):
+        """
+        Run start animation
+        """
+        names, keys, times = get_arms_up()
+        if self.tracking_face:
+            head_n, head_k, head_t = self.get_back_to_target()
+            self.tracker.stopTracker()
+        else:
+            head_n, head_k, head_t = self.last_track
+        # self.ap.playSoundSetFile("", _async=True)
+        self.do_action(names, keys, times)
+        self.do_action(head_n, head_k, head_t)
+        self.tracker.track('Face')
+        self.tracking_face = True
+
+    def run_end_anim(self):
+        """
+        Run start animation
+        """
+        names, keys, times = get_dab_movement()
+        if self.tracking_face:
+            head_n, head_k, head_t = self.get_back_to_target()
+            self.tracker.stopTracker()
+        else:
+            head_n, head_k, head_t = self.last_track
+        # self.ap.playSoundSetFile("", _async=True)
+        self.do_action(names, keys, times)
+        self.do_action(head_n, head_k, head_t)
+        self.tracker.track('Face')
+        self.tracking_face = True
+        pass
 
     def process_text(self, cli, obj, msg):
         if not self.keyboard_control:
