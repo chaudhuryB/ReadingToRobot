@@ -113,11 +113,11 @@ def get_dab_movement():
 
     names.append("LElbowRoll")
     times.append([0.866667, 1.53333, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([-0.849975, -1.54462, -1.34282, -1.31706, -1.39383, -0.426082])
+    keys.append([-0.849975, -1.54462, -1.34282, -1.31706, -1.39383, -0.872665])
 
     names.append("LElbowYaw")
     times.append([1.53333, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([0, -0.342282, -0.347581, -0.219484, -1.20298])
+    keys.append([0, -0.342282, -0.347581, -0.219484, -0.129154])
 
     names.append("LHand")
     times.append([0.866667, 1.53333, 2.26667, 2.86667, 4.06667, 5.33333])
@@ -125,11 +125,11 @@ def get_dab_movement():
 
     names.append("LShoulderPitch")
     times.append([0.866667, 1.53333, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([0.195477, -0.403171, 0.00964282, 0.0152586, -0.100026, 1.44082])
+    keys.append([0.195477, -0.403171, 0.00964282, 0.0152586, -0.100026, 0.733038])
 
     names.append("LShoulderRoll")
     times.append([1.53333, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([0.139697, -0.10536, -0.07895, -0.00176048, 0.217533])
+    keys.append([0.139697, -0.10536, -0.07895, -0.00176048, 0])
 
     names.append("LWristYaw")
     times.append([0.866667, 1.53333, 2.26667, 2.86667, 4.06667, 5.33333])
@@ -137,11 +137,11 @@ def get_dab_movement():
 
     names.append("RElbowRoll")
     times.append([0.733333, 1.4, 2.26667, 2.33333, 2.86667, 4.06667, 5.33333])
-    keys.append([1.24791, 0.534071, 0.0380194, 0.0349066, 0.0387634, 0.878332, 0.422059])
+    keys.append([1.24791, 0.534071, 0.0380194, 0.0349066, 0.0387634, 0.878332, 1.42942])
 
     names.append("RElbowYaw")
     times.append([0.733333, 1.4, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([1.42244, 1.2363, 0.751108, 0.75825, 1.22859, 1.20938])
+    keys.append([1.42244, 1.2363, 0.751108, 0.75825, 1.22859, 0.204204])
 
     names.append("RHand")
     times.append([0.733333, 2.26667, 2.86667, 4.06667, 5.33333])
@@ -149,11 +149,11 @@ def get_dab_movement():
 
     names.append("RShoulderPitch")
     times.append([0.733333, 1.4, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([0.79587, 0.53058, -0.652284, -0.652718, -0.161813, 1.4416])
+    keys.append([0.79587, 0.53058, -0.652284, -0.652718, -0.161813, 0.731293])
 
     names.append("RShoulderRoll")
     times.append([1.4, 2.26667, 2.86667, 4.06667, 5.33333])
-    keys.append([0.219786, -1.03848, -1.04119, -0.507324, -0.222072])
+    keys.append([0.219786, -1.03848, -1.04119, -0.507324, -0.750492])
 
     names.append("RWristYaw")
     times.append([0.733333, 1.4, 2.26667, 2.86667, 4.06667, 5.33333])
@@ -168,60 +168,60 @@ def get_arms_up():
     keys = list()
 
     names.append("HeadPitch")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0, 0.0198135, -0.234621, -0.189354])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.0198135, -0.234621, -0.189354])
 
     names.append("HeadYaw")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0, 0, 0, 0])
+    times.append([1, 1.6, 2.76])
+    keys.append([0, 0, 0])
 
     names.append("LElbowRoll")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([-1.0097, -1.0573, -1.0573, -0.0382723])
+    times.append([1, 1.6, 2.76])
+    keys.append([-1.0573, -1.0573, -0.872665])
 
     names.append("LElbowYaw")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([-1.38656, -1.19953, -1.19953, -1.201])
+    times.append([1, 1.6, 2.76])
+    keys.append([-1.19953, -1.19953, -0.129154])
 
     names.append("LHand")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0.253632, 0.577628, 0.577628, 0.577628])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.577628, 0.577628, 0.577628])
 
     names.append("LShoulderPitch")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([1.4027, 0.9907, -0.936024, 1.03463])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.9907, -0.736971, 0.733038])
 
     names.append("LShoulderRoll")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0.294219, 0.18997, 0.18997, 0.267374])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.18997, 0.18997, 0])
 
     names.append("LWristYaw")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0.00399255, 0.100148, 0.100148, 0.0908224])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.100148, 0.100148, 0.0908224])
 
     names.append("RElbowRoll")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([1.0097, 1.06284, 1.06741, 1.05881])
+    times.append([1, 1.6, 2.76])
+    keys.append([1.06284, 1.06741, 1.42942])
 
     names.append("RElbowYaw")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([1.38664, 1.19172, 1.19953, 1.19506])
+    times.append([1, 1.6, 2.76])
+    keys.append([1.19172, 1.19953, 0.204204])
 
     names.append("RHand")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0.253636, 0.580799, 0.580799, 0.580799])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.580799, 0.580799, 0.580799])
 
     names.append("RShoulderPitch")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([1.40706, 0.994153, -0.942783, 0.97639])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.994153, -0.736971, 0.731293])
 
     names.append("RShoulderRoll")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([-0.298814, -0.17041, -0.181565, -0.178088])
+    times.append([1, 1.6, 2.76])
+    keys.append([-0.17041, -0.181565, -0.750492])
 
     names.append("RWristYaw")
-    times.append([0.36, 1.36, 1.96, 2.76])
-    keys.append([0.00385484, 0.096694, 0.096694, 0.0876897])
+    times.append([1, 1.6, 2.76])
+    keys.append([0.096694, 0.096694, 0.0876897])
 
     return names, keys, times
 

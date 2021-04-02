@@ -114,10 +114,10 @@ class RobotManager:
             elif feeling == Feel.SCARED:
                 self.be_scared()
 
-            elif feeling == Feel.STARTED:
+            elif feeling == Feel.START:
                 self.run_start_anim()
 
-            elif feeling == Feel.End:
+            elif feeling == Feel.END:
                 self.run_end_anim()
 
     def do_action(self, names, keys, times, abs=True):
