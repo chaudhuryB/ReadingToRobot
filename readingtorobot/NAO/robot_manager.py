@@ -54,6 +54,9 @@ class RobotManager:
         self.ap.loadSoundSet("Aldebaran")
         self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
 
+        # Text to speech
+        self.tts = session.service("ALTextToSpeech")
+
         # Tracking
         self.tracker = session.service("ALTracker")
         self.tracker.registerTarget('Face', 0.3)
@@ -281,7 +284,7 @@ class RobotManager:
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
-        # self.ap.playSoundSetFile("", _async=True)
+        self.ap.playSoundSetFile("enu_word_yeah", _async=True)
         self.do_action(names, keys, times)
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
@@ -297,7 +300,7 @@ class RobotManager:
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
-        # self.ap.playSoundSetFile("", _async=True)
+        self.tts.say("Hey, thank you!")
         self.do_action(names, keys, times)
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')

@@ -168,60 +168,60 @@ def get_arms_up():
     keys = list()
 
     names.append("HeadPitch")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.0198135, -0.234621, -0.189354])
+    times.append([0.6, 2.76])
+    keys.append([-0.234621, -0.189354])
 
     names.append("HeadYaw")
-    times.append([1, 1.6, 2.76])
-    keys.append([0, 0, 0])
+    times.append([0.6, 2.76])
+    keys.append([0, 0])
 
     names.append("LElbowRoll")
-    times.append([1, 1.6, 2.76])
-    keys.append([-1.0573, -1.0573, -0.872665])
+    times.append([0.6, 2.76])
+    keys.append([-1.0573, -0.872665])
 
     names.append("LElbowYaw")
-    times.append([1, 1.6, 2.76])
-    keys.append([-1.19953, -1.19953, -0.129154])
+    times.append([0.6, 2.76])
+    keys.append([-1.19953, -0.129154])
 
     names.append("LHand")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.577628, 0.577628, 0.577628])
+    times.append([0.6, 2.76])
+    keys.append([0.577628, 0.577628])
 
     names.append("LShoulderPitch")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.9907, -0.736971, 0.733038])
+    times.append([0.6, 2.76])
+    keys.append([-0.736971, 0.733038])
 
     names.append("LShoulderRoll")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.18997, 0.18997, 0])
+    times.append([0.6, 2.76])
+    keys.append([0.18997, 0])
 
     names.append("LWristYaw")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.100148, 0.100148, 0.0908224])
+    times.append([0.6, 2.76])
+    keys.append([0.100148, 0.0908224])
 
     names.append("RElbowRoll")
-    times.append([1, 1.6, 2.76])
-    keys.append([1.06284, 1.06741, 1.42942])
+    times.append([0.6, 2.76])
+    keys.append([1.06741, 1.42942])
 
     names.append("RElbowYaw")
-    times.append([1, 1.6, 2.76])
-    keys.append([1.19172, 1.19953, 0.204204])
+    times.append([0.6, 2.76])
+    keys.append([1.19953, 0.204204])
 
     names.append("RHand")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.580799, 0.580799, 0.580799])
+    times.append([0.6, 2.76])
+    keys.append([0.580799, 0.580799])
 
     names.append("RShoulderPitch")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.994153, -0.736971, 0.731293])
+    times.append([0.6, 2.76])
+    keys.append([-0.736971, 0.731293])
 
     names.append("RShoulderRoll")
-    times.append([1, 1.6, 2.76])
-    keys.append([-0.17041, -0.181565, -0.750492])
+    times.append([0.6, 2.76])
+    keys.append([-0.181565, -0.750492])
 
     names.append("RWristYaw")
-    times.append([1, 1.6, 2.76])
-    keys.append([0.096694, 0.096694, 0.0876897])
+    times.append([0.6, 2.76])
+    keys.append([0.096694, 0.0876897])
 
     return names, keys, times
 
