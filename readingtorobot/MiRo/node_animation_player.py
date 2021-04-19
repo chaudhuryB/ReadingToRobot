@@ -288,9 +288,10 @@ def load_animations(animation_address=None, min_speed=None, max_speed=None):
     file_addr = []
     if os.path.isdir(animation_address):
         for root, _, files in os.walk(animation_address):
-            for name in files:
-                if name.endswith('.json'):
-                    file_addr.append(os.path.join(root, name))
+            if 'archived' not in root:
+                for name in files:
+                    if name.endswith('.json'):
+                        file_addr.append(os.path.join(root, name))
 
     animations = {}
 

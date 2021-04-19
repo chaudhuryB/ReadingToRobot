@@ -1,28 +1,28 @@
 {
     "tail_droop": {
-        "times": [0.5, 1, 2, 6],
+        "times": [0.5, 0.75, 1.5, 3],
         "positions": [0.0, 0.10, 0.50, 0.5],
-        "max_speed": 0.5,
+        "max_speed": 2,
         "return_to_initial_pose": true
     },
     "eyel": {
-        "times": [0.5, 1, 2, 6],
+        "times": [0.5, 0.75, 1.5, 3],
         "positions": [0.0, 0.2, 0.3, 0.3],
         "return_to_initial_pose": true
     },
     "eyer": {
-        "times": [0.5, 1, 2, 6],
+        "times": [0.5, 0.75, 1.5, 3],
         "positions": [0.0, 0.2, 0.3, 0.3],
         "return_to_initial_pose": true
     },
     "lift": {
-        "times": [0.5, 1, 2, 6],
+        "times": [0.5, 0.75, 1.5, 3],
         "positions": [0.6, 0.7, 1.2, 1.2],
         "max_speed": 0.5,
         "return_to_initial_pose": true
     },
     "pitch": {
-        "times": [0.5, 1, 2, 6],
+        "times": [0.5, 0.75, 1.5, 3],
         "positions": [0.0, -0.1, -0.3, -0.3],
         "max_speed": 0.5,
         "return_to_initial_pose": true
