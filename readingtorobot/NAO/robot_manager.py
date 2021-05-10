@@ -9,12 +9,13 @@ import paho.mqtt.client as mqtt
 from ..common.speech_conn import DetachedSpeechReco
 from ..common.keyboard_control import EmotionController
 from ..common.feeling_declaration import Feel
+from .nao_base import NAOBase
 from .nao_expression import get_scared_movement, get_annoyed_movement, get_excited_movement, get_sad_movement, \
                             get_background_A, get_background_B, get_background_C, get_looking_down, get_arms_up, \
                             get_dab_movement
 
 
-class RobotManager:
+class RobotManager(NAOBase):
     """
     Class managing the movement of NAO, adding expressions when listening
     """
@@ -22,8 +23,8 @@ class RobotManager:
         """
         Initialisation of qi framework and event detection.
         """
-        app.start()
-        session = app.session
+        super(RobotManager, self).__init__(app)
+
         self.logger = logging.getLogger(__name__)
         self.keyboard_control = keyboard_control
         self.done = False
@@ -39,26 +40,15 @@ class RobotManager:
         self.mqtt_timeout = timeout
         self.connected_flag = False
 
-        # Movement
-        self.movement = session.service("ALMotion")
-        self.posture = session.service("ALRobotPosture")
-
         # Autonomous habilities
-        self.autonomousblinking = session.service("ALAutonomousBlinking")
         self.autonomousblinking.setEnabled(True)
         self.background_thread = threading.Thread(target=self.do_background)
 
         # Expressions
         self.feel_lock = threading.Lock()
-        self.ap = session.service("ALAudioPlayer")
-        self.ap.loadSoundSet("Aldebaran")
         self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
 
-        # Text to speech
-        self.tts = session.service("ALTextToSpeech")
-
         # Tracking
-        self.tracker = session.service("ALTracker")
         self.tracker.registerTarget('Face', 0.3)
         self.tracker.track('Face')
         self.tracking_face = True
@@ -95,7 +85,7 @@ class RobotManager:
         self.tracker.stopTracker()
         self.tracker.unregisterAllTargets()
         self.background_thread.join()
-        self.movement.rest()
+        super(RobotManager, self).stop()
 
     def do_feel(self, feeling=Feel.NEUTRAL):
         """
@@ -122,22 +112,6 @@ class RobotManager:
 
             elif feeling == Feel.END:
                 self.run_end_anim()
-
-    def do_action(self, names, keys, times, abs=True):
-        """
-        Executes a robot movement given a set of joint names, angles and times
-
-        Args:
-            names ([string]):   Names of joints to move
-            keys ([[float]]):   Each entry contains a list object containing the target positions of
-                                each joint
-            times ([[float]]):  Each entry contains a list object containing the target times for each
-                                joint position
-        """
-        try:
-            self.movement.angleInterpolation(names, keys, times, abs)
-        except BaseException:
-            raise
 
     def get_back_to_target(self, ret_time=0.7):
         head_pitch = self.movement.getAngles('HeadPitch', True)
@@ -167,14 +141,11 @@ class RobotManager:
             with self.feel_lock:
                 lot = random.randint(0, 4)
                 if lot == 0:
-                    names, keys, times = get_background_A()
-                    self.do_action(names, keys, times)
+                    self.do_action(*get_background_A())
                 elif lot == 1:
-                    names, keys, times = get_background_B()
-                    self.do_action(names, keys, times)
+                    self.do_action(*get_background_B())
                 elif lot == 2:
-                    names, keys, times = get_background_C()
-                    self.do_action(names, keys, times)
+                    self.do_action(*get_background_C())
                 if lot >= 2:
                     self.toogle_face_book_tracking()
 
@@ -184,14 +155,13 @@ class RobotManager:
 
     def toogle_face_book_tracking(self):
         if self.tracking_face:
-            names, keys, times = get_looking_down()
             self.last_track = self.get_back_to_target()
             self.tracker.stopTracker()
-            self.do_action(names, keys, times)
+            self.do_action(*get_looking_down())
             self.tracking_face = False
         else:
             self.tracker.track('Face')
-            self.do_action(self.last_track[0], self.last_track[1], self.last_track[2])
+            self.do_action(*self.last_track)
             self.tracking_face = True
 
     def be_annoyed(self):
@@ -224,14 +194,13 @@ class RobotManager:
         """
         Execute Excited expression
         """
-        names, keys, times = get_excited_movement()
         if self.tracking_face:
             head_n, head_k, head_t = self.get_back_to_target()
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
         self.ap.playSoundSetFile("enu_ono_laugh_excited_01", _async=True)
-        self.do_action(names, keys, times, False)
+        self.do_action(*get_excited_movement(), abs=False)
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
@@ -246,14 +215,13 @@ class RobotManager:
         """
         Execute Sad expression
         """
-        names, keys, times = get_sad_movement()
         if self.tracking_face:
             head_n, head_k, head_t = self.get_back_to_target()
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
         self.ap.playSoundSetFile("frf_ono_exclamation_sad_06", _async=True)
-        self.do_action(names, keys, times)
+        self.do_action(*get_sad_movement())
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
@@ -262,14 +230,13 @@ class RobotManager:
         """
         Execute Scared expression
         """
-        names, keys, times = get_scared_movement()
         if self.tracking_face:
             head_n, head_k, head_t = self.get_back_to_target()
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
         self.ap.playSoundSetFile("enu_ono_scared_02", _async=True)
-        self.do_action(names, keys, times)
+        self.do_action(*get_scared_movement())
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
@@ -278,14 +245,13 @@ class RobotManager:
         """
         Run start animation
         """
-        names, keys, times = get_arms_up()
         if self.tracking_face:
             head_n, head_k, head_t = self.get_back_to_target()
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
         self.ap.playSoundSetFile("enu_word_yeah", _async=True)
-        self.do_action(names, keys, times)
+        self.do_action(*get_arms_up())
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
@@ -294,14 +260,13 @@ class RobotManager:
         """
         Run start animation
         """
-        names, keys, times = get_dab_movement()
         if self.tracking_face:
             head_n, head_k, head_t = self.get_back_to_target()
             self.tracker.stopTracker()
         else:
             head_n, head_k, head_t = self.last_track
         self.tts.say("Hey, thank you!")
-        self.do_action(names, keys, times)
+        self.do_action(*get_dab_movement())
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
