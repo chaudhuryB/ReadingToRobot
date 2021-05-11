@@ -117,12 +117,35 @@ class EmotionTrajectory:
     def get_initial_value(self):
         return self.run_value
 
+class NavigationCmd:
+    def __init__(self, cmds, times):
+        self.cmds = [0.0] + cmds
+        self.times =  times
+
+    def initialize(self):
+        self.run_times = [0.0] + self.times
+
+    def get_target_pose(self, t):
+        """
+            Target speed generation.
+        Args:
+            t (float): current time relative to animation start
+
+        Returns:
+            Tuple[float, bool]: Returns the target position, plus a bool indicating if the animation has ended.
+        """
+        for i in range(len(self.times)):
+            if self.run_times[i+1] > t:
+                return self.cmds[i], False
+        return self.cmds[i+1], True
+
 
 class Animation:
 
     cosmetic_name_idx = {'tail_droop': 0, 'tail_wag': 1, 'eyel': 2, 'eyer': 3, 'earl': 4, 'earr': 5}
     kinematic_name_idx = {'tilt': 0, 'lift': 1, 'yaw': 2, 'pitch': 3}
     emotion_name_idx = {'valence': 0, 'arousal': 1}
+    cmd_vel_idx = {'x_vel': 0, 'z_rot': 1}
 
     def __init__(self, trajectories):
         """Robot animation class, containing trajectories for the joints that will be active.
@@ -142,10 +165,13 @@ class Animation:
                 self.trajectories[j]['traj'].initialize(kinematic[self.trajectories[j]['idx']])
             elif self.trajectories[j]['group'] == 'emotion':
                 self.trajectories[j]['traj'].initialize(emotion[self.trajectories[j]['idx']])
+            elif self.trajectories[j]['group'] == 'cmd_vel':
+                self.trajectories[j]['traj'].initialize()
 
     def get_commands(self, kin, cos):
         kin_j, cos_j = kin, cos
         emotion = [0.0] * 2
+        cmd_vel = [0.0] * 2
         dt = (datetime.datetime.now() - self.ref_time).total_seconds()
         finished = True
         for traj in self.trajectories:
@@ -157,10 +183,12 @@ class Animation:
                 kin_j[self.trajectories[traj]['idx']] = cmd
             elif self.trajectories[traj]['group'] == 'emotion':
                 emotion[self.trajectories[traj]['idx']] = cmd
+            elif self.trajectories[traj]['group'] == 'cmd_vel':
+                cmd_vel[self.trajectories[traj]['idx']] = cmd
         if finished:
             return None
         else:
-            return {'kinematic': kin_j, 'cosmetic': cos_j, 'emotion': emotion}
+            return {'kinematic': kin_j, 'cosmetic': cos_j, 'emotion': emotion, 'cmd_vel': cmd_vel}
 
     def get_initial_emotion_level(self):
         emotion = [0.0, 0.0]
@@ -197,8 +225,10 @@ class Animation:
             for j in index_dict:
                 t_, p_ = [], []
                 if j in data:
-                    if 'value' in data[j]:
+                    if group == 'emotion':
                         tr = EmotionTrajectory(data[j]['value'])
+                    elif group == 'cmd_vel':
+                        tr = NavigationCmd(data[j]['values'], data[j]['times'])
                     else:
                         mn = max(data[j]['min_speed'], min_speed) \
                             if min_speed and 'min_speed' in data[j] \
@@ -221,6 +251,7 @@ class Animation:
         gen_traj(cls.cosmetic_name_idx, 'cosmetic')
         gen_traj(cls.kinematic_name_idx, 'kinematic')
         gen_traj(cls.emotion_name_idx, 'emotion')
+        gen_traj(cls.cmd_vel_idx, 'cmd_vel')
 
         return cls(trajectories=trajectories)
 
@@ -232,6 +263,7 @@ class NodeAnimationPlayer(node.Node):
         self.current_animation = None
         # Kinematics target joint positions (config in the MDK)
         self.config = [0.0] * 4
+        self.cmd_vel = [0.0] * 2  # normally, for miro we'll only need +/-x (fwd/bwd) and +/- z (rotation)
         self.emotion = self.output.animal_state.emotion
 
     def play_animation(self, anim):
@@ -239,6 +271,9 @@ class NodeAnimationPlayer(node.Node):
 
     def get_config(self):
         return self.config
+
+    def get_cmd_vel(self):
+        return self.cmd_vel
 
     def tick(self):
         """ Calculate next step in the animation."""
@@ -255,6 +290,7 @@ class NodeAnimationPlayer(node.Node):
                 self.state.animation_running = True
                 self.state.vocalize = True
                 self.config = cmds['kinematic']
+                self.cmd_vel = cmds['cmd_vel']
                 self.output.cosmetic_joints = np.array(cmds['cosmetic'])
                 self.state.emotion.valence = cmds['emotion'][0]
                 self.state.emotion.arousal = cmds['emotion'][1]
@@ -264,6 +300,7 @@ class NodeAnimationPlayer(node.Node):
                 self.state.animation_running = False
                 self.state.vocalize = False
                 self.current_animation = None
+                self.cmd_vel = [0.0] * 2
 
 
 def choose_animation(animations, emotion_key):
