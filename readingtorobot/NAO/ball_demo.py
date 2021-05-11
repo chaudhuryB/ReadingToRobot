@@ -6,24 +6,20 @@ import time
 import threading
 
 from readingtorobot.NAO.nao_base import NAOBase
-from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, point_forward, explain
+from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, point_forward, explain, wave
 
 class BallDemo(NAOBase):
-    def __init__(self, app):
-        super(BallDemo, self).__init__(app)
-
     def run(self):
         self.running = True
-        self.movement.wakeUp()
         self.posture.goToPosture('Crouch', 2.0)
         self.movement.setStiffnesses("Body", 1.0)
+
+        # Sit and hold hand
         self.do_action(*hand_hold_ball())
         self.do_action(*stand_hand_fwd())
 
         # Walking motion
         self.movement.setMoveArmsEnabled( True, False )
-        self.movement.moveToward(0.5, 0, 0)
-        time.sleep(3)
 
         # Drop ball
         self.movement.stopMove()
@@ -34,13 +30,24 @@ class BallDemo(NAOBase):
         self.do_action(*point_forward())
         t.join()
 
-        t = threading.Thread(target=self.tts.say, args=["We dropped a ball!"])
+        t = threading.Thread(target=self.tts.say, args=["We dropped the ball!"])
         t.start()
         self.do_action(*explain())
         t.join()
         time.sleep(3)
 
+class ByeForNow(NAOBase):
+    def run(self):
+        self.running = True
+        self.movement.wakeUp()
+        self.movement.setStiffnesses("Body", 1.0)
 
+        t = threading.Thread(target=self.tts.say, args=["Bye for now!"])
+        t.start()
+        self.do_action(*wave())
+        t.join()
+
+        time.sleep(3)
 
 def play_ball_demo():
 
@@ -50,6 +57,9 @@ def play_ball_demo():
     parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
                         help="IP address of the robot, use 'localhost' for virtual Nao in" \
                         "Choregraphe")
+
+    parser.add_argument("-a", type=str,  default="ball",
+                        help="Animation options: 'ball' or 'hi'")
 
     args = parser.parse_args()
 
@@ -62,7 +72,7 @@ def play_ball_demo():
                "Please check your script arguments. Run with -h option for help.")
         sys.exit(1)
 
-    manager = BallDemo(app)
+    manager = ByeForNow(app) if args.a == 'hi' else BallDemo(app)
     # Keep robot running
     try:
         manager.run()

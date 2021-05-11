@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Package name="Dab" format_version="5">
+<Package name="wave" format_version="5">
     <Manifest src="manifest.xml" />
     <BehaviorDescriptions>
         <BehaviorDescription name="behavior" src="behavior_1" xar="behavior.xar" />
     </BehaviorDescriptions>
     <Dialogs />
     <Resources>
-        <File name="elephant" src="behavior_1/dab.ogg" />
+        <File name="surprise3" src="behavior_1/surprise3.ogg" />
     </Resources>
     <Topics />
     <IgnoredPaths />

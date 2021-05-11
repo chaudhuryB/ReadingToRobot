@@ -427,7 +427,7 @@ def hand_hold_ball():
 
     names.append("RHand")
     times.append([0.96])
-    keys.append([0.73])
+    keys.append([0.33])
 
     names.append("RWristYaw")
     times.append([0.96])
@@ -506,8 +506,8 @@ def stand_hand_fwd():
     keys.append([1.2096])
 
     names.append("RHand")
-    times.append([2, 2.76])
-    keys.append([0.727432, 0.73])
+    times.append([1.0, 2])
+    keys.append([0.33, 0.73])
 
     names.append("RHipPitch")
     times.append([2])
@@ -690,5 +690,117 @@ def explain():
     names.append("RWristYaw")
     times.append([0.44, 0.92, 1.2, 1.8])
     keys.append([0.791502, 0.868202, 0.89428, 0.891212])
+
+    return names, keys, times
+
+
+def wave():
+    names = list()
+    times = list()
+    keys = list()
+
+    names.append("HeadPitch")
+    times.append([4.8])
+    keys.append([-0.163712])
+
+    names.append("HeadYaw")
+    times.append([4.8])
+    keys.append([0])
+
+    names.append("LAnklePitch")
+    times.append([4.8])
+    keys.append([0.0828792])
+
+    names.append("LAnkleRoll")
+    times.append([4.8])
+    keys.append([-0.1008])
+
+    names.append("LElbowRoll")
+    times.append([4.8])
+    keys.append([-0.419153])
+
+    names.append("LElbowYaw")
+    times.append([4.8])
+    keys.append([-1.19421])
+
+    names.append("LHand")
+    times.append([4.8])
+    keys.append([0.3])
+
+    names.append("LHipPitch")
+    times.append([4.8])
+    keys.append([0.130092])
+
+    names.append("LHipRoll")
+    times.append([4.8])
+    keys.append([0.118398])
+
+    names.append("LHipYawPitch")
+    times.append([4.8])
+    keys.append([-0.17001])
+
+    names.append("LKneePitch")
+    times.append([4.8])
+    keys.append([-0.0844387])
+
+    names.append("LShoulderPitch")
+    times.append([4.8])
+    keys.append([1.44994])
+
+    names.append("LShoulderRoll")
+    times.append([4.8])
+    keys.append([0.232865])
+
+    names.append("LWristYaw")
+    times.append([4.8])
+    keys.append([0.100817])
+
+    names.append("RAnklePitch")
+    times.append([4.8])
+    keys.append([0.0828791])
+
+    names.append("RAnkleRoll")
+    times.append([4.8])
+    keys.append([0.108162])
+
+    names.append("RElbowRoll")
+    times.append([1.4, 1.9, 2.4, 3.2, 4.8])
+    keys.append([0.753982, 0.0645772, 0.753982, 0.0645772, 0.420785])
+
+    names.append("RElbowYaw")
+    times.append([1.4, 2.4, 4.8])
+    keys.append([0, 0, 1.20514])
+
+    names.append("RHand")
+    times.append([1.4, 1.9, 2.4, 3.2, 4.8])
+    keys.append([0.7, 0.67, 0.52, 0.68, 0.301776])
+
+    names.append("RHipPitch")
+    times.append([4.8])
+    keys.append([0.135894])
+
+    names.append("RHipRoll")
+    times.append([4.8])
+    keys.append([-0.110433])
+
+    names.append("RHipYawPitch")
+    times.append([4.8])
+    keys.append([-0.17001])
+
+    names.append("RKneePitch")
+    times.append([4.8])
+    keys.append([-0.0844387])
+
+    names.append("RShoulderPitch")
+    times.append([1.4, 2.4, 3.2, 4.8])
+    keys.append([-1.40499, -1.40499, -1.39626, 1.43784])
+
+    names.append("RShoulderRoll")
+    times.append([1.4, 1.9, 2.4, 3.2, 4.8])
+    keys.append([0, -0.272271, 0, -0.272271, -0.220384])
+
+    names.append("RWristYaw")
+    times.append([1.4, 2.4, 4.8])
+    keys.append([0, 0, 0.108999])
 
     return names, keys, times

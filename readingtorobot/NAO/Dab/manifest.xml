@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<package uuid="dab-fbe703" version="0.0.0">
+<package uuid="dab-fbe703" version="0.0.0" installOnlyAtStartup="false">
  <names>
   <name lang="en_US">Dab</name>
  </names>
@@ -18,9 +18,6 @@
    <names>
     <name lang="en_US">dab</name>
    </names>
-   <triggerSentences/>
-   <loadingResponses/>
-   <autonomous/>
    <permissions/>
   </behaviorContent>
  </contents>
