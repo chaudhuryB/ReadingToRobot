@@ -300,7 +300,6 @@ class NodeAnimationPlayer(node.Node):
                 self.state.animation_running = True
                 self.state.vocalize = True
                 self.config = cmds['kinematic']
-                print(cmds['kinematic'])
                 self.cmd_vel = cmds['cmd_vel']
                 self.output.cosmetic_joints = np.array(cmds['cosmetic'])
                 self.state.user_touch = 2.0
