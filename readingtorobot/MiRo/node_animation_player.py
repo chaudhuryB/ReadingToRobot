@@ -95,12 +95,18 @@ class EmptyTrajectory(Trajectory):
     def __init__(self):
         Trajectory.__init__(self, [0.0], [0.0])
 
-    def initialize(self, current_pose):
-        self.run_angles = current_pose
+    def initialize(self, current_pose=0):
+        self.value = current_pose
         pass
 
     def get_target_pose(self, t):
-        return self.run_angles, True
+        return self.value, True
+
+    def get_initial_value(self):
+        return self.value
+
+    def __bool__(self):
+        return False
 
 
 class EmotionTrajectory:
@@ -116,6 +122,7 @@ class EmotionTrajectory:
 
     def get_initial_value(self):
         return self.run_value
+
 
 class NavigationCmd:
     def __init__(self, cmds, times):
@@ -175,16 +182,17 @@ class Animation:
         dt = (datetime.datetime.now() - self.ref_time).total_seconds()
         finished = True
         for traj in self.trajectories:
-            cmd, t_ended = self.trajectories[traj]['traj'].get_target_pose(dt)
-            finished &= t_ended
-            if self.trajectories[traj]['group'] == 'cosmetic':
-                cos_j[self.trajectories[traj]['idx']] = cmd
-            elif self.trajectories[traj]['group'] == 'kinematic':
-                kin_j[self.trajectories[traj]['idx']] = cmd
-            elif self.trajectories[traj]['group'] == 'emotion':
-                emotion[self.trajectories[traj]['idx']] = cmd
-            elif self.trajectories[traj]['group'] == 'cmd_vel':
-                cmd_vel[self.trajectories[traj]['idx']] = cmd
+            if self.trajectories[traj]['group']:
+                cmd, t_ended = self.trajectories[traj]['traj'].get_target_pose(dt)
+                finished &= t_ended
+                if self.trajectories[traj]['group'] == 'cosmetic':
+                    cos_j[self.trajectories[traj]['idx']] = cmd
+                elif self.trajectories[traj]['group'] == 'kinematic':
+                    kin_j[self.trajectories[traj]['idx']] = cmd
+                elif self.trajectories[traj]['group'] == 'emotion':
+                    emotion[self.trajectories[traj]['idx']] = cmd
+                elif self.trajectories[traj]['group'] == 'cmd_vel':
+                    cmd_vel[self.trajectories[traj]['idx']] = cmd
         if finished:
             return None
         else:
@@ -223,7 +231,7 @@ class Animation:
 
         def gen_traj(index_dict, group):
             for j in index_dict:
-                t_, p_ = [], []
+                tr = EmptyTrajectory()
                 if j in data:
                     if group == 'emotion':
                         tr = EmotionTrajectory(data[j]['value'])
@@ -237,16 +245,18 @@ class Animation:
                             if max_speed and 'max_speed' in data[j] \
                             else data[j].get('max_speed') or max_speed
                         rti = data[j].get('return_to_initial_pose', False)
-                        for t, p in zip(data[j]['times'], data[j]['positions']):
-                            t_.append(t)
-                            p_.append(p)
-                        tr = Trajectory(angles=p_, times=t_, min_speed=mn, max_speed=mx, return_to_init=rti)
+                        tr = Trajectory(
+                            angles=data[j]['positions'],
+                            times=data[j]['times'],
+                            min_speed=mn,
+                            max_speed=mx,
+                            return_to_init=rti)
 
-                    trajectories[j] = {
-                        'traj': tr,
-                        'group': group,
-                        'idx': index_dict[j]
-                    }
+                trajectories[j] = {
+                    'traj': tr,
+                    'group': group if tr else None,
+                    'idx': index_dict[j]
+                }
 
         gen_traj(cls.cosmetic_name_idx, 'cosmetic')
         gen_traj(cls.kinematic_name_idx, 'kinematic')
@@ -280,9 +290,9 @@ class NodeAnimationPlayer(node.Node):
         if not self.current_animation:
             if self.playing_animations:
                 self.current_animation = self.playing_animations.pop(0)
-                config = self.kc_m.getConfig()
+                self.config = self.kc_m.getConfig()
                 self.current_animation.initialize(cosmetic=self.output.cosmetic_joints.tolist(),
-                                                  kinematic=config,
+                                                  kinematic=self.config,
                                                   emotion=(self.emotion.valence, self.emotion.arousal))
         else:
             cmds = self.current_animation.get_commands(self.config, self.output.cosmetic_joints)
@@ -290,8 +300,10 @@ class NodeAnimationPlayer(node.Node):
                 self.state.animation_running = True
                 self.state.vocalize = True
                 self.config = cmds['kinematic']
+                print(cmds['kinematic'])
                 self.cmd_vel = cmds['cmd_vel']
                 self.output.cosmetic_joints = np.array(cmds['cosmetic'])
+                self.state.user_touch = 2.0
                 self.state.emotion.valence = cmds['emotion'][0]
                 self.state.emotion.arousal = cmds['emotion'][1]
             else:
@@ -303,8 +315,12 @@ class NodeAnimationPlayer(node.Node):
                 self.cmd_vel = [0.0] * 2
 
 
+def get_animations_with_key(animations, key):
+    return sorted([anim for anim in animations if key in anim])
+
+
 def choose_animation(animations, emotion_key):
-    return choice([anim for anim in animations if emotion_key in anim])
+    return choice(get_animations_with_key(animations, emotion_key))
 
 
 def load_animations(animation_address=None, min_speed=None, max_speed=None):

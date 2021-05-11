@@ -21,7 +21,7 @@ from cv_bridge import CvBridge
 
 # Local nodes
 from readingtorobot.MiRo.helper_classes import Input, Nodes, Output, Pub, State
-from readingtorobot.MiRo.node_animation_player import choose_animation, load_animations
+from readingtorobot.MiRo.node_animation_player import get_animations_with_key, load_animations
 from readingtorobot.common import module_file
 
 
@@ -441,8 +441,10 @@ if __name__ == "__main__":
     # instantiate
     app = RobotManager(animation_dir=module_file(os.path.join('MiRo', 'animations')))
 
+    for a in get_animations_with_key(app.animations.keys(), 'ball_demo'):
+        app.nodes.animation.play_animation(app.animations[a])
+
     app.state.user_touch = 2.0
-    app.nodes.animation.play_animation(app.animations[choose_animation(app.animations.keys(), 'move_fwd')])
     # execute
     app.loop()
 
