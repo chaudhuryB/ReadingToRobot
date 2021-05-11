@@ -1,0 +1,28 @@
+{
+    "lift": {
+        "times": [0.5, 0.75, 1.5, 3],
+        "positions": [0.6, 0.7, 1.2, 1.2],
+        "max_speed": 0.5,
+        "return_to_initial_pose": false
+    },
+    "pitch": {
+        "times": [0.5, 0.75, 1.5, 3],
+        "positions": [0.0, -0.1, -0.3, -0.3],
+        "max_speed": 0.5,
+        "return_to_initial_pose": false
+    },
+    "x_vel": {
+        "times": [0.5, 0.75, 1.5, 3],
+        "values": [0.10, 0.10, 0.1, 0]
+    },
+    "z_rot": {
+        "times": [0.5, 2],
+        "values": [0.5, 0]
+    },
+    "valence": {
+        "value": 1.0
+    },
+    "arousal": {
+        "value": 1.0
+    }
+}
