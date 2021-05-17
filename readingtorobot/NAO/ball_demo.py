@@ -6,7 +6,7 @@ import time
 import threading
 
 from readingtorobot.NAO.nao_base import NAOBase
-from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, point_forward, explain, wave
+from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, point_forward, explain, wave, open_hand
 
 class BallDemo(NAOBase):
     def run(self):
@@ -20,7 +20,10 @@ class BallDemo(NAOBase):
 
         # Walking motion
         self.movement.setMoveArmsEnabled( True, False )
-
+        self.movement.moveToward(1, 0, 0)
+        time.sleep(3)
+        self.do_action(*open_hand())
+        time.sleep(1.5)
         # Drop ball
         self.movement.stopMove()
         self.posture.goToPosture('Stand', 2.0)

@@ -507,7 +507,7 @@ def stand_hand_fwd():
 
     names.append("RHand")
     times.append([1.0, 2])
-    keys.append([0.33, 0.73])
+    keys.append([0.33, 0.33])
 
     names.append("RHipPitch")
     times.append([2])
@@ -804,3 +804,7 @@ def wave():
     keys.append([0, 0, 0.108999])
 
     return names, keys, times
+
+
+def open_hand():
+    return ["RHand"], [[0.65]], [[0.88]]
