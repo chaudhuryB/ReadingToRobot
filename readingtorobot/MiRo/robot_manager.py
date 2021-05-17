@@ -23,9 +23,7 @@ from cv_bridge import CvBridge
 # Local nodes
 from .helper_classes import Input, Nodes, Output, Pub, State
 from .node_animation_player import choose_animation, load_animations
-from ..common.feeling_declaration import Feel
-from ..common.speech_conn import DetachedSpeechReco
-from ..common.keyboard_control import EmotionController
+from ..common.feeling_expression import Feel, FeelingReaction
 
 
 class RobotManager(object):
@@ -57,7 +55,7 @@ class RobotManager(object):
 
         # emotion expression management
         self.keyboard_control = keyboard_control
-        self.emotion = EmotionController(self) if keyboard_control else DetachedSpeechReco(self, logger=self.logger)
+        self.emotion = FeelingReaction(self)
 
         # init ROS
         rospy.init_node(self.pars.ros.robot_name + "_client_main", log_level=self.pars.ros.log_level)

@@ -6,9 +6,7 @@ import threading
 
 import paho.mqtt.client as mqtt
 
-from ..common.speech_conn import DetachedSpeechReco
-from ..common.keyboard_control import EmotionController
-from ..common.feeling_declaration import Feel
+from ..common.feeling_expression import Feel, FeelingReaction
 from .nao_base import NAOBase
 from .nao_expression import get_scared_movement, get_annoyed_movement, get_excited_movement, get_sad_movement, \
                             get_background_A, get_background_B, get_background_C, get_looking_down, get_arms_up, \
@@ -46,7 +44,7 @@ class RobotManager(NAOBase):
 
         # Expressions
         self.feel_lock = threading.Lock()
-        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
+        self.feel_control = FeelingReaction(self)
 
         # Tracking
         self.tracker.registerTarget('Face', 0.3)

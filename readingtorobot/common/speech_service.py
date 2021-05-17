@@ -5,7 +5,6 @@
 
 import argparse
 import logging
-import os
 import socket
 import time
 
@@ -135,6 +134,7 @@ def main():
         logging.info("Stopping, bye!")
 
     speech_reco.send_stopped()
+
 
 if __name__ == '__main__':
     main()

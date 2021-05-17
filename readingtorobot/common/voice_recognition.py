@@ -8,7 +8,7 @@ import numpy as np
 import speech_recognition as sr
 from threading import Thread
 
-from .feeling_declaration import Feel
+from .feeling_expression import Feel
 from .continuous_speech import ContinuousSpeech
 from .configuration_loader import load_config_file, resource_file
 from .book_reactions import Book
@@ -16,7 +16,7 @@ from .book_reactions import Book
 
 class SpeechReco(Thread):
     """
-        Speech recognition module, using DeepSpeech or Google Cloud Speech API (through the speech_recognition module).
+        Speech recognition module, using DeepSpeech or Google Cloud Speech API (through the speech_recognition package).
 
         Interpreter options:
         - 'ds' : DeepSpeech (default)

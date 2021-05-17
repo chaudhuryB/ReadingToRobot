@@ -11,9 +11,7 @@ import cozmo
 from cozmo.util import degrees
 import paho.mqtt.client as mqtt
 
-from ..common.feeling_declaration import Feel
-from ..common.keyboard_control import EmotionController
-from ..common.speech_conn import DetachedSpeechReco
+from ..common.feeling_expression import Feel, FeelingReaction
 from .constants import START_CUBE, END_CUBE
 from .cozmo_listener import CozmoPlayerActions
 
@@ -27,7 +25,7 @@ class ReadEngine:
         self.feel = Feel.NEUTRAL
         self.logger = logging.getLogger(name=__name__)
         self.keyboard_control = keyboard_control
-        self.feel_control = EmotionController(self) if keyboard_control else DetachedSpeechReco(self)
+        self.feel_control = FeelingReaction(self)
 
         # Connection to command server
         self.mqtt_client = mqtt.Client("cozmo")

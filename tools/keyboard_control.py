@@ -5,7 +5,7 @@ from threading import Thread
 
 from getkey import getkey, keys
 
-from ..common.feeling_declaration import Feel
+from ..common.feeling_expression import Feel
 
 
 class EmotionController(Thread):

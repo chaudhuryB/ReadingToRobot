@@ -14,7 +14,7 @@ from cozmo.util import degrees
 from cozmo import event
 
 from .game_cubes import BlinkyCube
-from ..common.feeling_declaration import Feel
+from ..common.feeling_expression import Feel
 
 
 cozmo.world.World.light_cube_factory = BlinkyCube
