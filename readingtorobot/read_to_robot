@@ -1,0 +1,111 @@
+#!/usr/bin/python
+
+import argparse
+import logging
+import os
+import sys
+import time
+
+from readingtorobot.common import module_file
+
+
+def nao_main(args):
+
+    from naoqi import ALProxy
+    import qi
+    from readingtorobot.NAO import RobotManager
+
+    motion = ALProxy("ALMotion", args.robotIP, args.port)
+
+    try:
+        # Initialize qi framework.
+        connection_url = "tcp://" + args.robotIP + ":" + str(args.port)
+        app = qi.Application(["HumanListener", "--qi-url=" + connection_url])
+    except RuntimeError:
+        print("Can't connect to Naoqi at ip \"" + args.robotIP + "\" on port " + str(args.port) + ".\n"
+              "Please check your script arguments. Run with -h option for help.")
+        sys.exit(1)
+
+    motion.wakeUp()
+
+    human_greeter = RobotManager(app,
+                                 keyboard_control=args.keyboard_control,
+                                 mqtt_ip=args.mqttIP)
+    human_greeter.start()
+    # Keep robot running
+    try:
+        while not human_greeter.done:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nInterrupted by user, shutting down")
+        raise
+    except BaseException as err:
+        print(err)
+        raise
+    finally:
+        human_greeter.stop()
+        motion.rest()
+        sys.exit(0)
+
+
+def miro_main(args):
+    from readingtorobot.MiRo import RobotManager
+    # instantiate
+    app = RobotManager(animation_dir=args.animation_dir, keyboard_control=args.keyboard_control, mqtt_ip=args.mqttIP)
+
+    # execute
+    app.loop()
+
+    # terminate
+    app.term()
+
+
+def cozmo_main(args):
+    import cozmo
+    from readingtorobot.Cozmo import ReadEngine
+
+    def cozmo_read_game(robot):
+        # Initialize all the game engines screens and listners
+        read_game = ReadEngine(robot, keyboard_control=args.keyboard_control, mqtt_ip=args.mqttIP)
+        read_game.cozmo_setup_game()
+        read_game.listen_to_story()
+
+    cozmo.run_program(cozmo_read_game)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    # Common arguments
+    parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
+    parser.add_argument("-k", "--keyboard-control", action="store_true",
+                        help="Trigger emotion animations manually using keyboard.")
+
+    subparsers = parser.add_subparsers(dest="robot")
+    nao_parser = subparsers.add_parser("nao")
+    miro_parser = subparsers.add_parser("miro")
+    cozmo_parser = subparsers.add_parser("cozmo")
+
+    # NAO specific arguments
+    nao_parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
+                            help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
+    nao_parser.add_argument("--port", type=int,  default="9559",
+                            help="Needed for connecting to virtual Choregraphe Nao")
+
+    # MiRo specific arguments
+    miro_parser.add_argument('animation_dir', nargs='?', default=module_file(os.path.join('MiRo', 'animations')))
+
+    args = parser.parse_args()
+
+    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+                        level=logging.DEBUG,
+                        filename=os.path.join(os.getenv("HOME"), "logs/{}.log".format(args.robot)),
+                        filemode="a")
+
+    if args.robot == "nao":
+        nao_main(args)
+    elif args.robot == "miro":
+        miro_main(args)
+    elif args.robot == "cozmo":
+        cozmo_main(args)
