@@ -4,7 +4,6 @@ import argparse
 import logging
 import os
 import sys
-import time
 
 from readingtorobot.common import module_file
 
@@ -31,11 +30,10 @@ def nao_main(args):
     human_greeter = RobotManager(app,
                                  keyboard_control=args.keyboard_control,
                                  mqtt_ip=args.mqttIP)
-    human_greeter.start()
     # Keep robot running
     try:
-        while not human_greeter.done:
-            time.sleep(1)
+        human_greeter.start()
+        human_greeter.join()
     except KeyboardInterrupt:
         print("\nInterrupted by user, shutting down")
         raise
