@@ -416,7 +416,6 @@ def go_to_fwd_lean():
 
 # Demo animations
 def hand_hold_ball():
-
     names = list()
     times = list()
     keys = list()
@@ -434,6 +433,7 @@ def hand_hold_ball():
     keys.append([1.45735])
 
     return names, keys, times
+
 
 # Get up with hand up
 def stand_hand_fwd():
@@ -539,6 +539,7 @@ def stand_hand_fwd():
 
     return names, keys, times
 
+
 def point_forward():
     names = list()
     times = list()
@@ -581,6 +582,7 @@ def point_forward():
     keys.append([-0.221657])
 
     return names, keys, times
+
 
 def explain():
     names = list()

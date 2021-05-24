@@ -21,7 +21,7 @@ from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from cv_bridge import CvBridge
 
 # Local nodes
-from .helper_classes import Input, Nodes, Output, Pub, State
+from .core import Input, Nodes, Output, Pub, State
 from .node_animation_player import choose_animation, load_animations
 from ..common.feeling_expression import Feel, FeelingReaction
 from ..common.mqtt_manager import MQTTManager
@@ -29,7 +29,7 @@ from ..common.mqtt_manager import MQTTManager
 
 class RobotManager(object):
 
-    def __init__(self, animation_dir=None, keyboard_control=False, mqtt_ip=None, timeout=20):
+    def __init__(self, animation_dir=None, mqtt_ip=None, timeout=20):
         # logger
         self.logger = logging.getLogger(f'rosout.{__name__}')
 
@@ -49,7 +49,6 @@ class RobotManager(object):
         self.mqtt_client = MQTTManager("miro", self.stop, self.emotion.process_text, timeout, mqtt_ip)
 
         # emotion expression management
-        self.keyboard_control = keyboard_control
         self.emotion = FeelingReaction(self)
 
         # init ROS
@@ -168,13 +167,11 @@ class RobotManager(object):
         self.active = True
 
     def subscribe(self, topic_name, data_type, callback):
-
         full_topic_name = self.topic_base_name + topic_name
         self.logger.debug("Subscribing to {}...".format(full_topic_name))
         self.sub.append(rospy.Subscriber(full_topic_name, data_type, callback, queue_size=1, tcp_nodelay=True))
 
     def publish(self, topic_name, data_type):
-
         return Pub(rospy.Publisher(self.topic_base_name + topic_name, data_type, queue_size=0, tcp_nodelay=True),
                    data_type)
 
@@ -202,7 +199,6 @@ class RobotManager(object):
             self.logger.debug("Finishing interaction")
 
     def callback_config_command(self, msg):
-
         # report command
         cmd = msg.data
         self.logger.debug("Callback_config_command {}".format(cmd))
@@ -235,19 +231,15 @@ class RobotManager(object):
         self.pub_config.publish()
 
     def callback_animal_adjust(self, msg):
-
         self.input.animal_adjust = msg
 
     def callback_audio_level(self, msg):
-
         self.state.audio_level = np.array(msg.data)
 
     def callback_stream(self, msg):
-
         self.input.stream = msg.data
 
     def callback_sensors_package(self, msg):
-
         if not self.active:
             return
 
@@ -441,12 +433,10 @@ class RobotManager(object):
         self.state.audio_events_for_50Hz = []
 
     def callback_detect_objects(self, msg):
-
         self.state.detect_objects_for_spatial[msg.stream_index] = msg
         self.state.detect_objects_for_50Hz[msg.stream_index] = msg
 
     def callback_mov(self, stream_index, msg):
-
         if not self.active:
             return
 
@@ -464,15 +454,12 @@ class RobotManager(object):
                 self.pub_pri[i].pub.publish(msg)
 
     def callback_movl(self, msg):
-
         self.callback_mov(0, msg)
 
     def callback_movr(self, msg):
-
         self.callback_mov(1, msg)
 
     def callback_voice_state(self, msg):
-
         if not self.active:
             return
 
@@ -487,7 +474,6 @@ class RobotManager(object):
         """
 
     def callback_audio_event(self, msg):
-
         q = DetectAudioEvent(msg.data)
         self.state.audio_events_for_spatial.append(q)
         self.state.audio_events_for_50Hz.append(q)
@@ -501,7 +487,6 @@ class RobotManager(object):
         self.loop_task = asyncio.create_task(self.loop())
 
     async def loop(self):
-
         # main loop
         while not rospy.core.is_shutdown() and self.state.keep_running:
 
