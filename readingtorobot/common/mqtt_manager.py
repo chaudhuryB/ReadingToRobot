@@ -5,7 +5,7 @@ from builtins import range
 
 
 class MQTTManager:
-    def __init__(self, name, stop_function, process_text_function, timeout, server_ip):
+    def __init__(self, name, stop_function, process_text_function, timeout=20, server_ip=None):
         self.process_text = process_text_function
         self.stop = stop_function
         self.name = name
@@ -16,7 +16,7 @@ class MQTTManager:
         self.client.message_callback_add("{}/stop".format(self.name), self.stop_callback)
         self.client.message_callback_add("speech/cmd", self.process_text_callback)
         self.client.on_connect = self.on_connect
-        self.client.connect(server_ip)
+        self.client.connect(server_ip or 'localhost')
         self.client.subscribe("{}/stop".format(self.name), 0)
         self.client.subscribe("speech/cmd", 0)
         self.mqtt_timeout = timeout
