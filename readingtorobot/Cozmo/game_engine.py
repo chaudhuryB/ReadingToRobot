@@ -12,11 +12,14 @@ from ..common.mqtt_manager import MQTTManager
 
 from .constants import END_CUBE
 from .cozmo_listener import CozmoPlayerActions
+from .cozmo_world import CozmoWorld
 
 
 class ReadEngine:
     def __init__(self, game_robot, mqtt_ip=None, timeout=20):
         self.robot = game_robot
+        # We need to modify the robot object to use a modified World object with the EvtRobotMovedBish event.
+        self.robot.world = CozmoWorld(self.robot.conn, self.robot, dispatch_parent=self.robot)
         self.robot_proxy = CozmoPlayerActions()
         self.robot_cubes = []
         self.my_postiion = None
