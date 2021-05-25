@@ -134,16 +134,6 @@ class CozmoPlayerActions(Thread):
 
             time.sleep(0.5)
 
-    def go_to_sleep(self):
-        self.logger.info("That was a vey soothing story. Cozmo has just dozed off")
-        self.robot.play_anim('anim_gotosleep_sleeping_01').wait_for_completed()
-
-    def start_free_play(self):
-        self.logger.info("What is Cozmo up to?")
-        self.robot.start_freeplay_behaviors()
-        time.sleep(90)
-        self.robot.stop_freeplay_behaviors()
-
     def play_anim(self, anim):
         try:
             self.running_animation = self.robot.play_anim(anim)
