@@ -6,62 +6,27 @@
 import argparse
 import logging
 import socket
-import time
 
-import paho.mqtt.client as mqtt
-
+from readingtorobot.common import load_config_file, MQTTManager, VoiceRecognition
 from readingtorobot.common.continuous_speech import DEFAULT_SAMPLE_RATE
-from readingtorobot.common.configuration_loader import load_config_file
-from readingtorobot.common.voice_recognition import SpeechReco
 
 
-class SpeechSender(SpeechReco):
+class SpeechSender(VoiceRecognition):
     HOST = socket.gethostbyname(socket.gethostname())
 
     def __init__(self, config=None, interpreter=None, timeout=20):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 
         # Connection to command server
-        self.mqtt_client = mqtt.Client("speech")
-        self.mqtt_client.message_callback_add("speech/stop", self.stop_callback)
-        self.mqtt_client.on_connect = self.on_connect
-        self.mqtt_client.connect(self.HOST)
-        self.mqtt_client.subscribe("speech/stop", 0)
-        self.mqtt_timeout = timeout
-        self.connected_flag = False
+        self.mqtt_client = MQTTManager("speech", self.stop, timeout=timeout, server_ip=self.HOST)
 
     def start(self):
-        self.mqtt_client.loop_start()
-        # Wait for connection
-        for _ in range(self.mqtt_timeout):
-            if self.connected_flag:
-                super().start()
-                break
-            time.sleep(1)
-        else:
-            self.logger.error("MQTT connection timed out, exiting.")
-            self.stop()
-
-    def stop_callback(self, cli, obj, msg):
-        self.logger.info("Stop message recieved: {}".format(msg.topic))
-        self.running = False
-
-    def send_stopped(self):
-        # Add mqtt response saying we finished.
-        self.logger.info("Sending response.")
-        self.mqtt_client.publish("speech/stopped_clean", "0")
-        time.sleep(5)
-        self.mqtt_client.loop_stop()
-        self.done = True
+        self.mqtt_client.start()
 
     def process_text(self, text):
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
             self.mqtt_client.publish("speech/cmd", op)
-
-    def on_connect(self, client, userdata, flags, rc):
-        self.connected_flag = True
-        self.logger.info("Connected to MQTT broker on host: {}".format(self.HOST))
 
 
 def main():

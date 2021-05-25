@@ -4,12 +4,11 @@ import random
 import time
 import threading
 
-from ..common.feeling_expression import Feel, FeelingReaction
+from ..common import Feel, FeelingReaction, MQTTManager
 from .nao_base import NAOBase
 from .nao_expression import get_scared_movement, get_annoyed_movement, get_excited_movement, get_sad_movement, \
                             get_background_A, get_background_B, get_background_C, get_looking_down, get_arms_up, \
                             get_dab_movement
-from ..common.mqtt_manager import MQTTManager
 
 
 class RobotManager(NAOBase):

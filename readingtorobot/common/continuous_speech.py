@@ -9,8 +9,8 @@ import queue
 
 import numpy as np
 import pyaudio
-import wave
 import webrtcvad
+import wave
 
 from threading import Thread, Lock
 

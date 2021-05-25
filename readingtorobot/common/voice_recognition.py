@@ -8,13 +8,12 @@ import numpy as np
 import speech_recognition as sr
 from threading import Thread
 
-from .feeling_expression import Feel
 from .continuous_speech import ContinuousSpeech
 from .configuration_loader import load_config_file, resource_file
 from .book_reactions import Book
 
 
-class SpeechReco(Thread):
+class VoiceRecognition(Thread):
     """
         Speech recognition module, using DeepSpeech or Google Cloud Speech API (through the speech_recognition package).
 
@@ -23,12 +22,12 @@ class SpeechReco(Thread):
         - 'gc' : Google Cloud Speech API
     """
     def __init__(self,
-                 read_game,
+                 reaction_manager,
                  config=None,
                  interpreter=None) -> None:
         super().__init__()
         self.name = 'SpeechRecognition'
-        self.game = read_game
+        self.reaction = reaction_manager
         self.running = False
         self.not_understood_count = 0
         self.reaction_delay = 1
@@ -58,34 +57,6 @@ class SpeechReco(Thread):
         self.running = False
         if self.is_alive():
             self.join()
-
-    def process_text(self, s: str) -> None:
-        expression = self.book.evaluate_static_sentence_validity(s)
-        self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
-        try:
-            if expression == "happy":
-                self.game.do_feel(Feel.HAPPY)
-                self.logger.debug("Feeling {}".format("Happy"))
-                time.sleep(self.reaction_delay)
-            elif expression == "sad":
-                self.game.do_feel(Feel.SAD)
-                self.logger.debug("Feeling {}".format("Sad"))
-                time.sleep(self.reaction_delay)
-            elif expression == "groan":
-                self.game.do_feel(Feel.ANNOYED)
-                self.logger.debug("Feeling {}".format("Groan"))
-                time.sleep(self.reaction_delay)
-            elif expression == "excited":
-                self.game.do_feel(Feel.EXCITED)
-                self.logger.debug("Feeling {}".format("Excited"))
-                time.sleep(self.reaction_delay)
-            elif expression == "scared":
-                self.game.do_feel(Feel.SCARED)
-                self.logger.debug("Feeling {}".format("Scared"))
-                time.sleep(self.reaction_delay)
-        except Exception as e:
-            self.logger.warning(e)
-            pass
 
     def run(self):
         self.logger.info("Say something!")
@@ -122,7 +93,7 @@ class SpeechReco(Thread):
                     text = stream.finishStream()
 
                 if text:
-                    self.process_text(text)
+                    self.reaction.process_text(text)
 
             self.audio_proc.stop()
         except Exception as e:

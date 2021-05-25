@@ -23,8 +23,7 @@ from cv_bridge import CvBridge
 # Local nodes
 from .core import Input, Nodes, Output, Pub, State
 from .node_animation_player import choose_animation, load_animations
-from ..common.feeling_expression import Feel, FeelingReaction
-from ..common.mqtt_manager import MQTTManager
+from ..common import Feel, FeelingReaction, MQTTManager
 
 
 class RobotManager(object):

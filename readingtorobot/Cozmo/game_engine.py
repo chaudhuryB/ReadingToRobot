@@ -7,9 +7,7 @@ import logging
 import time
 from cozmo.util import degrees
 
-from ..common.feeling_expression import Feel, FeelingReaction
-from ..common.mqtt_manager import MQTTManager
-
+from ..common import Feel, FeelingReaction, MQTTManager
 from .constants import END_CUBE
 from .cozmo_listener import CozmoPlayerActions
 from .cozmo_world import CozmoWorld

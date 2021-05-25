@@ -8,11 +8,10 @@ import time
 import subprocess
 import os
 from readingtorobot.common.continuous_speech import DEFAULT_SAMPLE_RATE
-from readingtorobot.common.configuration_loader import load_config_file, resource_file
-from readingtorobot.common.voice_recognition import SpeechReco
+from readingtorobot.common import load_config_file, resource_file, VoiceRecognition
 
 
-class SpeechRecoMock(SpeechReco):
+class SpeechRecoMock(VoiceRecognition):
     def __init__(self, config=None, interpreter=None):
         super().__init__(read_game=None, config=config, interpreter=interpreter)
 

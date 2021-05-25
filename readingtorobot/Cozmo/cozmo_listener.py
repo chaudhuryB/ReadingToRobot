@@ -5,17 +5,17 @@
 import asyncio
 import logging
 import time
-from random import randint, choice
+from random import choice, randint
 from threading import Thread
-from queue import Queue, Empty
+from queue import Empty, Queue
 
 import cozmo
-from cozmo.util import degrees
 from cozmo import event
+from cozmo.util import degrees
 
 from .game_cubes import BlinkyCube
 from .cozmo_world import EvtRobotMovedBish
-from ..common.feeling_expression import Feel
+from ..common import Feel
 
 
 cozmo.world.World.light_cube_factory = BlinkyCube

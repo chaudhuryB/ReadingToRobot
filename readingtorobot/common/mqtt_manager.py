@@ -1,12 +1,13 @@
 import logging
 import time
-import paho.mqtt.client as mqtt
 from builtins import range
+
+import paho.mqtt.client as mqtt
 
 
 class MQTTManager:
-    def __init__(self, name, stop_function, process_text_function, timeout=20, server_ip=None):
-        self.process_text = process_text_function
+    def __init__(self, name, stop_function, process_text_function=None, timeout=20, server_ip=None):
+        self.process_text = process_text_function or (lambda x: None)
         self.stop = stop_function
         self.name = name
         self.logger = logging.getLogger(name=__name__)
