@@ -16,14 +16,13 @@ class RobotManager(NAOBase):
     """
     Class managing the movement of NAO, adding expressions when listening
     """
-    def __init__(self, app, keyboard_control=False, mqtt_ip=None, timeout=20):
+    def __init__(self, app, mqtt_ip=None, timeout=20):
         """
         Initialisation of qi framework and event detection.
         """
         super(RobotManager, self).__init__(app)
 
         self.logger = logging.getLogger(__name__)
-        self.keyboard_control = keyboard_control
 
         # Autonomous habilities
         self.autonomousblinking.setEnabled(True)
