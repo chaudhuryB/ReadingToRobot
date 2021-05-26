@@ -4,6 +4,7 @@
     [Requires Python 2.7 compatibility]
 
 """
+import logging
 
 
 class Feel:
@@ -22,6 +23,7 @@ class FeelingReaction:
     """ Class triggering the emotional responses in the robot. """
     def __init__(self, read_game):
         self.game = read_game
+        self.logger = logging.getLogger(name=__name__)
 
     def process_text(self, s):
         """ Check an input string and execute a feeling animation in the robot. """

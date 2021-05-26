@@ -5,7 +5,7 @@
     This script can be used to start the robots individually.
     Usage:
 
-    read_to_robot [-h] [--mqttIP MQTTIP] {nao,miro,cozmo} ...
+    read_to_robot [-h] {nao,miro,cozmo} [--mqttIP MQTTIP] [--options] ...
 
 """
 
@@ -89,23 +89,24 @@ def cozmo_main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
-    # Common arguments
-    parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
-
     subparsers = parser.add_subparsers(dest="robot")
     nao_parser = subparsers.add_parser("nao")
     miro_parser = subparsers.add_parser("miro")
     cozmo_parser = subparsers.add_parser("cozmo")
 
     # NAO specific arguments
+    nao_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
     nao_parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
                             help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
     nao_parser.add_argument("--port", type=int,  default="9559",
                             help="Needed for connecting to virtual Choregraphe Nao")
 
     # MiRo specific arguments
+    miro_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
     miro_parser.add_argument('animation_dir', nargs='?', default=module_file(os.path.join('MiRo', 'animations')))
+
+    # Cozmo specific arguments
+    cozmo_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
 
     args = parser.parse_args()
 
