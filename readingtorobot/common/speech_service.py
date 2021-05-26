@@ -12,6 +12,12 @@ from readingtorobot.common.continuous_speech import DEFAULT_SAMPLE_RATE
 
 
 class SpeechSender(VoiceRecognition):
+    """
+    Speech recognition with mqtt manager.
+
+    This class allows the recognition of speech and evaluation of messages, and publishes the results over MQTT.
+    """
+
     HOST = socket.gethostbyname(socket.gethostname())
 
     def __init__(self, config=None, interpreter=None, timeout=20):
@@ -21,16 +27,21 @@ class SpeechSender(VoiceRecognition):
         self.mqtt_client = MQTTManager("speech", self.stop, timeout=timeout, server_ip=self.HOST)
 
     def start(self):
-        self.mqtt_client.start()
+        """ Start speech recognition thread. """
+        try:
+            self.mqtt_client.start()
+            super().start()
+        except TimeoutError:
+            raise
 
     def process_text(self, text):
+        """ Process detected text and publish the corresponding emotion response. """
         op = self.book.evaluate_static_sentence_validity(text)
         if op is not None:
             self.mqtt_client.publish("speech/cmd", op)
 
 
 def main():
-
     logging.basicConfig(format='%(asctime)s:SpeechService:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s',
                         level=logging.DEBUG,
                         filename='/home/ubuntu/logs/speech.log',

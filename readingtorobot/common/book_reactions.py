@@ -1,38 +1,24 @@
 """
-    Book reaction class
+    Book reaction class.
 """
 
 import logging
 import re
 import time
+from typing import Dict, List, Optional
 
 from .configuration_loader import resource_file, load_book
 
 
 class NoMatchFound(Exception):
+    """
+        To mark when there is no matches.
+    """
     pass
 
 
-wordlist = {
-    'happy':    "happy day second week".split(' ') +
-                "keep them wet and wait".split(' '),
-
-    'groan':    "very long week sat".split(' ') +
-                "there was no tree seen".split(' ') +
-                "this is silly".split(' '),
-
-    'excited':  "teeny green stem peeping out pot".split(' ') +
-                "molly saw soft green leaf".split(' ') +
-                "yippee have tree".split(' '),
-
-    'sad':      "teeny green stem and soft green leaf had vanished".split(' ') +
-                "molly was very sad".split(' ') +
-                "oh dear she said".split(' ') +
-                "little tear fell down her cheek".split(' '),
-
-    'scared':   "eek molly was screaming".split(' ') +
-                "three fat snails sneaking feet".split(' ')
-    }
+##
+# Generation of list containing sentences that can be matched to specific emotions
 
 # The teeny tree
 sentencelist = {
@@ -94,7 +80,11 @@ sentencelist['scared'] += ['sam runs at the box',
 
 
 class Book:
-    def __init__(self, source='the_teeny_tree_literal.txt'):
+    """ Load and evaluate sentences from a book or sentencelist. """
+    def __init__(self,
+                 source: Optional[str] = 'the_teeny_tree_literal.txt',
+                 sentences: Optional[Dict[List[str]]] = sentencelist) -> None:
+
         self.text = load_book(resource_file(source))
         self.filtered_text = self.extract_keywords(self.text)
         self.window = (0, len(self.text))  # This window covers the possible pages where we are reading
@@ -111,11 +101,15 @@ class Book:
         self.logger = logging.getLogger(name=__name__)
 
         self.sentences = [{'sentence': sen.split(' '), 'emotion': em}
-                          for em in sentencelist for sen in sentencelist[em]]
+                          for em in sentences for sen in sentences[em]]
         self.match_score_thresh = 0.5
         self.last_matched_emotion = None
 
-    def evaluate_static_sentence_validity(self, text):
+    def evaluate_static_sentence_validity(self, text: str) -> str:
+        """
+            Compare a sentence with the reference emotion dict `self.sentences` and return the matched emotion if any.
+        """
+
         text_list = text.split(' ')
         matching_sentences = {}
         # For all evaluated sentences, check if any of the words in it match to the given text. Then, find the position
@@ -167,7 +161,7 @@ class Book:
         return best_em
 
     @staticmethod
-    def extract_keywords(text):
+    def extract_keywords(text: List[str]) -> List[str]:
         """ Detect all unique words in the text. """
         all_keys = []
         for sentence in text:
@@ -195,6 +189,7 @@ class Book:
 
     @staticmethod
     def find_match_start_point(rec, template, start_point=0):
+        """ Find first match after `start_point."""
         for k in range(start_point, len(template)):
             word = template[k]
             for text_word in rec:

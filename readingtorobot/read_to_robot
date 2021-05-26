@@ -1,4 +1,14 @@
 #!/usr/bin/python
+"""
+    Main script for the reading to robot project.
+
+    This script can be used to start the robots individually.
+    Usage:
+
+    read_to_robot [-h] [--mqttIP MQTTIP] {nao,miro,cozmo} ...
+
+"""
+
 
 import argparse
 import logging
@@ -9,7 +19,9 @@ from readingtorobot.common import module_file
 
 
 def nao_main(args):
-
+    """
+        NAO controller
+    """
     from naoqi import ALProxy
     import qi
     from readingtorobot.NAO import RobotManager
@@ -45,6 +57,9 @@ def nao_main(args):
 
 
 def miro_main(args):
+    """
+    MiRo controller
+    """
     from readingtorobot.MiRo import RobotManager
     # instantiate
     app = RobotManager(animation_dir=args.animation_dir, mqtt_ip=args.mqttIP)
@@ -57,6 +72,9 @@ def miro_main(args):
 
 
 def cozmo_main(args):
+    """
+    Cozmo controller
+    """
     import cozmo
     from readingtorobot.Cozmo import ReadEngine
 
@@ -70,7 +88,6 @@ def cozmo_main(args):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     # Common arguments

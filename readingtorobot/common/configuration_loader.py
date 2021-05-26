@@ -17,6 +17,7 @@ __all__ = [
 
 
 def load_book(path):
+    """ Open text file in given path. """
     if os.path.isfile(path) and path.endswith('txt'):
         with open(path, 'r') as f:
             return f.read().splitlines()
@@ -25,6 +26,7 @@ def load_book(path):
 
 
 def load_config_file(path):
+    """ Open JSON file in given path. """
     if os.path.isfile(path) and path.endswith('json'):
         with open(path, 'r') as f:
             return json.load(f)
@@ -33,8 +35,10 @@ def load_config_file(path):
 
 
 def module_file(filename):
+    """ Find path to a file in the package. """
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), filename)
 
 
 def resource_file(filename):
+    """ Find path to file in the resources folder of the package. """
     return module_file("resources/{}".format(filename))
