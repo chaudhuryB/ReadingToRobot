@@ -41,10 +41,3 @@ class BlinkyCube(cozmo.objects.LightCube):
         if self._chaser:
             self._chaser.cancel()
             self._chaser = None
-
-    def start_hand(self, colour1, colour2=None):
-        if colour2:
-            cols = [colour1, colour2, colour1, colour2]
-        else:
-            cols = [colour1] * 4
-        self.set_light_corners(*cols)

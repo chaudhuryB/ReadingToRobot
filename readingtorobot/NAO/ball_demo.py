@@ -6,7 +6,8 @@ import time
 import threading
 
 from readingtorobot.NAO.nao_base import NAOBase
-from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, point_forward, explain, wave
+from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, point_forward, explain, wave, open_hand
+
 
 class BallDemo(NAOBase):
     def run(self):
@@ -19,8 +20,11 @@ class BallDemo(NAOBase):
         self.do_action(*stand_hand_fwd())
 
         # Walking motion
-        self.movement.setMoveArmsEnabled( True, False )
-
+        self.movement.setMoveArmsEnabled(True, False)
+        self.movement.moveToward(1, 0, 0)
+        time.sleep(3)
+        self.do_action(*open_hand())
+        time.sleep(1.5)
         # Drop ball
         self.movement.stopMove()
         self.posture.goToPosture('Stand', 2.0)
@@ -36,6 +40,7 @@ class BallDemo(NAOBase):
         t.join()
         time.sleep(3)
 
+
 class ByeForNow(NAOBase):
     def run(self):
         self.running = True
@@ -49,14 +54,13 @@ class ByeForNow(NAOBase):
 
         time.sleep(3)
 
-def play_ball_demo():
 
+def play_ball_demo():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int,  default="9559",
                         help="Needed for connecting to virtual Choregraphe Nao")
     parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
-                        help="IP address of the robot, use 'localhost' for virtual Nao in" \
-                        "Choregraphe")
+                        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
 
     parser.add_argument("-a", type=str,  default="ball",
                         help="Animation options: 'ball' or 'hi'")
@@ -68,8 +72,8 @@ def play_ball_demo():
         connection_url = "tcp://" + args.robotIP + ":" + str(args.port)
         app = qi.Application(["HumanListener", "--qi-url=" + connection_url])
     except RuntimeError:
-        print ("Can't connect to Naoqi at ip \"" + args.robotIP + "\" on port " + str(args.port) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
+        print("Can't connect to Naoqi at ip \"" + args.robotIP + "\" on port " + str(args.port) + ".\n"
+              "Please check your script arguments. Run with -h option for help.")
         sys.exit(1)
 
     manager = ByeForNow(app) if args.a == 'hi' else BallDemo(app)
@@ -77,14 +81,15 @@ def play_ball_demo():
     try:
         manager.run()
     except KeyboardInterrupt:
-        print "\nInterrupted by user, shutting down"
+        print("\nInterrupted by user, shutting down")
         raise
-    except BaseException, err:
-        print err
+    except BaseException as err:
+        print(err)
         raise
     finally:
         manager.stop()
         sys.exit(0)
+
 
 if __name__ == '__main__':
     play_ball_demo()

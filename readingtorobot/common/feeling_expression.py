@@ -4,25 +4,29 @@
     [Requires Python 2.7 compatibility]
 
 """
+import logging
 
 
 class Feel:
+    """ Enum for available emotional states. """
     NEUTRAL = 0
     HAPPY = 1
     SAD = 2
     ANNOYED = 3
     SCARED = 4
     EXCITED = 5
-
     START = 6
     END = 7
 
 
 class FeelingReaction:
+    """ Class triggering the emotional responses in the robot. """
     def __init__(self, read_game):
         self.game = read_game
+        self.logger = logging.getLogger(name=__name__)
 
     def process_text(self, s):
+        """ Check an input string and execute a feeling animation in the robot. """
         self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
         try:
             if s == "happy":

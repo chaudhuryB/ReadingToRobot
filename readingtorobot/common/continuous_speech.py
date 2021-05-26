@@ -9,8 +9,8 @@ import queue
 
 import numpy as np
 import pyaudio
-import wave
 import webrtcvad
+import wave
 
 from threading import Thread, Lock
 
@@ -32,6 +32,7 @@ class Audio(object):
     RATE_PROCESS = 16000
     CHANNELS = 1
     BLOCKS_PER_SECOND = 50
+    frame_duration_ms = property(lambda self: 1000 * self.block_size // self.sample_rate)
 
     def __init__(self, callback=None, device=None, input_rate=RATE_PROCESS, file=None, kwargs=None):
         def proxy_callback(in_data, frame_count, time_info, status):
@@ -87,20 +88,19 @@ class Audio(object):
         return resample16.tobytes()
 
     def read_resampled(self):
-        """Return a block of audio data resampled to 16000hz, blocking if necessary."""
+        """ Return a block of audio data resampled to 16000hz, blocking if necessary. """
         return self.resample(data=self.buffer_queue.get(),
                              input_rate=self.input_rate)
 
     def read(self):
-        """Return a block of audio data, blocking if necessary."""
+        """ Return a block of audio data, blocking if necessary. """
         return self.buffer_queue.get()
 
-    def destroy(self):
+    def stop(self):
+        """ Stop audio stream. """
         self.stream.stop_stream()
         self.stream.close()
         self.pa.terminate()
-
-    frame_duration_ms = property(lambda self: 1000 * self.block_size // self.sample_rate)
 
     def write_wav(self, filename, data):
         logging.info("write wav %s", filename)
@@ -153,7 +153,7 @@ class ContinuousSpeech(Thread, Audio):
         self.join()
 
     def frame_generator(self):
-        """Generator that yields all audio frames from microphone."""
+        """ Generator that yields all audio frames from microphone. """
         if self.input_rate == self.RATE_PROCESS:
             while self.running:
                 yield self.read()
@@ -162,7 +162,7 @@ class ContinuousSpeech(Thread, Audio):
                 yield self.read_resampled()
 
     def run(self):
-        """Function storing audio buffers."""
+        """ Function storing audio buffers. """
         while self.running:
             triggered = False
             num_unvoiced = 0

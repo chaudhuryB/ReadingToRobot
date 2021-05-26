@@ -4,9 +4,7 @@ import random
 import time
 import threading
 
-import paho.mqtt.client as mqtt
-
-from ..common.feeling_expression import Feel, FeelingReaction
+from ..common import Feel, FeelingReaction, MQTTManager
 from .nao_base import NAOBase
 from .nao_expression import get_scared_movement, get_annoyed_movement, get_excited_movement, get_sad_movement, \
                             get_background_A, get_background_B, get_background_C, get_looking_down, get_arms_up, \
@@ -17,26 +15,13 @@ class RobotManager(NAOBase):
     """
     Class managing the movement of NAO, adding expressions when listening
     """
-    def __init__(self, app, keyboard_control=False, mqtt_ip=None, timeout=20):
+    def __init__(self, app, mqtt_ip=None, timeout=20):
         """
         Initialisation of qi framework and event detection.
         """
         super(RobotManager, self).__init__(app)
 
         self.logger = logging.getLogger(__name__)
-        self.keyboard_control = keyboard_control
-        self.done = False
-
-        # Connection to command server
-        self.mqtt_client = mqtt.Client("nao")
-        self.mqtt_client.message_callback_add("nao/stop", self.stop_callback)
-        self.mqtt_client.message_callback_add("speech/cmd", self.process_text)
-        self.mqtt_client.on_connect = self.on_connect
-        self.mqtt_client.connect(mqtt_ip)
-        self.mqtt_client.subscribe("nao/stop", 0)
-        self.mqtt_client.subscribe("speech/cmd", 0)
-        self.mqtt_timeout = timeout
-        self.connected_flag = False
 
         # Autonomous habilities
         self.autonomousblinking.setEnabled(True)
@@ -51,32 +36,19 @@ class RobotManager(NAOBase):
         self.tracker.track('Face')
         self.tracking_face = True
 
+        # Connection to command server
+        self.mqtt_client = MQTTManager('nao', self.stop, self.feel_control.process_text, timeout, mqtt_ip)
+
     def start(self):
         self.running = True
         self.movement.wakeUp()
         self.posture.goToPosture('Sit', 2.0)
         self.movement.setStiffnesses("Body", 1.0)
         self.background_thread.start()
-        self.mqtt_client.loop_start()
-
-        # Wait for connection
-        for _ in xrange(self.mqtt_timeout):
-            if self.connected_flag:
-                break
-            time.sleep(1)
-        else:
-            self.logger.error("MQTT connection timed out, exiting.")
+        try:
+            self.mqtt_client.start()
+        except Exception:
             self.stop()
-
-    def stop_callback(self, cli, obj, msg):
-        self.logger.info("Stop message recieved: {}".format(msg.topic))
-        self.stop()
-        # Add mqtt response saying we finished.
-        self.logger.info("Sending response.")
-        self.mqtt_client.publish("nao/stopped_clean", "0")
-        time.sleep(5)
-        self.mqtt_client.loop_stop()
-        self.done = True
 
     def stop(self):
         self.running = False
@@ -84,6 +56,9 @@ class RobotManager(NAOBase):
         self.tracker.unregisterAllTargets()
         self.background_thread.join()
         super(RobotManager, self).stop()
+
+    def join(self):
+        self.background_thread.join()
 
     def do_feel(self, feeling=Feel.NEUTRAL):
         """
@@ -268,21 +243,3 @@ class RobotManager(NAOBase):
         self.do_action(head_n, head_k, head_t)
         self.tracker.track('Face')
         self.tracking_face = True
-        pass
-
-    def process_text(self, cli, obj, msg):
-        if not self.keyboard_control:
-            self.feel_control.process_text(msg.payload)
-        else:
-            self.logger.warning("Keyboard control is enabled, speech msg ignored: {}, {}, {}".format(msg.topic,
-                                                                                                     msg.qos,
-                                                                                                     msg.payload))
-
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            self.connected_flag = True
-            self.logger.info("Connected to MQTT broker.")
-            self.mqtt_client.publish("nao/started", 1)
-        else:
-            self.logger.error("Bad connection to mqtt, returned code: {}".format(rc))
-            self.mqtt_client.publish("nao/started", 0)

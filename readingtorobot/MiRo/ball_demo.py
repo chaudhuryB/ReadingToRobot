@@ -16,7 +16,6 @@ import std_msgs
 
 import miro2 as miro
 import miro2.core.pars as pars
-from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from cv_bridge import CvBridge
 
 # Local nodes
@@ -26,7 +25,6 @@ from readingtorobot.common import module_file
 
 
 class RobotManager(object):
-
     def __init__(self, animation_dir=None, timeout=20):
         # logger
         self.logger = logging.getLogger(f'rosout.{__name__}')
@@ -148,35 +146,24 @@ class RobotManager(object):
         self.active = True
 
     def subscribe(self, topic_name, data_type, callback):
-
         full_topic_name = self.topic_base_name + topic_name
         self.logger.debug("Subscribing to {}...".format(full_topic_name))
         self.sub.append(rospy.Subscriber(full_topic_name, data_type, callback, queue_size=1, tcp_nodelay=True))
 
     def publish(self, topic_name, data_type):
-
         return Pub(rospy.Publisher(self.topic_base_name + topic_name, data_type, queue_size=0, tcp_nodelay=True),
                    data_type)
 
-    def do_feel(self, feeling):
-        self.state.user_touch = 2.0
-        self.nodes.animation.play_animation(self.animations[choose_animation(self.animations.keys(), 'sad')])
-        self.logger.debug("Feeling sad")
-
     def callback_animal_adjust(self, msg):
-
         self.input.animal_adjust = msg
 
     def callback_audio_level(self, msg):
-
         self.state.audio_level = np.array(msg.data)
 
     def callback_stream(self, msg):
-
         self.input.stream = msg.data
 
     def callback_voice_state(self, msg):
-
         if not self.active:
             return
 
@@ -191,7 +178,6 @@ class RobotManager(object):
         """
 
     def callback_sensors_package(self, msg):
-
         if not self.active:
             return
 
@@ -308,7 +294,6 @@ class RobotManager(object):
 
         # debug
         if self.pars.dev.SEND_DEBUG_TOPICS:
-
             # publish
             if self.pub_pri_peak is None:
                 self.pub_pri_peak = self.publish('core/debug_pri_peak', miro.msg.priority_peak)
@@ -332,7 +317,6 @@ class RobotManager(object):
 
         # publish
         if self.output.tone > 0:
-
             # output tones are debug tones
             x = max(min(self.output.tone, 255), 0)
 
@@ -383,7 +367,6 @@ class RobotManager(object):
         self.state.audio_events_for_50Hz = []
 
     def callback_mov(self, stream_index, msg):
-
         if not self.active:
             return
 
@@ -401,10 +384,8 @@ class RobotManager(object):
                 self.pub_pri[i].pub.publish(msg)
 
     def loop(self):
-
         # main loop
         while not rospy.core.is_shutdown() and self.state.keep_running:
-
             # sleepy time
             time.sleep(0.1)
 
@@ -436,8 +417,8 @@ class RobotManager(object):
         # remove state file
         os.remove(self.demo_state_filename)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     # instantiate
     app = RobotManager(animation_dir=module_file(os.path.join('MiRo', 'animations')))
 

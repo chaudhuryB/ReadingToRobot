@@ -5,16 +5,17 @@
 import asyncio
 import logging
 import time
-from random import randint, choice
+from random import choice, randint
 from threading import Thread
-from queue import Queue, Empty
+from queue import Empty, Queue
 
 import cozmo
-from cozmo.util import degrees
 from cozmo import event
+from cozmo.util import degrees
 
 from .game_cubes import BlinkyCube
-from ..common.feeling_expression import Feel
+from .cozmo_world import EvtRobotMovedBish
+from ..common import Feel
 
 
 cozmo.world.World.light_cube_factory = BlinkyCube
@@ -134,16 +135,6 @@ class CozmoPlayerActions(Thread):
 
             time.sleep(0.5)
 
-    def go_to_sleep(self):
-        self.logger.info("That was a vey soothing story. Cozmo has just dozed off")
-        self.robot.play_anim('anim_gotosleep_sleeping_01').wait_for_completed()
-
-    def start_free_play(self):
-        self.logger.info("What is Cozmo up to?")
-        self.robot.start_freeplay_behaviors()
-        time.sleep(90)
-        self.robot.stop_freeplay_behaviors()
-
     def play_anim(self, anim):
         try:
             self.running_animation = self.robot.play_anim(anim)
@@ -162,10 +153,9 @@ class CozmoPlayerActions(Thread):
         wait_time = 10.0
         self.fist_bump_success = False
 
-        # This event EvtRobotMovedBish was added to the cozmo.world.py in site-packages specifically for this
-        # It is dispatched when the world receives the robot delocalized message because that is what "fist bumping"
-        # tiny Cozmo does.
-        self.robot.add_event_handler(cozmo.world.EvtRobotMovedBish, self.handle_fist_bump)
+        # This event EvtRobotMovedBish is dispatched when the world receives the robot delocalized message because that
+        # is what "fist bumping" tiny Cozmo does.
+        self.robot.add_event_handler(EvtRobotMovedBish, self.handle_fist_bump)
         self.robot.move_lift(5)
         time.sleep(.2)
         self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpRequestOnce).wait_for_completed()

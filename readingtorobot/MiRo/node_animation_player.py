@@ -127,7 +127,7 @@ class EmotionTrajectory:
 class NavigationCmd:
     def __init__(self, cmds, times):
         self.cmds = [0.0] + cmds
-        self.times =  times
+        self.times = times
 
     def initialize(self):
         self.run_times = [0.0] + self.times

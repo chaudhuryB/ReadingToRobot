@@ -2,13 +2,13 @@
     MiRo Robot behaviour manager.
 """
 
+import asyncio
 import copy
 import logging
 import os
 import time
 
 import numpy as np
-import paho.mqtt.client as mqtt
 
 import geometry_msgs
 import rospy
@@ -21,16 +21,18 @@ from miro2.core.node_detect_audio_engine import DetectAudioEvent
 from cv_bridge import CvBridge
 
 # Local nodes
-from .helper_classes import Input, Nodes, Output, Pub, State
+from .core import Input, Nodes, Output, Pub, State
 from .node_animation_player import choose_animation, load_animations
-from ..common.feeling_expression import Feel, FeelingReaction
+from ..common import Feel, FeelingReaction, MQTTManager
 
 
 class RobotManager(object):
 
-    def __init__(self, animation_dir=None, keyboard_control=False, mqtt_ip=None, timeout=20):
+    def __init__(self, animation_dir=None, mqtt_ip=None, timeout=20):
         # logger
         self.logger = logging.getLogger(f'rosout.{__name__}')
+
+        self.loop_task = None
 
         # config animations
         self.animations = load_animations(animation_dir, max_speed=10)
@@ -43,18 +45,9 @@ class RobotManager(object):
         self.bridge = CvBridge()
 
         # Connection to command server
-        self.mqtt_client = mqtt.Client("miro")
-        self.mqtt_client.message_callback_add("miro/stop", self.mqtt_stop_callback)
-        self.mqtt_client.message_callback_add("speech/cmd", self.mqtt_process_text)
-        self.mqtt_client.on_connect = self.mqtt_on_connect
-        self.mqtt_client.connect(mqtt_ip)
-        self.mqtt_client.subscribe("miro/stop", 0)
-        self.mqtt_client.subscribe("speech/cmd", 0)
-        self.mqtt_timeout = timeout
-        self.connected_flag = False
+        self.mqtt_client = MQTTManager("miro", self.stop, self.emotion.process_text, timeout, mqtt_ip)
 
         # emotion expression management
-        self.keyboard_control = keyboard_control
         self.emotion = FeelingReaction(self)
 
         # init ROS
@@ -163,16 +156,7 @@ class RobotManager(object):
         self.subscribe('sensors/stream', std_msgs.msg.UInt16MultiArray, self.callback_stream)
 
         # MQTT connection
-        self.mqtt_client.loop_start()
-
-        # Wait for connection
-        for _ in range(self.mqtt_timeout):
-            if self.connected_flag:
-                break
-            time.sleep(1)
-        else:
-            self.logger.error("MQTT connection timed out, exiting.")
-            return
+        self.mqtt_client.start()
 
         # wait for connection before moving off
         self.logger.info("Waiting for connection to robot...")
@@ -182,13 +166,11 @@ class RobotManager(object):
         self.active = True
 
     def subscribe(self, topic_name, data_type, callback):
-
         full_topic_name = self.topic_base_name + topic_name
         self.logger.debug("Subscribing to {}...".format(full_topic_name))
         self.sub.append(rospy.Subscriber(full_topic_name, data_type, callback, queue_size=1, tcp_nodelay=True))
 
     def publish(self, topic_name, data_type):
-
         return Pub(rospy.Publisher(self.topic_base_name + topic_name, data_type, queue_size=0, tcp_nodelay=True),
                    data_type)
 
@@ -216,7 +198,6 @@ class RobotManager(object):
             self.logger.debug("Finishing interaction")
 
     def callback_config_command(self, msg):
-
         # report command
         cmd = msg.data
         self.logger.debug("Callback_config_command {}".format(cmd))
@@ -249,19 +230,15 @@ class RobotManager(object):
         self.pub_config.publish()
 
     def callback_animal_adjust(self, msg):
-
         self.input.animal_adjust = msg
 
     def callback_audio_level(self, msg):
-
         self.state.audio_level = np.array(msg.data)
 
     def callback_stream(self, msg):
-
         self.input.stream = msg.data
 
     def callback_sensors_package(self, msg):
-
         if not self.active:
             return
 
@@ -455,12 +432,10 @@ class RobotManager(object):
         self.state.audio_events_for_50Hz = []
 
     def callback_detect_objects(self, msg):
-
         self.state.detect_objects_for_spatial[msg.stream_index] = msg
         self.state.detect_objects_for_50Hz[msg.stream_index] = msg
 
     def callback_mov(self, stream_index, msg):
-
         if not self.active:
             return
 
@@ -478,15 +453,12 @@ class RobotManager(object):
                 self.pub_pri[i].pub.publish(msg)
 
     def callback_movl(self, msg):
-
         self.callback_mov(0, msg)
 
     def callback_movr(self, msg):
-
         self.callback_mov(1, msg)
 
     def callback_voice_state(self, msg):
-
         if not self.active:
             return
 
@@ -501,34 +473,19 @@ class RobotManager(object):
         """
 
     def callback_audio_event(self, msg):
-
         q = DetectAudioEvent(msg.data)
         self.state.audio_events_for_spatial.append(q)
         self.state.audio_events_for_50Hz.append(q)
 
-    def mqtt_stop_callback(self, cli, obj, msg):
-        self.logger.info("Stop message recieved: {}".format(msg.topic))
+    def stop(self):
         self.state.keep_running = False
+        if self.loop_task:
+            await self.loop_task
 
-    def mqtt_process_text(self, cli, obj, msg):
-        if not self.keyboard_control:
-            self.emotion.process_text(msg.payload.decode())
-        else:
-            self.logger.warning("Keyboard control is enabled, speech msg ignored: {} : {} : {}".format(msg.topic,
-                                                                                                       msg.qos,
-                                                                                                       msg.payload))
+    def start(self):
+        self.loop_task = asyncio.create_task(self.loop())
 
-    def mqtt_on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            self.connected_flag = True
-            self.logger.info("Connected to MQTT broker.")
-            self.mqtt_client.publish("miro/started", 1)
-        else:
-            self.logger.error("Bad connection to mqtt, returned code: {}".format(rc))
-            self.mqtt_client.publish("miro/started", 0)
-
-    def loop(self):
-
+    async def loop(self):
         # main loop
         while not rospy.core.is_shutdown() and self.state.keep_running:
 
@@ -559,14 +516,5 @@ class RobotManager(object):
                 tt = self.timing[i]
                 self.logger.debug("\n\n\n{}".format(np.array(tt)))
 
-    def term(self):
-        self.mqtt_client.loop_stop()
         # remove state file
         os.remove(self.demo_state_filename)
-        # Add mqtt response saying we finished.
-        self.logger.info("Sending response.")
-
-        self.mqtt_client.publish("miro/stopped_clean", "0")
-        time.sleep(5)
-        self.mqtt_client.loop_stop()
-        self.mqtt_client.disconnect()
