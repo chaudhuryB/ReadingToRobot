@@ -7,7 +7,8 @@ import argparse
 import logging
 import socket
 
-from readingtorobot.common import load_config_file, MQTTManager, VoiceRecognition
+from readingtorobot.common import load_config_file, MQTTManager
+from readingtorobot.common.voice_recognition import VoiceRecognition
 from readingtorobot.common.continuous_speech import DEFAULT_SAMPLE_RATE
 
 
