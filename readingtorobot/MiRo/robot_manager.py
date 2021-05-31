@@ -2,11 +2,11 @@
     MiRo Robot behaviour manager.
 """
 
-import asyncio
 import copy
 import logging
 import os
 import time
+from threading import Thread
 
 import numpy as np
 
@@ -26,9 +26,10 @@ from .node_animation_player import choose_animation, load_animations
 from ..common import Feel, FeelingReaction, MQTTManager
 
 
-class RobotManager(object):
+class RobotManager(Thread):
 
     def __init__(self, animation_dir=None, mqtt_ip=None, timeout=20):
+        super().__init__()
         # logger
         self.logger = logging.getLogger(f'rosout.{__name__}')
 
@@ -479,13 +480,14 @@ class RobotManager(object):
 
     def stop(self):
         self.state.keep_running = False
-        if self.loop_task:
-            await self.loop_task
+        if self.is_alive():
+            self.join()
 
     def start(self):
-        self.loop_task = asyncio.create_task(self.loop())
+        self.state.keep_running = True
+        super().start()
 
-    async def loop(self):
+    def run(self):
         # main loop
         while not rospy.core.is_shutdown() and self.state.keep_running:
 

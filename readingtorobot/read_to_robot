@@ -61,14 +61,10 @@ def miro_main(args):
     MiRo controller
     """
     from readingtorobot.MiRo import RobotManager
-    # instantiate
+
     app = RobotManager(animation_dir=args.animation_dir, mqtt_ip=args.mqttIP)
-
-    # execute
-    app.loop()
-
-    # terminate
-    app.term()
+    app.start()
+    app.join()
 
 
 def cozmo_main(args):
