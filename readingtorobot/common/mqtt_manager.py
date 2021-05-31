@@ -62,10 +62,10 @@ class MQTTManager:
         self.stop()
         # Add mqtt response saying we finished.
         self.logger.info("Sending response.")
-        self.mqtt_client.publish("nao/stopped_clean", "0")
+        self.client.publish("nao/stopped_clean", "0")
         time.sleep(1)
-        self.mqtt_client.loop_stop()
+        self.client.loop_stop()
 
     def process_text_callback(self, cli, obj, msg):
         """ Run process text function on msg recieved. """
-        self.process_text(msg.payload)
+        self.process_text(msg.payload.decode('ascii'))
