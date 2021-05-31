@@ -76,7 +76,7 @@ def cozmo_main(args):
     Cozmo controller
     """
     import cozmo
-    from readingtorobot.Cozmo import ReadEngine
+    from readingtorobot.Cozmo import ReadEngine, Connection
 
     def cozmo_read_game(robot):
         # Initialize all the game engines screens and listners
@@ -84,7 +84,7 @@ def cozmo_main(args):
         read_game.cozmo_setup_game()
         read_game.listen_to_story()
 
-    cozmo.run_program(cozmo_read_game)
+    cozmo.run_program(cozmo_read_game, conn_factory=Connection)
 
 
 if __name__ == "__main__":
@@ -110,9 +110,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Check and create logs folder
+    if not os.path.exists('/logs'):
+        os.makedirs('/logs')
+
     logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
                         level=logging.DEBUG,
-                        filename=os.path.join(os.getenv("HOME"), "logs/{}.log".format(args.robot)),
+                        filename="/logs/{}.log".format(args.robot),
                         filemode="a")
 
     if args.robot == "nao":

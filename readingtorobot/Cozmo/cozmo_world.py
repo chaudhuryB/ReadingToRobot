@@ -1,3 +1,7 @@
+"""
+    Factory overrides to use a custom event.
+"""
+
 import cozmo
 
 
@@ -13,3 +17,11 @@ class CozmoWorld(cozmo.world.World):
         for obj in self._objects.values():
             obj.pose.invalidate()
         self.dispatch_event(EvtRobotMovedBish)
+
+
+class Robot(cozmo.robot.Robot):
+    world_factory = CozmoWorld
+
+
+class Connection(cozmo.conn.CozmoConnection):
+    robot_factory = Robot
