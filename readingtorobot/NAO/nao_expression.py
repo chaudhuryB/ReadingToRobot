@@ -168,59 +168,59 @@ def get_arms_up():
     keys = list()
 
     names.append("HeadPitch")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([-0.234621, -0.189354])
 
     names.append("HeadYaw")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([0, 0])
 
     names.append("LElbowRoll")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([-1.0573, -0.872665])
 
     names.append("LElbowYaw")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([-1.19953, -0.129154])
 
     names.append("LHand")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([0.577628, 0.577628])
 
     names.append("LShoulderPitch")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([-0.736971, 0.733038])
 
     names.append("LShoulderRoll")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([0.18997, 0])
 
     names.append("LWristYaw")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([0.100148, 0.0908224])
 
     names.append("RElbowRoll")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([1.06741, 1.42942])
 
     names.append("RElbowYaw")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([1.19953, 0.204204])
 
     names.append("RHand")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([0.580799, 0.580799])
 
     names.append("RShoulderPitch")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([-0.736971, 0.731293])
 
     names.append("RShoulderRoll")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([-0.181565, -0.750492])
 
     names.append("RWristYaw")
-    times.append([0.6, 2.76])
+    times.append([0.8, 3])
     keys.append([0.096694, 0.0876897])
 
     return names, keys, times

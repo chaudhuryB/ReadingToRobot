@@ -159,6 +159,7 @@ class RobotManager(NAOBase):
         self.ap.playSoundSetFile("enu_ono_exclamation_disapointed_05", _async=True)
         self.do_action(names, keys, times)
         self.do_action(body_n, body_k, body_t)
+        self.posture.goToPosture("Sit", 0.2)
 
         self.tracker.track('Face')
         self.tracking_face = True
@@ -211,6 +212,7 @@ class RobotManager(NAOBase):
         self.ap.playSoundSetFile("enu_ono_scared_02", _async=True)
         self.do_action(*get_scared_movement())
         self.do_action(head_n, head_k, head_t)
+        self.posture.goToPosture("Sit", 0.2)
         self.tracker.track('Face')
         self.tracking_face = True
 

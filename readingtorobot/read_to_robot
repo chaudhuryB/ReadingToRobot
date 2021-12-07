@@ -26,6 +26,15 @@ def nao_main(args):
     import qi
     from readingtorobot.NAO import RobotManager
 
+    # Check and create logs folder
+    if not os.path.exists('~/logs'):
+        os.makedirs('~/logs')
+
+    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+                        level=logging.DEBUG,
+                        filename="~/logs/{}.log".format(args.robot),
+                        filemode="a")
+
     motion = ALProxy("ALMotion", args.robotIP, args.port)
 
     try:
@@ -62,6 +71,15 @@ def miro_main(args):
     """
     from readingtorobot.MiRo import RobotManager
 
+    # Check and create logs folder
+    if not os.path.exists('/logs'):
+        os.makedirs('/logs')
+
+    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+                        level=logging.DEBUG,
+                        filename="/logs/{}.log".format(args.robot),
+                        filemode="a")
+
     app = RobotManager(animation_dir=args.animation_dir, mqtt_ip=args.mqttIP)
     app.start()
     app.join()
@@ -73,6 +91,15 @@ def cozmo_main(args):
     """
     import cozmo
     from readingtorobot.Cozmo import ReadEngine, Connection
+
+    # Check and create logs folder
+    if not os.path.exists('/logs'):
+        os.makedirs('/logs')
+
+    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+                        level=logging.DEBUG,
+                        filename="/logs/{}.log".format(args.robot),
+                        filemode="a")
 
     def cozmo_read_game(robot):
         # Initialize all the game engines screens and listners
@@ -105,15 +132,6 @@ if __name__ == "__main__":
     cozmo_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
 
     args = parser.parse_args()
-
-    # Check and create logs folder
-    if not os.path.exists('/logs'):
-        os.makedirs('/logs')
-
-    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
-                        level=logging.DEBUG,
-                        filename="/logs/{}.log".format(args.robot),
-                        filemode="a")
 
     if args.robot == "nao":
         nao_main(args)

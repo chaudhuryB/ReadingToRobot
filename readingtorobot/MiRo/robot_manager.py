@@ -45,11 +45,11 @@ class RobotManager(Thread):
         # resources
         self.bridge = CvBridge()
 
-        # Connection to command server
-        self.mqtt_client = MQTTManager("miro", self.stop, self.emotion.process_text, timeout, mqtt_ip)
-
         # emotion expression management
         self.emotion = FeelingReaction(self)
+
+        # Connection to command server
+        self.mqtt_client = MQTTManager("miro", self.stop, self.emotion.process_text, timeout, mqtt_ip)
 
         # init ROS
         rospy.init_node(self.pars.ros.robot_name + "_client_main", log_level=self.pars.ros.log_level)
