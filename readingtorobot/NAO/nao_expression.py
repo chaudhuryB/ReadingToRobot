@@ -810,3 +810,13 @@ def wave():
 
 def open_hand():
     return ["RHand"], [[0.65]], [[0.88]]
+
+
+def look_left_and_right():
+    return [], [], []
+
+
+def look_at_book():
+    return [], [], []
+
+

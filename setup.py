@@ -15,6 +15,7 @@ if sys.version_info[0] < 3:
     requires = ">=2.7"
 else:
     scripts = ['readingtorobot/read_to_robot',
+               'readingtorobot/design_reading_buddy_demo',
                'tools/launch_nao.sh',
                'tools/launch_miro.sh',
                'tools/launch_miro_docker.sh',
