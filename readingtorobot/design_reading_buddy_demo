@@ -14,14 +14,13 @@ import argparse
 import logging
 import os
 import sys
-from readingtorobot.NAO.nao_expression import look_at_book, look_left_and_right
-
-from readingtorobot.common import module_file, mqtt_manager
 # import qi
 import time
 # from naoqi import ALProxy
 from readingtorobot.NAO.nao_base import NAOBase
 from readingtorobot.common import MQTTManager
+from readingtorobot.NAO.nao_expression import look_at_book, look_left, look_right, hold_book
+
 
 def main(args):
     # Check and create logs folder
@@ -55,8 +54,13 @@ def main(args):
     reader_robot.movement.setStiffnesses("Body", 1.0)
     mqtt_manager.start()
 
+    reader_robot.do_action(*hold_book())
+
+    raw_input("NAO is ready to hold the book now. Place the book correctly and press enter to continue...")
+
     # 1. Look left and right (to one robot and another)
-    reader_robot.do_action(*look_left_and_right())
+    reader_robot.do_action(*look_left())
+    reader_robot.do_action(*look_right())
     # 2. Look at book.
     reader_robot.do_action(*look_at_book())
     # 3. Read 2 sentences.
@@ -80,10 +84,8 @@ if __name__ == "__main__":
     # NAO specific arguments
     parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
     parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
-                            help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
+                        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
     parser.add_argument("--port", type=int,  default="9559",
-                            help="Needed for connecting to virtual Choregraphe Nao")
+                        help="Needed for connecting to virtual Choregraphe Nao")
 
     main(parser.parse_args())
-
-

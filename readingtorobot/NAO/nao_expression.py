@@ -3,9 +3,7 @@
 # This file contains timelines for different movements of NAO robot
 
 def get_scared_movement():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
     times.append([0.16])
@@ -35,9 +33,7 @@ def get_scared_movement():
 
 
 def get_annoyed_movement():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([0.96])
@@ -75,9 +71,7 @@ def get_annoyed_movement():
 
 
 def get_excited_movement():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([0.16, 0.28, 0.52, 0.68, 0.96])
@@ -87,9 +81,7 @@ def get_excited_movement():
 
 
 def get_sad_movement():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([1.56])
@@ -99,9 +91,7 @@ def get_sad_movement():
 
 
 def get_dab_movement():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([0.733333, 1.4, 2.26667, 2.86667, 4.06667, 5.33333])
@@ -163,9 +153,7 @@ def get_dab_movement():
 
 
 def get_arms_up():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([0.8, 3])
@@ -230,9 +218,7 @@ def get_arms_up():
 # Background movements
 
 def get_background_A():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
     times.append([1])
@@ -262,9 +248,7 @@ def get_background_A():
 
 
 def get_background_B():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
     times.append([0.96])
@@ -298,9 +282,7 @@ def get_background_B():
 
 
 def get_background_C():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
     times.append([1.6])
@@ -334,9 +316,7 @@ def get_background_C():
 
 
 def get_looking_down():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([0.7])
@@ -351,9 +331,7 @@ def get_looking_down():
 
 # Base pose transitions
 def go_to_fwd_lean():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LAnklePitch")
     times.append([3.12])
@@ -416,9 +394,7 @@ def go_to_fwd_lean():
 
 # Demo animations
 def hand_hold_ball():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("RElbowRoll")
     times.append([0.96])
@@ -437,9 +413,7 @@ def hand_hold_ball():
 
 # Get up with hand up
 def stand_hand_fwd():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LAnklePitch")
     times.append([2])
@@ -541,9 +515,7 @@ def stand_hand_fwd():
 
 
 def point_forward():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
     times.append([0.88])
@@ -585,9 +557,7 @@ def point_forward():
 
 
 def explain():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([0.56, 0.84, 1.28, 1.8])
@@ -697,9 +667,7 @@ def explain():
 
 
 def wave():
-    names = list()
-    times = list()
-    keys = list()
+    names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
     times.append([4.8])
@@ -808,15 +776,65 @@ def wave():
     return names, keys, times
 
 
-def open_hand():
-    return ["RHand"], [[0.65]], [[0.88]]
+def hold_book():
+    # Choregraphe simplified export in Python.
+    names, times, keys = list(), list(), list()
+
+    names.append("LHand")
+    times.append([0.16])
+    keys.append([0.2])
+
+    names.append("LWristYaw")
+    times.append([0.16])
+    keys.append([-0.698132])
+
+    names.append("RHand")
+    times.append([0.16])
+    keys.append([0.2])
+
+    names.append("RWristYaw")
+    times.append([0.16])
+    keys.append([0.71733])
+
+    return names, keys, times
 
 
-def look_left_and_right():
-    return [], [], []
+def look_left():
+    names, times, keys = list(), list(), list()
+
+    names.append("HeadPitch")
+    times.append([0.96, 1.56])
+    keys.append([0.331613, 0.331613])
+
+    names.append("HeadYaw")
+    times.append([0.96, 1.56])
+    keys.append([0.610865, 0.610865])
+
+    return names, keys, times
+
+
+def look_right():
+    # Choregraphe simplified export in Python.
+    names, times, keys = list(), list(), list()
+
+    names.append("HeadPitch")
+    times.append([1.56])
+    keys.append([0.331613])
+
+    names.append("HeadYaw")
+    times.append([0.96, 1.56])
+    keys.append([-0.663225, -0.663225])
+
+    return names, keys, times
 
 
 def look_at_book():
-    return [], [], []
+    names, times, keys = list(), list(), list()
 
+    names.append("HeadPitch")
+    times.append([0.96])
+    keys.append([0.514872])
 
+    names.append("HeadYaw")
+    times.append([0.96])
+    keys.append([0])
