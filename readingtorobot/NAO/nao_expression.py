@@ -838,3 +838,4 @@ def look_at_book():
     names.append("HeadYaw")
     times.append([0.96])
     keys.append([0])
+    return names, keys, times

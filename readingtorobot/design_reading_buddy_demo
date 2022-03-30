@@ -14,9 +14,9 @@ import argparse
 import logging
 import os
 import sys
-# import qi
+import qi
 import time
-# from naoqi import ALProxy
+from naoqi import ALProxy
 from readingtorobot.NAO.nao_base import NAOBase
 from readingtorobot.common import MQTTManager
 from readingtorobot.NAO.nao_expression import look_at_book, look_left, look_right, hold_book
@@ -29,7 +29,7 @@ def main(args):
 
     logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
                         level=logging.DEBUG,
-                        filename="~/logs/{}.log".format(args.robot),
+                        filename="~/logs/nao.log",
                         filemode="a")
 
     motion = ALProxy("ALMotion", args.robotIP, args.port)
@@ -45,12 +45,12 @@ def main(args):
 
     motion.wakeUp()
 
-    reader_robot = NAOBase(app, mqtt_ip=args.mqttIP)
+    reader_robot = NAOBase(app)
     mqtt_manager = MQTTManager('nao', reader_robot.stop, server_ip=args.mqttIP)
 
     # Start reading
     reader_robot.movement.wakeUp()
-    reader_robot.posture.goToPosture('Sit', 2.0)
+    reader_robot.posture.goToPosture('Crouch', 2.0)
     reader_robot.movement.setStiffnesses("Body", 1.0)
     mqtt_manager.start()
 
@@ -64,11 +64,17 @@ def main(args):
     # 2. Look at book.
     reader_robot.do_action(*look_at_book())
     # 3. Read 2 sentences.
-    reader_robot.tts.say("")
+    reader_robot.tts.say("My mum has to get the bus to her job.")
+    reader_robot.tts.say("Her job is at the vet.")
+
+    time.sleep(3)
+    reader_robot.tts.say("She got on it. She cannot sit.")
     # 4. Trigger reaction in other robots.
-    mqtt_manager.publish("speech/cmd", "happy")
+    mqtt_manager.publish("speech/cmd", "groan")
+    time.sleep(3)
     # 3. Read 2 sentences.
-    reader_robot.tts.say("")
+    reader_robot.tts.say("The man got up for my mum.")
+    reader_robot.tts.say("The man has his pet dog on the bus.")
     # 4. Trigger reaction in other robots.
     mqtt_manager.publish("speech/cmd", "happy")
 
@@ -76,6 +82,7 @@ def main(args):
     time.sleep(3)
     mqtt_manager.publish("cozmo/stop", "stop")
     mqtt_manager.publish("miro/stop", "stop")
+    reader_robot.stop()
 
 
 if __name__ == "__main__":

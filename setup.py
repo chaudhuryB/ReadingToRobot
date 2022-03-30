@@ -10,12 +10,12 @@ with io.open("README.md", "r", encoding="utf-8") as fh:
 # Install nao and miro executables in python 2 only, and cozmo in python 3 only.
 if sys.version_info[0] < 3:
     scripts = [
-        'readingtorobot/read_to_robot']
+        'readingtorobot/read_to_robot',
+        'readingtorobot/design_reading_buddy_demo']
     requirementPath = './requirements2.txt'
     requires = ">=2.7"
 else:
     scripts = ['readingtorobot/read_to_robot',
-               'readingtorobot/design_reading_buddy_demo',
                'tools/launch_nao.sh',
                'tools/launch_miro.sh',
                'tools/launch_miro_docker.sh',
