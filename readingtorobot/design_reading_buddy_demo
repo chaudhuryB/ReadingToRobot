@@ -82,6 +82,9 @@ def main(args):
     time.sleep(3)
     mqtt_manager.publish("cozmo/stop", "stop")
     mqtt_manager.publish("miro/stop", "stop")
+
+    raw_input("Please remove the book from NAO and press enter to continue...")
+
     reader_robot.stop()
 
 

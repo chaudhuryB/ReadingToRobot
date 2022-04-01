@@ -780,21 +780,45 @@ def hold_book():
     # Choregraphe simplified export in Python.
     names, times, keys = list(), list(), list()
 
+    names.append("RShoulderRoll")
+    times.append([2.16])
+    keys.append([-0.35])
+
+    names.append("RElbowRoll")
+    times.append([2.866667])
+    keys.append([1.0])
+
+    names.append("RElbowYaw")
+    times.append([2.53333])
+    keys.append([1.5])
+
+    names.append("LShoulderRoll")
+    times.append([2.16])
+    keys.append([0.35])
+
+    names.append("LElbowRoll")
+    times.append([2.866667])
+    keys.append([-1.0])
+
+    names.append("LElbowYaw")
+    times.append([2.53333])
+    keys.append([-1.5])
+
     names.append("LHand")
     times.append([0.16])
-    keys.append([0.2])
+    keys.append([0.3])
 
     names.append("LWristYaw")
     times.append([0.16])
-    keys.append([-0.698132])
+    keys.append([-0.7])
 
     names.append("RHand")
     times.append([0.16])
-    keys.append([0.2])
+    keys.append([0.3])
 
     names.append("RWristYaw")
     times.append([0.16])
-    keys.append([0.71733])
+    keys.append([0.7])
 
     return names, keys, times
 
