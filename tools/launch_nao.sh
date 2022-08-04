@@ -1,6 +1,10 @@
 #!/bin/bash
-
-ip=$(hostname -I | awk '{print $1}')
+if [[ $1 == 10.3.141.* ]]
+then
+    ip=10.3.141.1
+else
+    ip=$(hostname -I | awk '{print $1}')
+fi
 
 cmd="source /home/nao/venv/bin/activate && read_to_robot nao --mqttIP ${ip}"
 
