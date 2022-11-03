@@ -46,4 +46,5 @@ setuptools.setup(
     ],
     scripts=scripts,
     python_requires=requires,
+    include_package_data=True,
 )
