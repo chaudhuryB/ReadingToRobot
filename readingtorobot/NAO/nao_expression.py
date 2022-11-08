@@ -1,8 +1,12 @@
+"""Timelines for different movements of NAO robot."""
 
-##
-# This file contains timelines for different movements of NAO robot
 
 def get_scared_movement():
+    """Timeline for the 'scared' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
@@ -33,6 +37,11 @@ def get_scared_movement():
 
 
 def get_annoyed_movement():
+    """Timeline for the 'annoyed' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -71,6 +80,11 @@ def get_annoyed_movement():
 
 
 def get_excited_movement():
+    """Timeline for the 'excited' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -81,6 +95,11 @@ def get_excited_movement():
 
 
 def get_sad_movement():
+    """Timeline for the 'sad' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -91,6 +110,11 @@ def get_sad_movement():
 
 
 def get_dab_movement():
+    """Timeline for the 'dab' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -153,6 +177,11 @@ def get_dab_movement():
 
 
 def get_arms_up():
+    """Timeline for scared movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -217,7 +246,13 @@ def get_arms_up():
 #################################################
 # Background movements
 
+
 def get_background_A():
+    """Timeline for the background movement A.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
@@ -248,6 +283,11 @@ def get_background_A():
 
 
 def get_background_B():
+    """Timeline for the background movement B.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
@@ -282,6 +322,11 @@ def get_background_B():
 
 
 def get_background_C():
+    """Timeline for the background movement C.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
@@ -316,6 +361,11 @@ def get_background_C():
 
 
 def get_looking_down():
+    """Timeline for the 'Look down' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -331,6 +381,11 @@ def get_looking_down():
 
 # Base pose transitions
 def go_to_fwd_lean():
+    """Timeline for the 'Lean Forward' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LAnklePitch")
@@ -394,6 +449,11 @@ def go_to_fwd_lean():
 
 # Demo animations
 def hand_hold_ball():
+    """Timeline for the 'Hold Ball' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("RElbowRoll")
@@ -413,6 +473,11 @@ def hand_hold_ball():
 
 # Get up with hand up
 def stand_hand_fwd():
+    """Timeline for the 'Stand up with hand forward' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LAnklePitch")
@@ -515,6 +580,11 @@ def stand_hand_fwd():
 
 
 def point_forward():
+    """Timeline for the 'Point forward' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("LElbowRoll")
@@ -557,6 +627,11 @@ def point_forward():
 
 
 def explain():
+    """Timeline for the 'Explain' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -667,6 +742,11 @@ def explain():
 
 
 def wave():
+    """Timeline for the 'Wave' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -776,7 +856,21 @@ def wave():
     return names, keys, times
 
 
+def open_hand():
+    """Timeline for the 'Open hand' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
+    return ["RHand"], [[0.65]], [[0.88]]
+
+
 def hold_book():
+    """Timeline for the 'Hold Book' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     # Choregraphe simplified export in Python.
     names, times, keys = list(), list(), list()
 
@@ -824,6 +918,11 @@ def hold_book():
 
 
 def look_left():
+    """Timeline for the 'Look left' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")
@@ -838,6 +937,11 @@ def look_left():
 
 
 def look_right():
+    """Timeline for the 'Look right' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     # Choregraphe simplified export in Python.
     names, times, keys = list(), list(), list()
 
@@ -853,6 +957,11 @@ def look_right():
 
 
 def look_at_book():
+    """Timeline for the 'Look at book' movement.
+
+    :return: Joint names, positions and times necessary to execute this movement.
+    :rtype: Tuple[List[str], List[List[float]], List[List[float]]]
+    """
     names, times, keys = list(), list(), list()
 
     names.append("HeadPitch")

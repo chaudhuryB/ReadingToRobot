@@ -1,5 +1,5 @@
+"""NAO robot's control package."""
+
 from .robot_manager import RobotManager
 
-__all__ = [
-    "RobotManager"
-]
+__all__ = ["RobotManager"]

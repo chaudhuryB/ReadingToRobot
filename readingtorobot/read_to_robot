@@ -20,20 +20,22 @@ from readingtorobot.common import module_file
 
 def nao_main(args):
     """
-        NAO controller
+    NAO controller
     """
     from naoqi import ALProxy
     import qi
     from readingtorobot.NAO import RobotManager
 
     # Check and create logs folder
-    if not os.path.exists('~/logs'):
-        os.makedirs('~/logs')
+    if not os.path.exists("~/logs"):
+        os.makedirs("~/logs")
 
-    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
-                        level=logging.DEBUG,
-                        filename="~/logs/{}.log".format(args.robot),
-                        filemode="a")
+    logging.basicConfig(
+        format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+        level=logging.DEBUG,
+        filename="~/logs/{}.log".format(args.robot),
+        filemode="a",
+    )
 
     motion = ALProxy("ALMotion", args.robotIP, args.port)
 
@@ -42,8 +44,10 @@ def nao_main(args):
         connection_url = "tcp://" + args.robotIP + ":" + str(args.port)
         app = qi.Application(["HumanListener", "--qi-url=" + connection_url])
     except RuntimeError:
-        print("Can't connect to Naoqi at ip \"" + args.robotIP + "\" on port " + str(args.port) + ".\n"
-              "Please check your script arguments. Run with -h option for help.")
+        print(
+            "Can't connect to Naoqi at ip \"" + args.robotIP + '" on port ' + str(args.port) + ".\n"
+            "Please check your script arguments. Run with -h option for help."
+        )
         sys.exit(1)
 
     motion.wakeUp()
@@ -72,13 +76,15 @@ def miro_main(args):
     from readingtorobot.MiRo import RobotManager
 
     # Check and create logs folder
-    if not os.path.exists('/logs'):
-        os.makedirs('/logs')
+    if not os.path.exists("/logs"):
+        os.makedirs("/logs")
 
-    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
-                        level=logging.DEBUG,
-                        filename="/logs/{}.log".format(args.robot),
-                        filemode="a")
+    logging.basicConfig(
+        format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+        level=logging.DEBUG,
+        filename="/logs/{}.log".format(args.robot),
+        filemode="a",
+    )
 
     app = RobotManager(animation_dir=args.animation_dir, mqtt_ip=args.mqttIP)
     app.start()
@@ -93,13 +99,15 @@ def cozmo_main(args):
     from readingtorobot.Cozmo import ReadEngine, Connection
 
     # Check and create logs folder
-    if not os.path.exists('/logs'):
-        os.makedirs('/logs')
+    if not os.path.exists("/logs"):
+        os.makedirs("/logs")
 
-    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
-                        level=logging.DEBUG,
-                        filename="/logs/{}.log".format(args.robot),
-                        filemode="a")
+    logging.basicConfig(
+        format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+        level=logging.DEBUG,
+        filename="/logs/{}.log".format(args.robot),
+        filemode="a",
+    )
 
     def cozmo_read_game(robot):
         # Initialize all the game engines screens and listners
@@ -119,14 +127,26 @@ if __name__ == "__main__":
 
     # NAO specific arguments
     nao_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
-    nao_parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
-                            help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
-    nao_parser.add_argument("--port", type=int,  default="9559",
-                            help="Needed for connecting to virtual Choregraphe Nao")
+    nao_parser.add_argument(
+        "--robotIP",
+        type=str,
+        default="127.0.0.1",
+        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe",
+    )
+    nao_parser.add_argument(
+        "--port",
+        type=int,
+        default="9559",
+        help="Needed for connecting to virtual Choregraphe Nao",
+    )
 
     # MiRo specific arguments
     miro_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
-    miro_parser.add_argument('animation_dir', nargs='?', default=module_file(os.path.join('MiRo', 'animations')))
+    miro_parser.add_argument(
+        "animation_dir",
+        nargs="?",
+        default=module_file(os.path.join("MiRo", "animations")),
+    )
 
     # Cozmo specific arguments
     cozmo_parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")

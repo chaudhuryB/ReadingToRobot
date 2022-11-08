@@ -1,4 +1,9 @@
 #!/usr/bin/python2
+"""Execute a Ball Demo motion.
+
+This motion makes NAO walk while holding a ball, and dropping it after a few steps.
+"""
+
 import argparse
 import qi
 import sys
@@ -10,9 +15,11 @@ from readingtorobot.NAO.nao_expression import hand_hold_ball, stand_hand_fwd, po
 
 
 class BallDemo(NAOBase):
+    """Execute ball demo movement."""
+
     def run(self):
-        self.running = True
-        self.posture.goToPosture('Crouch', 2.0)
+        """Run movement."""
+        self.posture.goToPosture("Crouch", 2.0)
         self.movement.setStiffnesses("Body", 1.0)
 
         # Sit and hold hand
@@ -27,7 +34,7 @@ class BallDemo(NAOBase):
         time.sleep(1.5)
         # Drop ball
         self.movement.stopMove()
-        self.posture.goToPosture('Stand', 2.0)
+        self.posture.goToPosture("Stand", 2.0)
 
         t = threading.Thread(target=self.tts.say, args=["Oh!"])
         t.start()
@@ -42,8 +49,10 @@ class BallDemo(NAOBase):
 
 
 class ByeForNow(NAOBase):
+    """Run 'Bye for now' movement (hand motion and text to speech)."""
+
     def run(self):
-        self.running = True
+        """Run movement."""
         self.movement.wakeUp()
         self.movement.setStiffnesses("Body", 1.0)
 
@@ -56,14 +65,17 @@ class ByeForNow(NAOBase):
 
 
 def play_ball_demo():
+    """Run the demo."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int,  default="9559",
-                        help="Needed for connecting to virtual Choregraphe Nao")
-    parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
-                        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
+    parser.add_argument("--port", type=int, default="9559", help="Needed for connecting to virtual Choregraphe Nao")
+    parser.add_argument(
+        "--robotIP",
+        type=str,
+        default="127.0.0.1",
+        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe",
+    )
 
-    parser.add_argument("-a", type=str,  default="ball",
-                        help="Animation options: 'ball' or 'hi'")
+    parser.add_argument("-a", type=str, default="ball", help="Animation options: 'ball' or 'hi'")
 
     args = parser.parse_args()
 
@@ -72,11 +84,13 @@ def play_ball_demo():
         connection_url = "tcp://" + args.robotIP + ":" + str(args.port)
         app = qi.Application(["HumanListener", "--qi-url=" + connection_url])
     except RuntimeError:
-        print("Can't connect to Naoqi at ip \"" + args.robotIP + "\" on port " + str(args.port) + ".\n"
-              "Please check your script arguments. Run with -h option for help.")
+        print(
+            "Can't connect to Naoqi at ip \"" + args.robotIP + '" on port ' + str(args.port) + ".\n"
+            "Please check your script arguments. Run with -h option for help."
+        )
         sys.exit(1)
 
-    manager = ByeForNow(app) if args.a == 'hi' else BallDemo(app)
+    manager = ByeForNow(app) if args.a == "hi" else BallDemo(app)
     # Keep robot running
     try:
         manager.run()
@@ -91,5 +105,5 @@ def play_ball_demo():
         sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     play_ball_demo()

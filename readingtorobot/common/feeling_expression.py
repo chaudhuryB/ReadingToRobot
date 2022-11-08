@@ -1,14 +1,14 @@
 """
-    Available feelings and reaction management.
+Available feelings and reaction management.
 
-    [Requires Python 2.7 compatibility]
-
+[Requires Python 2.7 compatibility]
 """
 import logging
 
 
 class Feel:
-    """ Enum for available emotional states. """
+    """Enum for available emotional states."""
+
     NEUTRAL = 0
     HAPPY = 1
     SAD = 2
@@ -20,36 +20,46 @@ class Feel:
 
 
 class FeelingReaction:
-    """ Class triggering the emotional responses in the robot. """
+    """Class triggering the emotional responses in the robot."""
+
     def __init__(self, read_game):
-        self.game = read_game
-        self.logger = logging.getLogger(name=__name__)
+        """Initialize feeling reaction.
+
+        :param read_game: An object implementing the 'do_feel' method.
+        :type read_game: Any
+        """
+        self._game = read_game
+        self._logger = logging.getLogger(name=__name__)
 
     def process_text(self, s):
-        """ Check an input string and execute a feeling animation in the robot. """
-        self.logger.debug("\033[93mRecognized: {}\033[0m".format(s))
+        """Check an input string and execute a feeling animation in the robot.
+
+        :param s: The action to execute: 'happy', 'sad', 'groan', 'excited', 'scared', 'start' or 'end'
+        :type s: str
+        """
+        self._logger.debug("\033[93mRecognized: {}\033[0m".format(s))
         try:
             if s == "happy":
-                self.game.do_feel(Feel.HAPPY)
-                self.logger.debug("Feeling {}".format("Happy"))
+                self._game.do_feel(Feel.HAPPY)
+                self._logger.debug("Feeling {}".format("Happy"))
             elif s == "sad":
-                self.game.do_feel(Feel.SAD)
-                self.logger.debug("Feeling {}".format("Sad"))
+                self._game.do_feel(Feel.SAD)
+                self._logger.debug("Feeling {}".format("Sad"))
             elif s == "groan":
-                self.game.do_feel(Feel.ANNOYED)
-                self.logger.debug("Feeling {}".format("Groan"))
+                self._game.do_feel(Feel.ANNOYED)
+                self._logger.debug("Feeling {}".format("Groan"))
             elif s == "excited":
-                self.game.do_feel(Feel.EXCITED)
-                self.logger.debug("Feeling {}".format("Excited"))
+                self._game.do_feel(Feel.EXCITED)
+                self._logger.debug("Feeling {}".format("Excited"))
             elif s == "scared":
-                self.game.do_feel(Feel.SCARED)
-                self.logger.debug("Feeling {}".format("Scared"))
+                self._game.do_feel(Feel.SCARED)
+                self._logger.debug("Feeling {}".format("Scared"))
             elif s == "start":
-                self.game.do_feel(Feel.START)
-                self.logger.debug("Running interaction starting animation.")
+                self._game.do_feel(Feel.START)
+                self._logger.debug("Running interaction starting animation.")
             elif s == "end":
-                self.game.do_feel(Feel.END)
-                self.logger.debug("Running interaction final animation.")
+                self._game.do_feel(Feel.END)
+                self._logger.debug("Running interaction final animation.")
         except Exception as e:
-            self.logger.warning(e)
+            self._logger.warning(e)
             pass
