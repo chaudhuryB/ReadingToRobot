@@ -1,6 +1,4 @@
-"""
-    Thread managing the robot animations.
-"""
+"""Thread managing the robot animations."""
 
 import asyncio
 import logging
@@ -14,7 +12,7 @@ from cozmo import event
 from cozmo.util import degrees
 
 from .game_cubes import BlinkyCube
-from .cozmo_world import EvtRobotMovedBish
+from .cozmo_world import Robot, EvtRobotMovedBish
 from ..common import Feel
 
 
@@ -22,143 +20,182 @@ cozmo.world.World.light_cube_factory = BlinkyCube
 
 
 class CozmoPlayerActions(Thread):
-    """
-        Thread controlling the robot actions.
-    """
+    """Thread controlling the robot actions."""
+
     QUEUE_TIMEOUT = 0.1
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize CozmoPlayerActions."""
         super().__init__()
-        self.queue = Queue()
+        self._queue = Queue()
 
-    def start(self, game_robot):
-        self.name = 'Robot'
-        self.robot = game_robot
-        self.face = None
-        self.last_head_position = cozmo.robot.MAX_HEAD_ANGLE
-        self.running_animation = None
-        self.running = True
-        self.logger = logging.getLogger(name=__name__)
+    def start(self, game_robot: Robot):
+        """Start thread.
+
+        :param game_robot: The robot proxy.
+        """
+        self.name = "Robot"
+        self._robot = game_robot
+        self._face = None
+        self._last_head_position = cozmo.robot.MAX_HEAD_ANGLE
+        self._running_animation = None
+        self._running = True
+        self._logger = logging.getLogger(name=__name__)
         super().start()
 
     def stop(self):
-        self.running = False
+        """Stop thread."""
+        self._running = False
         if self.is_alive():
             self.join()
 
     def run(self):
-        while self.running:
-            if not self.face:
+        """Run thread task."""
+        while self._running:
+            if not self._face:
                 try:
-                    self.robot.set_head_angle(cozmo.robot.MAX_HEAD_ANGLE).wait_for_completed()
-                    self.face = self.robot.world.wait_for_observed_face(timeout=1, include_existing=True)
-                    self.robot.turn_towards_face(self.face).wait_for_completed()
+                    self._robot.set_head_angle(cozmo.robot.MAX_HEAD_ANGLE).wait_for_completed()
+                    self._face = self._robot.world.wait_for_observed_face(timeout=1, include_existing=True)
+                    self._robot.turn_towards_face(self._face).wait_for_completed()
                 except asyncio.TimeoutError:
-                    self.logger.warning("Didn't find any face.")
+                    self._logger.warning("Didn't find any face.")
 
             try:
-                f = self.queue.get(timeout=self.QUEUE_TIMEOUT)
+                f = self._queue.get(timeout=self.QUEUE_TIMEOUT)
             except Empty:
-                self.do_listen()
+                self._do_listen()
                 continue
 
             if f == Feel.HAPPY:
-                self.be_happy()
+                self._be_happy()
             elif f == Feel.SAD:
-                self.be_sad()
+                self._be_sad()
             elif f == Feel.ANNOYED:
-                self.be_annoyed()
+                self._be_annoyed()
             elif f == Feel.SCARED:
-                self.be_scared()
+                self._be_scared()
             elif f == Feel.EXCITED:
-                self.be_excited()
+                self._be_excited()
             elif f == Feel.START:
-                self.play_anim('anim_speedtap_wingame_intensity03_01')
+                self.play_anim("anim_speedtap_wingame_intensity03_01")
             elif f == Feel.END:
                 self.do_fist_bump()
 
-    def do_feel(self, feel):
-        self.queue.put(feel)
-        if self.running_animation is not None:
-            self.running_animation.abort()
+    def do_feel(self, feel: Feel):
+        """Execute feeling animation."""
+        self._queue.put(feel)
+        if self._running_animation is not None:
+            self._running_animation.abort()
 
-    def be_sad(self):
+    def _be_sad(self):
+        """Execute sad emotion."""
         self.play_anim(
-            choice(['anim_rtpmemorymatch_no_01',
-                    'anim_speedtap_playerno_01',
-                    'anim_memorymatch_failhand_02',
-                    'anim_energy_cubenotfound_02']))
+            choice(
+                [
+                    "anim_rtpmemorymatch_no_01",
+                    "anim_speedtap_playerno_01",
+                    "anim_memorymatch_failhand_02",
+                    "anim_energy_cubenotfound_02",
+                ]
+            )
+        )
 
-    def be_happy(self):
+    def _be_happy(self):
+        """Execute happy emotion."""
         self.play_anim(
-            choice(['anim_poked_giggle',
-                    'anim_reacttoblock_happydetermined_01',
-                    'anim_memorymatch_failhand_player_02',
-                    'anim_pyramid_reacttocube_happy_low_01',
-                    'anim_pyramid_reacttocube_happy_mid_01',
-                    'anim_pyramid_reacttocube_happy_high_02']))
+            choice(
+                [
+                    "anim_poked_giggle",
+                    "anim_reacttoblock_happydetermined_01",
+                    "anim_memorymatch_failhand_player_02",
+                    "anim_pyramid_reacttocube_happy_low_01",
+                    "anim_pyramid_reacttocube_happy_mid_01",
+                    "anim_pyramid_reacttocube_happy_high_02",
+                ]
+            )
+        )
 
-    def be_annoyed(self):
+    def _be_annoyed(self):
+        """Execute annoyed emotion."""
         self.play_anim(
-            choice(['anim_memorymatch_failhand_01',
-                    'anim_reacttoblock_frustrated_01',
-                    'anim_pyramid_reacttocube_frustrated_low_01',
-                    'anim_reacttoblock_frustrated_int2_01']))
+            choice(
+                [
+                    "anim_memorymatch_failhand_01",
+                    "anim_reacttoblock_frustrated_01",
+                    "anim_pyramid_reacttocube_frustrated_low_01",
+                    "anim_reacttoblock_frustrated_int2_01",
+                ]
+            )
+        )
 
-    def be_scared(self):
+    def _be_scared(self):
+        """Execute scared emotion (Uninplemented)."""
         pass
 
-    def be_excited(self):
-        self.play_anim(
-            choice(['anim_speedtap_wingame_intensity03_01',
-                    'anim_codelab_chicken_01']))
+    def _be_excited(self):
+        """Execute excited emotion."""
+        self.play_anim(choice(["anim_speedtap_wingame_intensity03_01", "anim_codelab_chicken_01"]))
 
-    def do_listen(self):
-        # Do little look down/up nods:
+    def _do_listen(self):
+        """Do little look down/up nods."""
         play_wait = randint(0, 3)
         if play_wait == 0:
-            self.logger.debug("Looking away")
-            self.robot.set_head_angle(degrees(0)).wait_for_completed()
+            self._logger.debug("Looking away")
+            self._robot.set_head_angle(degrees(0)).wait_for_completed()
             self.play_anim(
-                choice(['anim_speedtap_wait_short',
-                        'anim_speedtap_wait_medium',
-                        'anim_speedtap_wait_medium_02',
-                        'anim_speedtap_wait_medium_03',
-                        'anim_speedtap_wait_long']))
+                choice(
+                    [
+                        "anim_speedtap_wait_short",
+                        "anim_speedtap_wait_medium",
+                        "anim_speedtap_wait_medium_02",
+                        "anim_speedtap_wait_medium_03",
+                        "anim_speedtap_wait_long",
+                    ]
+                )
+            )
         else:
-            self.logger.debug("Looking at face")
-            if self.face:
+            self._logger.debug("Looking at face")
+            if self._face:
                 # start turning towards the face
-                self.robot.set_head_angle(self.last_head_position).wait_for_completed()
-                self.robot.turn_towards_face(self.face).wait_for_completed()
-                self.last_head_position = self.robot.head_angle
+                self._robot.set_head_angle(self._last_head_position).wait_for_completed()
+                self._robot.turn_towards_face(self._face).wait_for_completed()
+                self._last_head_position = self._robot.head_angle
 
             time.sleep(0.5)
 
-    def play_anim(self, anim):
+    def play_anim(self, anim: str):
+        """Execute given animation.
+
+        :param anim: The code for the animation to run.
+        """
         try:
-            self.running_animation = self.robot.play_anim(anim)
-            self.running_animation.wait_for_completed()
+            self._running_animation = self._robot.play_anim(anim)
+            self._running_animation.wait_for_completed()
         except Exception as e:
-            self.logger.warning("Error while playing animation \'{}\': {}".format(anim, e))
+            self._logger.warning("Error while playing animation '{}': {}".format(anim, e))
             pass
 
     @event.oneshot
-    def handle_fist_bump(self, event):
-        self.logger.info(event)
+    def handle_fist_bump(self, event: EvtRobotMovedBish):
+        """Execute action when fist bump event is triggered.
+
+        :param event: Robot moved event.
+        """
+        self._logger.info(event)
         self.fist_bump_success = True
 
     def do_fist_bump(self):
-        self.logger.info("Fist bump?")
+        """Execute fist bump interaction."""
+        self._logger.info("Fist bump?")
         wait_time = 10.0
         self.fist_bump_success = False
 
         # This event EvtRobotMovedBish is dispatched when the world receives the robot delocalized message because that
         # is what "fist bumping" tiny Cozmo does.
-        self.robot.add_event_handler(EvtRobotMovedBish, self.handle_fist_bump)
-        self.robot.move_lift(5)
-        time.sleep(.2)
-        self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpRequestOnce).wait_for_completed()
+        self._robot.add_event_handler(EvtRobotMovedBish, self.handle_fist_bump)
+        self._robot.move_lift(5)
+        time.sleep(0.2)
+        self._robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpRequestOnce).wait_for_completed()
 
         while not self.fist_bump_success and wait_time > 0:
             time.sleep(0.5)
@@ -167,19 +204,19 @@ class CozmoPlayerActions(Thread):
         if not self.fist_bump_success:
             # No fist bumo yet request again
             wait_time = 10.0
-            self.logger.info("Please fist bump")
-            self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpRequestRetry).wait_for_completed()
+            self._logger.info("Please fist bump")
+            self._robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpRequestRetry).wait_for_completed()
             while not self.fist_bump_success and wait_time > 0:
                 time.sleep(0.5)
                 wait_time -= 0.5
 
         if self.fist_bump_success:
-            self.logger.info("hehe fist bumped")
-            self.robot.move_lift(-3)
-            time.sleep(.2)
-            self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpSuccess).wait_for_completed()
+            self._logger.info("hehe fist bumped")
+            self._robot.move_lift(-3)
+            time.sleep(0.2)
+            self._robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpSuccess).wait_for_completed()
         else:
-            self.logger.info("Cozmo is sad, no fist bump")
-            self.robot.move_lift(-3)
+            self._logger.info("Cozmo is sad, no fist bump")
+            self._robot.move_lift(-3)
             time.sleep(2)
-            self.robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpLeftHanging).wait_for_completed()
+            self._robot.play_anim_trigger(cozmo.anim.Triggers.FistBumpLeftHanging).wait_for_completed()

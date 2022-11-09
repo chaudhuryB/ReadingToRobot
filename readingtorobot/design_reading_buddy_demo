@@ -19,18 +19,25 @@ import time
 from naoqi import ALProxy
 from readingtorobot.NAO.nao_base import NAOBase
 from readingtorobot.common import MQTTManager
-from readingtorobot.NAO.nao_expression import look_at_book, look_left, look_right, hold_book
+from readingtorobot.NAO.nao_expression import (
+    look_at_book,
+    look_left,
+    look_right,
+    hold_book,
+)
 
 
 def main(args):
     # Check and create logs folder
-    if not os.path.exists('~/logs'):
-        os.makedirs('~/logs')
+    if not os.path.exists("~/logs"):
+        os.makedirs("~/logs")
 
-    logging.basicConfig(format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
-                        level=logging.DEBUG,
-                        filename="~/logs/nao.log",
-                        filemode="a")
+    logging.basicConfig(
+        format="%(asctime)s:%(levelname)s:\033[32m%(name)s\033[0m: %(message)s",
+        level=logging.DEBUG,
+        filename="~/logs/nao.log",
+        filemode="a",
+    )
 
     motion = ALProxy("ALMotion", args.robotIP, args.port)
 
@@ -39,18 +46,20 @@ def main(args):
         connection_url = "tcp://" + args.robotIP + ":" + str(args.port)
         app = qi.Application(["HumanListener", "--qi-url=" + connection_url])
     except RuntimeError:
-        print("Can't connect to Naoqi at ip \"" + args.robotIP + "\" on port " + str(args.port) + ".\n"
-              "Please check your script arguments. Run with -h option for help.")
+        print(
+            "Can't connect to Naoqi at ip \"" + args.robotIP + '" on port ' + str(args.port) + ".\n"
+            "Please check your script arguments. Run with -h option for help."
+        )
         sys.exit(1)
 
     motion.wakeUp()
 
     reader_robot = NAOBase(app)
-    mqtt_manager = MQTTManager('nao', reader_robot.stop, server_ip=args.mqttIP)
+    mqtt_manager = MQTTManager("nao", reader_robot.stop, server_ip=args.mqttIP)
 
     # Start reading
     reader_robot.movement.wakeUp()
-    reader_robot.posture.goToPosture('Crouch', 2.0)
+    reader_robot.posture.goToPosture("Crouch", 2.0)
     reader_robot.movement.setStiffnesses("Body", 1.0)
     mqtt_manager.start()
 
@@ -93,9 +102,17 @@ if __name__ == "__main__":
 
     # NAO specific arguments
     parser.add_argument("--mqttIP", type=str, default=None, help="Ip of speech server.")
-    parser.add_argument("--robotIP", type=str,  default="127.0.0.1",
-                        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe")
-    parser.add_argument("--port", type=int,  default="9559",
-                        help="Needed for connecting to virtual Choregraphe Nao")
+    parser.add_argument(
+        "--robotIP",
+        type=str,
+        default="127.0.0.1",
+        help="IP address of the robot, use 'localhost' for virtual Nao in Choregraphe",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default="9559",
+        help="Needed for connecting to virtual Choregraphe Nao",
+    )
 
     main(parser.parse_args())

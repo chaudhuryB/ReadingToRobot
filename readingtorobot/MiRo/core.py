@@ -1,6 +1,4 @@
-"""
-    Auxiliary objects for managing ROS interactions
-"""
+"""Auxiliary classes for managing ROS interactions."""
 import numpy as np
 
 from miro2.core.node_lower import NodeLower
@@ -14,9 +12,20 @@ from .node_animation_player import NodeAnimationPlayer
 
 
 class Pub:
+    """Manage a ROS Publisher.
+
+    :param pub: ROS Publisher.
+    :param msg: Message to be sent.
+    """
 
     def __init__(self, pub, data_type):
+        """Initialize Pub.
 
+        :param pub: Topic name.
+        :type pub: str
+        :param data_type: ROS Message description.
+        :type data_type: genpy.message.Message
+        """
         # if data_type is not None, instantiate a message
         if data_type is not None:
             msg = data_type()
@@ -27,20 +36,23 @@ class Pub:
         self.msg = msg
 
     def publish(self):
-
+        """Execute publication of currently stored message."""
         # if a msg was passed
         self.pub.publish(self.msg)
 
-    def publish_this(self, msg):
-
-        # if a msg was passed
-        self.pub.publish(msg)
-
 
 class Input:
+    """Manage input date.
+
+    :param sensors_package: Sensor data.
+    :param stream: Sensor data stream.
+    :param voice_state: Animal voice module state.
+    :param mics: Microphone data.
+    :param animal_adjust: Animal behaviour state.
+    """
 
     def __init__(self):
-
+        """Initialize Input."""
         # instantiate
         self.sensors_package = None
         self.stream = None
@@ -50,9 +62,14 @@ class Input:
 
 
 class State:
+    """Compilation of data about the robot state."""
 
     def __init__(self, pars):
+        """Initialize state struct.
 
+        :param pars: Unused.
+        """
+        del pars
         # shared resources
         self.camera_model_full = None
         self.camera_model_mini = None
@@ -115,9 +132,18 @@ class State:
 
 
 class Output:
+    """Data to be sent to the robot.
+
+    :param cosmetic_joints: Cosmetic joint positions (tail, ears).
+    :param illum: Lights.
+    :param affect: Affectivity level.
+    :param pushes: ??
+    :param tone: ??
+    :param stream: ??
+    """
 
     def __init__(self):
-
+        """Initialize Output."""
         # instantiate
         self.cosmetic_joints = np.array([0, 0.5, 0.5, 0.5, 0.2, 0])
         self.illum = [0] * 6
@@ -128,7 +154,10 @@ class Output:
 
 
 class Nodes:
+    """ROS Nodes used for controlling MiRo."""
+
     def instantiate(self, app):
+        """Start nodes for MiRo app."""
         self.lower = NodeLower(app)
         self.affect = NodeAffect(app)
         self.express = NodeExpress(app)
@@ -138,6 +167,7 @@ class Nodes:
         self.animation = NodeAnimationPlayer(app)
 
     def tick(self):
+        """Run update for all node."""
         self.lower.tick()
         self.affect.tick()
         self.express.tick()
