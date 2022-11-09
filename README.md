@@ -43,7 +43,7 @@ Raspberry Pi.
 If you are going to use a Raspberry Pi, you can install this package on NAO's own computer, and run
 it remotely.
 To do so, please follow the instructions to isnstall a virtual environment in NAO's computer
-provided in [this repository](https://github.com/gimait/nao_virtualenv).
+provided in [this repository](https://github.com/NaoPepper4hri/nao_virtualenv).
 Once this environment is running, you can freely install this and any other packages in NAO's head.
 
 ### Common
