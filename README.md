@@ -8,7 +8,7 @@ For information about the robots' movements, see [Design](./doc/design.md).
 
 ## Usage
 
-After installing this package, a few different scripts will be available in your machine.
+After installing this package, a few different scripts will be available on your machine.
 
 The robot control should be launched separately from the speech recognition, meaning that to start
 an interaction with a robot, you need to:
@@ -21,7 +21,7 @@ an interaction with a robot, you need to:
    read_to_robot <robot-name> [--options]
    ```
 
-   Or using the robot specific launch scripts: `launch_miro`, `launch_nao`.
+   Or using the robot-specific launch scripts: `launch_miro`, `launch_nao`.
    Examples:
 
    ```
