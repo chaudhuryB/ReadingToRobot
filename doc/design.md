@@ -86,7 +86,7 @@ In all animations, the sound is reactivated to provide a 'voice' effect.
 
 - Annoyed:
 
-  - [annoyed2](../readingtorobot/MiRo/animations/archived/annoyed2.json):
+  - [annoyed2](../readingtorobot/MiRo/animations/annoyed2.json):
     Lower the tail, reduce valence and arousal of emotion engine and move the head down and
     sideways in disapproval.
 
