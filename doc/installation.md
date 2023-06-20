@@ -41,6 +41,11 @@ it remotely.
 To do so, please follow the instructions to install a virtual environment in NAO's computer
 provided in [this repository](https://github.com/NaoPepper4hri/nao_virtualenv).
 Once this environment is running, you can freely install this and any other packages in NAO's head.
+You can copy this package into NAO with:
+```
+scp ReadingToRobot nao@<nao's IP address>:~/ReadingToRobot
+```
+Log into nao using `ssh` and then follow the python2 setup described in the next section.
 
 ### Common
 
@@ -82,6 +87,6 @@ Once the requirements are installed, you can install this package by running:
 cd <path-to-repository>
 python3 -m pip install .
 
-(or for python2 setups)
+(and/or for python2 setups)
 python2 -m pip install .
 ```
