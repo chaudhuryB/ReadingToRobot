@@ -50,8 +50,8 @@ class RobotManager(Thread):
         self._animations = load_animations(animation_dir, max_speed=10)
 
         # pars
-        self._pars = pars.CorePars()
-        self._pars.express.eyelids_droop_on_touch = 0
+        self.pars = pars.CorePars()
+        self.pars.express.eyelids_droop_on_touch = 0
 
         # resources
         self._bridge = CvBridge()
@@ -63,22 +63,22 @@ class RobotManager(Thread):
         self._mqtt_client = MQTTManager("miro", self.stop, self._emotion.process_text, timeout, mqtt_ip)
 
         # init ROS
-        rospy.init_node(self._pars.ros.robot_name + "_client_main", log_level=self._pars.ros.log_level)
-        self._topic_base_name = "/" + self._pars.ros.robot_name + "/"
+        rospy.init_node(self.pars.ros.robot_name + "_client_main", log_level=self.pars.ros.log_level)
+        self._topic_base_name = "/" + self.pars.ros.robot_name + "/"
 
         # subs
-        self._kc_m = miro.lib.kc_interf.kc_miro()
-        self._kc_s = miro.lib.kc_interf.kc_miro()
-        self._input = Input()
-        self._state = State(self._pars)
-        self._output = Output()
-        self._nodes = Nodes()
+        self.kc_m = miro.lib.kc_interf.kc_miro()
+        self.kc_s = miro.lib.kc_interf.kc_miro()
+        self.input = Input()
+        self.state = State(self.pars)
+        self.output = Output()
+        self.nodes = Nodes()
 
         # debug
-        if self._pars.dev.START_CAMS_HORIZ:
+        if self.pars.dev.START_CAMS_HORIZ:
             self._logger.debug("Adjusting camera start position to horizontal")
-            self._kc_m = miro.utils.kc_interf.kc_miro_cams_horiz()
-            self._kc_s = miro.utils.kc_interf.kc_miro_cams_horiz()
+            self.kc_m = miro.utils.kc_interf.kc_miro_cams_horiz()
+            self.kc_s = miro.utils.kc_interf.kc_miro_cams_horiz()
 
         # state
         self._active_counter = 1
@@ -91,7 +91,7 @@ class RobotManager(Thread):
         self._timing0 = None  # time.time()
 
         # traces
-        if self._pars.dev.DEBUG_WRITE_TRACES:
+        if self.pars.dev.DEBUG_WRITE_TRACES:
             with open("/tmp/kin", "w") as file:
                 file.write("")
 
@@ -115,9 +115,9 @@ class RobotManager(Thread):
         self._pub_sel_inhib = self._publish("core/selection/inhibition", std_msgs.msg.Float32MultiArray)
 
         # reference core states output messages in output array
-        self._output.animal_state = self._pub_animal_state.msg
-        self._output.sel_prio = self._pub_sel_prio.msg
-        self._output.sel_inhib = self._pub_sel_inhib.msg
+        self.output.animal_state = self._pub_animal_state.msg
+        self.output.sel_prio = self._pub_sel_prio.msg
+        self.output.sel_inhib = self._pub_sel_inhib.msg
 
         # publish
         self._pub_flags = self._publish("control/flags", std_msgs.msg.UInt32)
@@ -138,14 +138,14 @@ class RobotManager(Thread):
         self._pub_pri_peak = None
 
         # instantiate nodes
-        self._nodes.instantiate(self)
+        self.nodes.instantiate(self)
 
         # finalize parameters
-        self._pars.finalize()
+        self.pars.finalize()
 
         # action final parameters
-        if not self._pars.dev.RECONFIG_CAMERA_QUICK:
-            self._state.reconfigure_cameras = True
+        if not self.pars.dev.RECONFIG_CAMERA_QUICK:
+            self.state.reconfigure_cameras = True
 
         # and set up to reconfigure them on the fly
         self._trigger_filename = os.getenv("MIRO_DIR_STATE") or "." + "/client_demo.reread"
@@ -211,26 +211,26 @@ class RobotManager(Thread):
         :param feeling: Feeling to execute.
         :type feeling: Feel
         """
-        self._state.user_touch = 2.0
+        self.state.user_touch = 2.0
         if feeling == Feel.HAPPY:
             # self.state.emotion.valence = 1.0
             # self.state.emotion.arousal = 1.0
-            self._nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "happy")])
+            self.nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "happy")])
             self._logger.debug("Feeling happy")
         elif feeling == Feel.SAD:
-            self._nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "sad")])
+            self.nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "sad")])
             self._logger.debug("Feeling sad")
         elif feeling == Feel.ANNOYED:
-            self._nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "annoyed")])
+            self.nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "annoyed")])
             self._logger.debug("Feeling annoyed")
         elif feeling == Feel.EXCITED:
-            self._nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "excited")])
+            self.nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "excited")])
             self._logger.debug("Feeling excited")
         elif feeling == Feel.START:
-            self._nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "start")])
+            self.nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "start")])
             self._logger.debug("Starting interaction")
         elif feeling == Feel.END:
-            self._nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "end")])
+            self.nodes.animation.play_animation(self._animations[choose_animation(self._animations.keys(), "end")])
             self._logger.debug("Finishing interaction")
 
     def _callback_config_command(self, msg):
@@ -247,37 +247,37 @@ class RobotManager(Thread):
         elif cmd[0] == "f":
             flag = cmd[1]
             self._logger.debug("Toggle {}".format(flag))
-            if flag in self._pars.demo_flags:
-                self._pars.demo_flags = self._pars.demo_flags.replace(flag, "")
+            if flag in self.pars.demo_flags:
+                self.pars.demo_flags = self.pars.demo_flags.replace(flag, "")
             else:
-                self._pars.demo_flags += flag
-            self._pars.action_demo_flags()
+                self.pars.demo_flags += flag
+            self.pars.action_demo_flags()
         elif cmd[0] == "p":
             q = float(cmd[1]) * 0.2
-            self._pars.action.action_prob = q
-            self._logger.debug("action_prob {}".format(self._pars.action.action_prob))
-            self._pars.lower.interact_prob = q
-            self._logger.debug("interact_prob {}".format(self._pars.lower.interact_prob))
+            self.pars.action.action_prob = q
+            self._logger.debug("action_prob {}".format(self.pars.action.action_prob))
+            self.pars.lower.interact_prob = q
+            self._logger.debug("interact_prob {}".format(self.pars.lower.interact_prob))
         else:
             self._logger.warning("command not understood: {}".format(cmd))
 
         # return state
         self._pub_config.msg.data = (
-            "demo_flags=" + self._pars.demo_flags + ", action_prob=" + str(self._pars.action.action_prob)
+            "demo_flags=" + self.pars.demo_flags + ", action_prob=" + str(self.pars.action.action_prob)
         )
         self._pub_config.publish()
 
     def _callback_animal_adjust(self, msg):
         """Update Input on /core/animal/adjust update."""
-        self._input.animal_adjust = msg
+        self.input.animal_adjust = msg
 
     def _callback_audio_level(self, msg):
         """Update State on /core/audio_level update."""
-        self._state.audio_level = np.array(msg.data)
+        self.state.audio_level = np.array(msg.data)
 
     def _callback_stream(self, msg):
         """Update Input on /sensors/stream update."""
-        self._input.stream = msg.data
+        self.input.stream = msg.data
 
     def _callback_sensors_package(self, msg):
         """Update on sensors/package update."""
@@ -288,24 +288,24 @@ class RobotManager(Thread):
             self._timing[0].append(time.time() - self._timing0)
 
         # store
-        self._input.sensors_package = msg
+        self.input.sensors_package = msg
 
         # configure kc_s
-        self._kc_s.setConfig(msg.kinematic_joints.position)
+        self.kc_s.setConfig(msg.kinematic_joints.position)
 
         # don't configure kc_m, it causes drift and feedback
         # effects (e.g. around movements associated with sleep)
         # self.state.motors_active = self.kc_m.setConfigIfInactive(msg.kinematic_joints.position)
 
         # instead, just set the active state
-        self._state.motors_active = self._kc_m.isActive()
+        self.state.motors_active = self.kc_m.isActive()
 
         # tick
-        self._nodes.tick()
+        self.nodes.tick()
 
         # write demo state (first two characters is demo state version code)
         state = "01"
-        if self._state.interact_enable:
+        if self.state.interact_enable:
             state += "I"
         else:
             state += "i"
@@ -321,7 +321,7 @@ class RobotManager(Thread):
         platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_WHEELS
         platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_TRANSLATION
 
-        if self._state.user_touch == 0:
+        if self.state.user_touch == 0:
             platform_flags |= miro.constants.PLATFORM_D_FLAG_DISABLE_KIN_IDLE
 
         if self._platform_flags != platform_flags:
@@ -331,15 +331,15 @@ class RobotManager(Thread):
             self._pub_flags.publish()
 
         # publish
-        self._pub_cos.msg.data = self._output.cosmetic_joints
+        self._pub_cos.msg.data = self.output.cosmetic_joints
         self._pub_cos.publish()
 
         # publish
-        if self._pub_illum.msg.data == self._output.illum:
+        if self._pub_illum.msg.data == self.output.illum:
             # do not publish, in case users want to do their own
             pass
         else:
-            self._pub_illum.msg.data = copy.copy(self._output.illum)
+            self._pub_illum.msg.data = copy.copy(self.output.illum)
             self._pub_illum.publish()
 
         # set animal state flags
@@ -348,18 +348,18 @@ class RobotManager(Thread):
         # in pars.flags, allowing other nodes that listen to animal_state
         # to use the same configuration as the main node (even if it changes
         # at runtime).
-        self._output.animal_state.flags = 0
+        self.output.animal_state.flags = 0
 
         # Allow vocalization when possible.
-        if self._state.vocalize or (self._input.voice_state is not None and self._input.voice_state.vocalising):
-            self._output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
-        self._output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_NECK
-        self._output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
-        self._output.animal_state.flags |= miro.constants.ANIMAL_DETECT_MOTION
-        self._output.animal_state.flags |= miro.constants.ANIMAL_DETECT_BALL
-        self._output.animal_state.flags |= miro.constants.ANIMAL_DETECT_FACE
-        self._output.animal_state.flags |= miro.constants.ANIMAL_DETECT_SOUND
-        self._output.animal_state.flags |= miro.constants.ANIMAL_DETECT_APRIL
+        if self.state.vocalize or (self.input.voice_state is not None and self.input.voice_state.vocalising):
+            self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_VOICE
+        self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_NECK
+        self.output.animal_state.flags |= miro.constants.ANIMAL_EXPRESS_THROUGH_WHEELS
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_MOTION
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_BALL
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_FACE
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_SOUND
+        self.output.animal_state.flags |= miro.constants.ANIMAL_DETECT_APRIL
 
         # publish core states
         self._pub_animal_state.publish()
@@ -367,18 +367,18 @@ class RobotManager(Thread):
         self._pub_sel_inhib.publish()
 
         # publish motor output
-        if self._state.animation_running:
-            config = self._nodes.animation.get_config()
+        if self.state.animation_running:
+            config = self.nodes.animation.get_config()
             self._pub_kin.msg.position = config
             self._pub_kin.publish()
 
         else:
             # get config & dpose from kc
-            config = self._kc_m.getConfig()
+            config = self.kc_m.getConfig()
             # dpose = self.kc_m.getPoseChange() * miro.constants.PLATFORM_TICK_HZ
 
             # handle wakefulness
-            w = self._state.wakefulness
+            w = self.state.wakefulness
             config[1] = miro.constants.LIFT_RAD_MAX + w * (config[1] - miro.constants.LIFT_RAD_MAX)
 
             # publish
@@ -389,23 +389,23 @@ class RobotManager(Thread):
             self._pub_cmd_vel.publish()
 
         # clear pushes for external kc
-        self._output.pushes = []
+        self.output.pushes = []
 
         # publish stream
-        if self._output.stream:
-            self.pub_stream.msg.data = self._output.stream
-            self._output.stream = None
+        if self.output.stream:
+            self.pub_stream.msg.data = self.output.stream
+            self.output.stream = None
             self.pub_stream.publish()
 
         # debug
-        if self._pars.dev.SEND_DEBUG_TOPICS:
+        if self.pars.dev.SEND_DEBUG_TOPICS:
 
             # publish
             if self._pub_pri_peak is None:
                 self._pub_pri_peak = self._publish("core/debug_pri_peak", miro.msg.priority_peak)
 
             # publish
-            peak = self._state.priority_peak
+            peak = self.state.priority_peak
             if peak is not None:
                 msg = miro.msg.priority_peak()
                 msg.stream_index = peak.stream_index
@@ -422,16 +422,16 @@ class RobotManager(Thread):
                 self._pub_pri_peak.pub.publish(msg)
 
         # publish
-        if self._output.tone > 0:
+        if self.output.tone > 0:
 
             # output tones are debug tones
-            x = max(min(self._output.tone, 255), 0)
+            x = max(min(self.output.tone, 255), 0)
 
             # over 250 are handled specially
             if x <= 250:
-                self._output.tone = 0
+                self.output.tone = 0
             else:
-                self._output.tone -= 1
+                self.output.tone -= 1
                 x = (x - 250) * 50
 
             # dispatch
@@ -440,7 +440,7 @@ class RobotManager(Thread):
             self._pub_tone.publish()
 
         # tick counter
-        self._state.tick += 1
+        self.state.tick += 1
 
         if self._timing0 is not None:
             self._timing[0].append(time.time() - self._timing0)
@@ -448,16 +448,16 @@ class RobotManager(Thread):
         # update config (from run state file)
         if os.path.isfile(self._trigger_filename):
             self._logger.debug("saw trigger file, (re)finalizing parameters")
-            self._pars.finalize()
+            self.pars.finalize()
             os.remove(self._trigger_filename)
 
         # write traces
-        if self._pars.dev.DEBUG_WRITE_TRACES:
+        if self.pars.dev.DEBUG_WRITE_TRACES:
             with open("/tmp/kin", "a") as file:
-                sen = np.array(self._input.sensors_package.kinematic_joints.position)
+                sen = np.array(self.input.sensors_package.kinematic_joints.position)
                 cmd = np.array(config)
                 dat = np.concatenate((sen, cmd))
-                dat2 = self._output.sel_inhib.data
+                dat2 = self.output.sel_inhib.data
                 if len(dat2) > 0:
                     s = ""
                     for i in range(8):
@@ -470,13 +470,13 @@ class RobotManager(Thread):
                     file.write(s)
 
         # clear inputs
-        self._input.sensors_package = None
-        self._state.audio_events_for_50Hz = []
+        self.input.sensors_package = None
+        self.state.audio_events_for_50Hz = []
 
     def _callback_detect_objects(self, msg):
         """Update State in core/detect_objects_l and core/detect_objects_r update."""
-        self._state.detect_objects_for_spatial[msg.stream_index] = msg
-        self._state.detect_objects_for_50Hz[msg.stream_index] = msg
+        self.state.detect_objects_for_spatial[msg.stream_index] = msg
+        self.state.detect_objects_for_50Hz[msg.stream_index] = msg
 
     def _callback_mov(self, stream_index, msg):
         """Update State in core/detect_motion update."""
@@ -484,14 +484,14 @@ class RobotManager(Thread):
             return
 
         # store
-        self._state.frame_mov[stream_index] = self._bridge.imgmsg_to_cv2(msg, "mono8")
+        self.state.frame_mov[stream_index] = self._bridge.imgmsg_to_cv2(msg, "mono8")
 
         # tick
-        updated = self._nodes.spatial.tick_camera(stream_index)
+        updated = self.nodes.spatial.tick_camera(stream_index)
 
         # publish
         for i in updated:
-            frame_pri = self._state.frame_pri[i]
+            frame_pri = self.state.frame_pri[i]
             if frame_pri is not None:
                 msg = self._bridge.cv2_to_imgmsg(frame_pri, encoding="mono8")
                 self._pub_pri[i].pub.publish(msg)
@@ -509,7 +509,7 @@ class RobotManager(Thread):
         if not self._active:
             return
 
-        self._input.voice_state = msg
+        self.input.voice_state = msg
 
         # DebugVoiceState
         """
@@ -522,39 +522,39 @@ class RobotManager(Thread):
     def _callback_audio_event(self, msg):
         """Update State in core/detect_audio_event update."""
         q = DetectAudioEvent(msg.data)
-        self._state.audio_events_for_spatial.append(q)
-        self._state.audio_events_for_50Hz.append(q)
+        self.state.audio_events_for_spatial.append(q)
+        self.state.audio_events_for_50Hz.append(q)
 
     def stop(self):
         """Stop RobotManager."""
-        self._state.keep_running = False
+        self.state.keep_running = False
         if self.is_alive():
             self.join()
 
     def start(self):
         """Start RobotManager."""
-        self._state.keep_running = True
+        self.state.keep_running = True
         super().start()
 
     def run(self):
         """Execute thread task."""
-        while not rospy.core.is_shutdown() and self._state.keep_running:
+        while not rospy.core.is_shutdown() and self.state.keep_running:
 
             # sleepy time
             time.sleep(0.1)
 
             # check dev stop
-            if self._pars.dev.DEBUG_AUTO_STOP:
-                if self._state.tick >= 400:  # set this value manually
+            if self.pars.dev.DEBUG_AUTO_STOP:
+                if self.state.tick >= 400:  # set this value manually
                     self._logger.debug("DEV_DEBUG_AUTO_STOP")
                     with open("/tmp/DEV_DEBUG_AUTO_STOP", "w") as file:
                         file.write("")
                     break
 
             # debug
-            if self._pars.dev.SHOW_LOC_EYE:
+            if self.pars.dev.SHOW_LOC_EYE:
                 x = miro.utils.get("LOC_EYE_L_HEAD")
-                y = self._kc_m.changeFrameAbs(miro.constants.LINK_HEAD, miro.constants.LINK_WORLD, x)
+                y = self.kc_m.changeFrameAbs(miro.constants.LINK_HEAD, miro.constants.LINK_WORLD, x)
                 self._logger.debug("LOC_EYE_L_HEAD_WORLD {}".format(y))
 
         # set inactive
